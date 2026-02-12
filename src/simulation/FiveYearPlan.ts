@@ -40,6 +40,8 @@ export class FiveYearPlanService {
   ) {}
 
   tick(): void {
+    if (this.state.mode === 'sandbox') return;
+
     // Start first plan if none active
     if (!this.state.currentPlan) {
       this.startNextPlan();

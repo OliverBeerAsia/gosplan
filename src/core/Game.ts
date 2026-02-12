@@ -1,6 +1,6 @@
 import { Application, Container } from 'pixi.js';
 import { EventBus } from './EventBus';
-import { GameStateData, createInitialState, GraphicsQuality } from './GameState';
+import { GameMode, GameStateData, createInitialState, GraphicsQuality } from './GameState';
 import { Grid } from '../grid/Grid';
 import { BuildingPlacer } from '../grid/BuildingPlacer';
 import { BuildingRegistry } from '../buildings/BuildingRegistry';
@@ -24,6 +24,10 @@ import { BuildingTooltip } from '../ui/BuildingPanel';
 import { Minimap } from '../ui/Minimap';
 import { TutorialManager } from '../ui/TutorialManager';
 import { TitleScreen } from '../ui/TitleScreen';
+import { DistrictPanel } from '../ui/DistrictPanel';
+import { BulletinPanel } from '../ui/BulletinPanel';
+import { EventChoiceModal } from '../ui/EventChoiceModal';
+import { AmbienceOverlay } from '../ui/AmbienceOverlay';
 import { hasSave, saveGame, loadGame } from './SaveLoad';
 import { gridToWorld } from '../rendering/IsometricRenderer';
 import { MAP_SIZE } from '../constants';
@@ -63,6 +67,10 @@ export class Game {
   private tooltip!: BuildingTooltip;
   private minimap!: Minimap;
   private tutorial!: TutorialManager;
+  private districtPanel!: DistrictPanel;
+  private bulletinPanel!: BulletinPanel;
+  private eventModal!: EventChoiceModal;
+  private ambienceOverlay!: AmbienceOverlay;
 
   private uiContainer!: HTMLDivElement;
 
@@ -98,21 +106,24 @@ export class Game {
     const canLoad = hasSave();
     const titleScreen = new TitleScreen(
       this.uiContainer,
-      () => this.startGame(false),
-      canLoad ? () => this.startGame(true) : null
+      () => this.startGame(false, 'campaign'),
+      () => this.startGame(false, 'sandbox'),
+      canLoad ? () => this.startGame(true, 'campaign') : null
     );
   }
 
-  private startGame(loadSave: boolean): void {
+  private startGame(loadSave: boolean, mode: GameMode): void {
     // Initialize game state
     this.grid = new Grid(MAP_SIZE);
     this.state = createInitialState();
+    this.state.mode = mode;
     this.placer = new BuildingPlacer(this.grid, this.registry, this.events);
 
     if (loadSave) {
       const loaded = loadGame(this.grid, this.registry, this.placer);
       if (loaded) {
         Object.assign(this.state, loaded);
+        this.addBulletinEntry('State archives restored from previous session.', 'info');
         this.events.emit('game:loaded', {});
       }
     }
@@ -120,6 +131,12 @@ export class Game {
     // Add some water features
     if (!loadSave) {
       this.generateTerrain();
+      this.addBulletinEntry(
+        this.state.mode === 'sandbox'
+          ? 'Sandbox mode initialized. Central command grants full planning autonomy.'
+          : 'Campaign mode initialized. Awaiting first Five-Year directive.',
+        'info'
+      );
     }
 
     // World container for camera transforms
@@ -219,6 +236,7 @@ export class Game {
   }
 
   private setupUI(): void {
+    this.ambienceOverlay = new AmbienceOverlay(this.uiContainer, this.state, this.events);
     this.resourceBar = new ResourceBar(this.uiContainer, this.state, this.events);
     this.toolbar = new Toolbar(this.uiContainer, this.registry, this.events, (tool, buildingId, zone) => {
       this.toolController.setTool(tool, buildingId, zone);
@@ -234,6 +252,9 @@ export class Game {
     this.tooltip = new BuildingTooltip(this.uiContainer, this.registry);
     this.minimap = new Minimap(this.uiContainer, this.grid, this.registry, this.camera, this.events);
     this.tutorial = new TutorialManager(this.uiContainer, this.state, this.grid, this.registry, this.events);
+    this.districtPanel = new DistrictPanel(this.uiContainer, this.state, this.events);
+    this.bulletinPanel = new BulletinPanel(this.uiContainer, this.state, this.events);
+    this.eventModal = new EventChoiceModal(this.uiContainer, this.state, this.events);
 
     // Update resource bar initially
     this.resourceBar.update();
@@ -254,6 +275,9 @@ export class Game {
         this.infoPanel.hide();
       }
     });
+
+    this.districtPanel.update();
+    this.bulletinPanel.update();
   }
 
   private setupKeyboard(): void {
@@ -372,6 +396,25 @@ export class Game {
     return 'low';
   }
 
+  private addBulletinEntry(
+    text: string,
+    level: 'info' | 'warning' | 'success' | 'error'
+  ): void {
+    const entry = {
+      id: `boot_${this.state.totalTicks}_${Math.floor(Math.random() * 10000)}`,
+      tick: this.state.totalTicks,
+      week: this.state.week,
+      year: this.state.year,
+      text,
+      level,
+    };
+    this.state.bulletin.push(entry);
+    if (this.state.bulletin.length > 60) {
+      this.state.bulletin.splice(0, this.state.bulletin.length - 60);
+    }
+    this.events.emit('bulletin:added', { entry });
+  }
+
   private lastFrameTime = 0;
 
   private update(): void {
@@ -392,6 +435,7 @@ export class Game {
 
     // Update weather effects
     this.weatherEffects.update(dt);
+    this.ambienceOverlay.updateFrame(now);
 
     // Update seasonal effects (only changes ~4 times per year)
     const season = getSeason(this.state.week);

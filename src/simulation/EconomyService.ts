@@ -29,7 +29,7 @@ export class EconomyService {
 
       // Only produce if powered (or no power needed)
       if (def.industrialOutput && b.powered) {
-        totalIndustrial += def.industrialOutput;
+        totalIndustrial += Math.round(def.industrialOutput * this.state.industrialEfficiency);
       }
     }
 

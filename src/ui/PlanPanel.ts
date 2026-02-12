@@ -32,10 +32,30 @@ export class PlanPanel {
   }
 
   update(): void {
+    if (this.state.mode === 'sandbox') {
+      while (this.headerEl.firstChild) this.headerEl.removeChild(this.headerEl.firstChild);
+      const title = document.createElement('span');
+      title.textContent = 'SANDBOX MODE';
+      this.headerEl.appendChild(title);
+
+      while (this.bodyEl.firstChild) this.bodyEl.removeChild(this.bodyEl.firstChild);
+      const msg = document.createElement('div');
+      msg.className = 'plan-goal-text';
+      msg.textContent = this.state.activeDirective || 'No central directives in sandbox mode.';
+      this.bodyEl.appendChild(msg);
+      return;
+    }
+
     const plan = this.state.currentPlan;
     if (!plan) {
       this.headerEl.textContent = 'AWAITING DIRECTIVES';
       while (this.bodyEl.firstChild) this.bodyEl.removeChild(this.bodyEl.firstChild);
+      if (this.state.activeDirective) {
+        const msg = document.createElement('div');
+        msg.className = 'plan-goal-text';
+        msg.textContent = this.state.activeDirective;
+        this.bodyEl.appendChild(msg);
+      }
       return;
     }
 

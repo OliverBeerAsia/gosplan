@@ -607,3 +607,238 @@
   z-index: 80;
   white-space: nowrap;
 }
+
+/* ===== AMBIENCE OVERLAY ===== */
+#ambience-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+  opacity: 0.08;
+  transition: opacity 0.25s linear, background 0.25s linear;
+}
+
+/* ===== DISTRICT PANEL ===== */
+#district-panel {
+  position: absolute;
+  left: 12px;
+  top: 270px;
+  width: 300px;
+  max-height: 300px;
+  overflow-y: auto;
+  background: rgba(20,20,20,0.9);
+  border: 2px solid #7a1f1f;
+  z-index: 90;
+}
+
+#district-panel-header {
+  background: linear-gradient(90deg, #5a1b1b, #7a2323);
+  color: var(--gold);
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+#district-panel-body {
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.district-card {
+  border: 1px solid #553535;
+  background: rgba(34,34,34,0.8);
+  padding: 6px;
+}
+
+.district-title {
+  font-size: 11px;
+  color: var(--gold);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.district-metric {
+  display: grid;
+  grid-template-columns: 52px 1fr 28px;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+
+.district-metric-label {
+  font-size: 10px;
+  color: var(--concrete-light);
+  text-transform: uppercase;
+}
+
+.district-metric-bar {
+  height: 8px;
+  background: #2A2A2A;
+  border: 1px solid #444;
+}
+
+.district-metric-fill {
+  height: 100%;
+  width: 0;
+  transition: width 0.25s ease;
+}
+
+.district-metric-value {
+  font-size: 10px;
+  color: var(--white);
+  text-align: right;
+}
+
+.district-empty {
+  color: #aaa;
+  font-size: 11px;
+  padding: 6px;
+}
+
+/* ===== BULLETIN PANEL ===== */
+#bulletin-panel {
+  position: absolute;
+  right: 12px;
+  top: 290px;
+  width: 300px;
+  max-height: 280px;
+  background: rgba(20,20,20,0.9);
+  border: 2px solid #4a4a4a;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+}
+
+#bulletin-panel-header {
+  background: linear-gradient(90deg, #353535, #5a5a5a);
+  color: var(--gold);
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#bulletin-directive {
+  padding: 6px 10px;
+  font-size: 11px;
+  color: #d8d8c4;
+  border-bottom: 1px solid #383838;
+  background: rgba(12, 12, 12, 0.5);
+}
+
+#bulletin-list {
+  overflow-y: auto;
+  max-height: 220px;
+}
+
+.bulletin-item {
+  display: flex;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: 11px;
+  border-bottom: 1px solid #333;
+}
+
+.bulletin-time {
+  color: #9a9a9a;
+  min-width: 56px;
+}
+
+.bulletin-text {
+  color: #dfdfd2;
+  line-height: 1.35;
+}
+
+.bulletin-item.warning .bulletin-text { color: #ffc107; }
+.bulletin-item.error .bulletin-text { color: #ef5350; }
+.bulletin-item.success .bulletin-text { color: #a5d6a7; }
+
+.bulletin-empty {
+  color: #9a9a9a;
+  font-size: 11px;
+  padding: 8px 10px;
+}
+
+/* ===== EVENT MODAL ===== */
+#event-modal {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 210;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+#event-modal-panel {
+  width: min(620px, calc(100vw - 40px));
+  background: rgba(25, 20, 20, 0.97);
+  border: 2px solid var(--gold);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+}
+
+#event-modal-title {
+  background: linear-gradient(90deg, var(--red-dark), var(--red));
+  color: var(--gold);
+  padding: 10px 14px;
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#event-modal-body {
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--white);
+}
+
+#event-modal-timer {
+  padding: 0 14px 10px 14px;
+  font-size: 11px;
+  color: var(--yellow);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+#event-modal-choices {
+  display: grid;
+  gap: 8px;
+  padding: 0 14px 14px 14px;
+}
+
+.event-choice-btn {
+  text-align: left;
+  border: 1px solid #5c4a4a;
+  background: #2b2424;
+  color: var(--white);
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.event-choice-btn:hover {
+  border-color: var(--gold);
+  background: #3a2f2f;
+}
+
+.event-choice-label {
+  color: var(--gold);
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.event-choice-desc {
+  font-size: 12px;
+  color: #ddd;
+  line-height: 1.35;
+}

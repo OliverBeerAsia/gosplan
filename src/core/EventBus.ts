@@ -25,6 +25,19 @@ export type GameEvents = {
   'zone:changed': { gx: number; gy: number; zone: import('../grid/Cell').ZoneType };
   'demand:updated': { residential: number; industrial: number; civic: number };
   'service:updated': { average: number };
+  'commute:updated': { commute: number; serviceAccess: number };
+  'district:updated': {
+    districts: import('./GameState').DistrictSnapshot[];
+    cityLoyalty: number;
+    unrestLevel: number;
+    commuteIndex: number;
+    serviceAccessIndex: number;
+  };
+  'directive:changed': { directive: string; pressure: number };
+  'event:triggered': { event: import('./GameState').ActiveCityEvent };
+  'event:choice:selected': { eventId: string; choiceId: string };
+  'event:resolved': { eventId: string; choiceId: string; summary: string };
+  'bulletin:added': { entry: import('./GameState').BulletinEntry };
   'tile:selected': { gx: number; gy: number };
   'overlay:service:toggle': {};
   'graphics:quality:changed': { quality: import('./GameState').GraphicsQuality };

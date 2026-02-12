@@ -38,6 +38,8 @@ export class ResourceBar {
   private powerEl!: HTMLSpanElement;
   private happyEl!: HTMLSpanElement;
   private demandEl!: HTMLSpanElement;
+  private orderEl!: HTMLSpanElement;
+  private mobilityEl!: HTMLSpanElement;
   private dateEl!: HTMLSpanElement;
   private trendEls: Record<string, HTMLSpanElement> = {};
 
@@ -55,6 +57,8 @@ export class ResourceBar {
     this.el.appendChild(resourceItem('\u26A1', 'Power', 'power', '0/0 MW', 'Power demand / capacity in megawatts'));
     this.el.appendChild(resourceItem('\u263A', 'Happiness', 'happy', '50%', 'City-wide happiness affects population growth'));
     this.el.appendChild(resourceItem('\u2690', 'Demand', 'demand', 'R0 I0 C0', 'Zoning demand: Housing / Industry / Civic'));
+    this.el.appendChild(resourceItem('\u262D', 'Order', 'order', 'L50 U20', 'City loyalty and unrest pressure'));
+    this.el.appendChild(resourceItem('\u21C4', 'Mobility', 'mobility', 'C45 S35', 'Commute index and service access index'));
     this.el.appendChild(resourceItem('\u2630', 'Date', 'date', 'W1 1980', 'Current week and year'));
 
     // Speed controls
@@ -85,6 +89,8 @@ export class ResourceBar {
     this.powerEl = this.el.querySelector('[data-res="power"]')!;
     this.happyEl = this.el.querySelector('[data-res="happy"]')!;
     this.demandEl = this.el.querySelector('[data-res="demand"]')!;
+    this.orderEl = this.el.querySelector('[data-res="order"]')!;
+    this.mobilityEl = this.el.querySelector('[data-res="mobility"]')!;
     this.dateEl = this.el.querySelector('[data-res="date"]')!;
 
     // Collect trend elements
@@ -99,6 +105,8 @@ export class ResourceBar {
     events.on('power:updated', () => this.update());
     events.on('happiness:changed', () => this.update());
     events.on('demand:updated', () => this.update());
+    events.on('district:updated', () => this.update());
+    events.on('commute:updated', () => this.update());
   }
 
   update(): void {
@@ -116,6 +124,8 @@ export class ResourceBar {
     const fmt = (n: number) => (n >= 0 ? `+${n}` : `${n}`);
     this.demandEl.textContent =
       `R${fmt(this.state.residentialDemand)} I${fmt(this.state.industrialDemand)} C${fmt(this.state.civicDemand)}`;
+    this.orderEl.textContent = `L${this.state.cityLoyalty} U${this.state.unrestLevel}`;
+    this.mobilityEl.textContent = `C${this.state.commuteIndex} S${this.state.serviceAccessIndex}`;
 
     const weekStr = `W${this.state.week}`;
     this.dateEl.textContent = `${weekStr} ${this.state.year}`;
@@ -126,6 +136,8 @@ export class ResourceBar {
     this.demandEl.style.color = this.state.residentialDemand + this.state.industrialDemand + this.state.civicDemand < 0
       ? '#EF5350'
       : '#FFD700';
+    this.orderEl.style.color = this.state.unrestLevel > 60 ? '#EF5350' : this.state.cityLoyalty < 45 ? '#FFC107' : '#FFD700';
+    this.mobilityEl.style.color = this.state.commuteIndex < 45 || this.state.serviceAccessIndex < 40 ? '#FFC107' : '#FFD700';
 
     // Trend arrows
     this.setTrend('pop', this.state.population, this.prevPop);

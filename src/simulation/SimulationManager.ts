@@ -9,6 +9,10 @@ import { PowerService } from './PowerService';
 import { FiveYearPlanService } from './FiveYearPlan';
 import { ZoneGrowthService } from './ZoneGrowthService';
 import { ServiceCoverageService } from './ServiceCoverageService';
+import { CommuteService } from './CommuteService';
+import { DistrictService } from './DistrictService';
+import { CampaignDirectorService } from './CampaignDirectorService';
+import { EventDirectorService } from './EventDirectorService';
 import {
   BASE_TICK_MS, TICKS_PER_YEAR, BASE_HAPPINESS,
   PARK_BONUS, SERVICE_BONUS, MONUMENT_BONUS,
@@ -22,6 +26,10 @@ export class SimulationManager {
   private fiveYearPlan: FiveYearPlanService;
   private zoneGrowth: ZoneGrowthService;
   private serviceCoverage: ServiceCoverageService;
+  private commute: CommuteService;
+  private district: DistrictService;
+  private campaignDirector: CampaignDirectorService;
+  private eventDirector: EventDirectorService;
   private accumulator = 0;
   private lastTime = 0;
   private running = false;
@@ -39,6 +47,10 @@ export class SimulationManager {
     this.fiveYearPlan = new FiveYearPlanService(grid, registry, state, events);
     this.zoneGrowth = new ZoneGrowthService(grid, registry, placer, state, events);
     this.serviceCoverage = new ServiceCoverageService(grid, registry, events);
+    this.commute = new CommuteService(grid, registry, state, events);
+    this.district = new DistrictService(grid, registry, state, events);
+    this.campaignDirector = new CampaignDirectorService(state, events);
+    this.eventDirector = new EventDirectorService(state, events);
 
     events.on('speed:changed', ({ speed }) => {
       this.state.speed = speed;
@@ -80,14 +92,19 @@ export class SimulationManager {
       this.state.year++;
     }
 
-    // Update in order: power -> coverage -> happiness -> economy -> population -> zoning growth -> plan
+    // Update order keeps deterministic economy and city behavior:
+    // infrastructure -> district metrics -> directives -> core economy/population -> events.
     this.power.tick();
     this.serviceCoverage.tick();
+    this.commute.tick();
+    this.district.tick();
+    this.campaignDirector.tick();
     this.updateHappiness();
     this.economy.tick();
     this.population.tick();
     this.zoneGrowth.tick();
     this.fiveYearPlan.tick();
+    this.eventDirector.tick();
 
     this.events.emit('tick', { week: this.state.week, year: this.state.year });
   }
@@ -148,6 +165,18 @@ export class SimulationManager {
     happiness += Math.min(monumentCount * MONUMENT_BONUS, 15);
     // City-wide service reach bonus from spatial coverage map.
     happiness += Math.min(Math.floor(this.serviceCoverage.getAverageCoverage() / 6), 18);
+    // Immersion layer metrics: better mobility and civic order sustain morale.
+    happiness += Math.floor((this.state.commuteIndex - 50) / 7);
+    happiness += Math.floor((this.state.serviceAccessIndex - 50) / 7);
+    happiness += Math.floor((this.state.cityLoyalty - 50) / 10);
+    happiness -= Math.floor(this.state.unrestLevel / 14);
+    happiness += this.state.happinessModifier;
+
+    // Event/policy mood effects slowly normalize over time.
+    this.state.happinessModifier *= 0.96;
+    if (Math.abs(this.state.happinessModifier) < 0.2) {
+      this.state.happinessModifier = 0;
+    }
 
     this.state.happiness = Math.max(0, Math.min(100, happiness));
     this.events.emit('happiness:changed', { happiness: this.state.happiness });

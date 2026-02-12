@@ -124,11 +124,15 @@ export class InfoPanel {
     const zoneLabel = cell.zone === 'none' ? 'NONE' : cell.zone.toUpperCase();
     const demandValue = this.getZoneDemand(cell.zone);
     const roadAccess = this.hasAdjacentRoad(gx, gy);
+    const district = this.state.districtStats.find(d => d.id === cell.districtId);
 
     this.appendParagraph('Tile status and growth diagnostics for Soviet planning bureau.', 'margin-bottom:8px;font-style:italic;opacity:0.8;font-size:12px');
     this.appendRow('Terrain', cell.terrain.toUpperCase());
     this.appendRow('Zone', zoneLabel, cell.zone === 'none');
+    this.appendRow('District', district ? district.label.toUpperCase() : 'UNASSIGNED');
     this.appendRow('Service Cover', `${Math.round(cell.serviceCoverage)}%`, cell.serviceCoverage < 20);
+    this.appendRow('Activity', `${Math.round(cell.activityLevel)}%`, cell.activityLevel < 35);
+    this.appendRow('Unrest Flag', cell.unrestMarker ? 'YES' : 'NO', cell.unrestMarker);
     this.appendRow('Road Access', roadAccess ? 'YES' : 'NO', !roadAccess);
     this.appendRow('Power Grid', this.state.powerDemand <= this.state.powerCapacity ? 'STABLE' : 'DEFICIT', this.state.powerDemand > this.state.powerCapacity);
 

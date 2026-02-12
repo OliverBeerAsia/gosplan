@@ -52,7 +52,16 @@ interface SaveDataV3 {
   zoneCells: SaveZoneCell[];
 }
 
-type SaveData = SaveDataV1 | SaveDataV2 | SaveDataV3;
+interface SaveDataV4 {
+  version: 4;
+  state: GameStateData;
+  buildings: SaveBuilding[];
+  nextBuildingId: number;
+  terrainCells: SaveTerrainCell[];
+  zoneCells: SaveZoneCell[];
+}
+
+type SaveData = SaveDataV1 | SaveDataV2 | SaveDataV3 | SaveDataV4;
 
 export function hasSave(): boolean {
   return localStorage.getItem(SAVE_KEY) !== null;
@@ -84,8 +93,8 @@ export function saveGame(grid: Grid, state: GameStateData, placer: BuildingPlace
     }
   }
 
-  const data: SaveDataV3 = {
-    version: 3,
+  const data: SaveDataV4 = {
+    version: 4,
     state: { ...state },
     buildings,
     nextBuildingId: placer.getNextId(),
@@ -111,14 +120,14 @@ export function loadGame(
       for (const [gx, gy] of data.waterCells) {
         grid.setTerrain(gx, gy, 'water');
       }
-    } else if (data.version === 2 || data.version === 3) {
+    } else if (data.version === 2 || data.version === 3 || data.version === 4) {
       for (const t of data.terrainCells) {
         grid.setTerrain(t.gx, t.gy, t.terrain);
         const cell = grid.getCell(t.gx, t.gy);
         if (cell) cell.elevation = t.elevation;
       }
 
-      if (data.version === 3) {
+      if (data.version === 3 || data.version === 4) {
         for (const z of data.zoneCells) {
           grid.setZone(z.gx, z.gy, z.zone);
         }

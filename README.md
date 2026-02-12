@@ -4,8 +4,24 @@ Soviet city builder inspired by SimCity 2000-style planning, layouts, and progre
 
 ## Current Release
 
-- Version: `1.2.0`
+- Version: `1.3.0`
 - Status: playable, desktop-first, production build passing
+
+## What Is In 1.3.0
+
+- Campaign + Sandbox mode split from title screen.
+- District identity simulation:
+  - district styles and district-level metrics
+  - loyalty/unrest/activity tracking
+- Commute and service-access simulation indices integrated into city health.
+- Central directives with adaptive planning pressure.
+- Dynamic political/social event engine with choice-based outcomes.
+- New immersion UI:
+  - district panel
+  - state bulletin panel
+  - event choice modal
+  - ambient day/night atmosphere overlay
+- Save format upgraded to v4 (backward compatible with v1-v3).
 
 ## What Is In 1.2.0
 
@@ -57,6 +73,10 @@ npm run dev
 
 Open the URL printed by Vite in your terminal (commonly `http://localhost:5173/` for dev).
 
+From the title screen:
+- `NEW CAMPAIGN` for directive-driven progression
+- `NEW SANDBOX` for open-ended city building
+
 Production build:
 
 ```bash
@@ -85,6 +105,8 @@ npm run preview
 - Overlays:
   - `P`: power overlay
   - `C`: service coverage overlay
+- Events:
+  - active state events appear as a modal with 2-3 policy choices
 - Management:
   - `Ctrl/Cmd+S`: save
   - `Ctrl/Cmd+Z`: undo
@@ -113,7 +135,7 @@ If the atlas or specific frames are missing, the game still runs via procedural 
 
 - `src/core`: game bootstrap, state, save/load, event bus
 - `src/grid`: cell/grid model, placement
-- `src/simulation`: economy, power, population, zoning growth, service coverage
+- `src/simulation`: economy, power, population, zoning growth, service coverage, commute, districts, directives, events
 - `src/rendering`: terrain/buildings/overlays/camera/isometric projection
 - `src/graphics`: palette, texture generators, atlas loader, texture factory
 - `src/ui`: toolbar, resource bar, info panel, minimap, notifications
@@ -131,6 +153,9 @@ If the atlas or specific frames are missing, the game still runs via procedural 
 - `docs/TEST_REPORT_v1.2.0.md`
 - `docs/BUG_CHECK_v1.2.0.md`
 - `docs/RELEASE_NOTES_v1.2.0.md`
+- `docs/IMPLEMENTATION_NOTES_v1.3.0.md`
+- `docs/TEST_REPORT_v1.3.0.md`
+- `docs/RELEASE_NOTES_v1.3.0.md`
 - `docs/RELEASE_RUNBOOK.md`
 - `docs/ART_DIRECTION.md`
 - `docs/GRAPHICS_CONTINUOUS_IMPROVEMENT_PLAN.md`

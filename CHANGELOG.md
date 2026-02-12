@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.3.0] - 2026-02-12
+
+### Added
+
+- Campaign and Sandbox start options on title screen.
+- District simulation layer with style classification and district metrics:
+  - service access
+  - commute quality
+  - loyalty
+  - unrest risk
+  - activity level
+- Commute simulation (`CommuteService`) and city mobility index.
+- Adaptive directive system (`CampaignDirectorService`) with performance pressure scoring.
+- Political/social event system (`EventDirectorService`) with choice-based consequences.
+- State bulletin feed and event history entries.
+- New immersion UI components:
+  - `DistrictPanel`
+  - `BulletinPanel`
+  - `EventChoiceModal`
+  - `AmbienceOverlay`
+- Save format v4 with backward compatibility for v1-v3.
+
+### Changed
+
+- Simulation tick order now includes commute, district, directive, and event layers.
+- Happiness model now includes commute/service access, loyalty, unrest, and event mood modifiers.
+- Economy now respects `industrialEfficiency` modifier from event outcomes.
+- Resource bar now includes `Order` and `Mobility` indicators.
+- Plan panel now supports Sandbox-mode messaging when Five-Year plans are disabled.
+
 ## [1.2.0] - 2026-02-12
 
 ### Added

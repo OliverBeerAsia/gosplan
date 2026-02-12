@@ -1,10 +1,17 @@
 export class TitleScreen {
   private el: HTMLDivElement;
-  private onNewGame: () => void;
+  private onNewCampaign: () => void;
+  private onNewSandbox: () => void;
   private onLoadGame: (() => void) | null;
 
-  constructor(container: HTMLElement, onNewGame: () => void, onLoadGame: (() => void) | null) {
-    this.onNewGame = onNewGame;
+  constructor(
+    container: HTMLElement,
+    onNewCampaign: () => void,
+    onNewSandbox: () => void,
+    onLoadGame: (() => void) | null
+  ) {
+    this.onNewCampaign = onNewCampaign;
+    this.onNewSandbox = onNewSandbox;
     this.onLoadGame = onLoadGame;
 
     this.el = document.createElement('div');
@@ -24,14 +31,23 @@ export class TitleScreen {
     star.style.cssText = 'font-size:48px;color:#FFD700;margin-bottom:32px;';
     this.el.appendChild(star);
 
-    const newBtn = document.createElement('button');
-    newBtn.className = 'title-btn';
-    newBtn.textContent = 'NEW CITY';
-    newBtn.addEventListener('click', () => {
+    const campaignBtn = document.createElement('button');
+    campaignBtn.className = 'title-btn';
+    campaignBtn.textContent = 'NEW CAMPAIGN';
+    campaignBtn.addEventListener('click', () => {
       this.hide();
-      this.onNewGame();
+      this.onNewCampaign();
     });
-    this.el.appendChild(newBtn);
+    this.el.appendChild(campaignBtn);
+
+    const sandboxBtn = document.createElement('button');
+    sandboxBtn.className = 'title-btn';
+    sandboxBtn.textContent = 'NEW SANDBOX';
+    sandboxBtn.addEventListener('click', () => {
+      this.hide();
+      this.onNewSandbox();
+    });
+    this.el.appendChild(sandboxBtn);
 
     if (onLoadGame) {
       const loadBtn = document.createElement('button');
@@ -46,7 +62,7 @@ export class TitleScreen {
 
     const subtitle = document.createElement('div');
     subtitle.className = 'subtitle';
-    subtitle.textContent = 'Build the workers\u2019 paradise \u2022 1980';
+    subtitle.textContent = 'Build the workers\u2019 paradise \u2022 campaign or sandbox';
     this.el.appendChild(subtitle);
 
     container.appendChild(this.el);
