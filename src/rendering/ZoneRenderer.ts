@@ -5,10 +5,12 @@ import { Grid } from '../grid/Grid';
 import { ZoneType } from '../grid/Cell';
 import { gridToWorld } from './IsometricRenderer';
 import { TILE_HALF_H, TILE_HALF_W } from '../constants';
+import { GraphicsQuality } from '../core/GameState';
 
 export class ZoneRenderer {
   readonly container: Container;
   private sprites: Sprite[][] = [];
+  private quality: GraphicsQuality = 'high';
 
   constructor(
     private grid: Grid,
@@ -24,6 +26,7 @@ export class ZoneRenderer {
     events.on('building:demolished', () => this.updateAll());
     events.on('terrain:changed', ({ gx, gy }) => this.updateCell(gx, gy));
     events.on('game:loaded', () => this.updateAll());
+    events.on('graphics:quality:changed', ({ quality }) => this.setQuality(quality));
   }
 
   private buildSprites(): void {
@@ -86,5 +89,10 @@ export class ZoneRenderer {
         this.updateCell(gx, gy);
       }
     }
+  }
+
+  setQuality(quality: GraphicsQuality): void {
+    this.quality = quality;
+    this.container.alpha = quality === 'low' ? 0.78 : quality === 'medium' ? 0.9 : 1;
   }
 }

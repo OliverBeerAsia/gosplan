@@ -119,6 +119,7 @@ export function generateBuildingTextures(renderer: Renderer): Map<string, Textur
   textures.set('plaza', drawPlaza(renderer));
   textures.set('fountain', drawFountain(renderer));
   textures.set('sports_complex', drawSportsComplex(renderer));
+  textures.set('queue_citizen', drawQueueCitizen(renderer));
 
   return textures;
 }
@@ -1144,4 +1145,30 @@ function drawStar(g: Graphics, cx: number, cy: number, r: number, color: number)
   }
   g.poly(points);
   g.fill(color);
+}
+
+function drawQueueCitizen(renderer: Renderer): Texture {
+  const g = new Graphics();
+
+  // Body coat
+  g.rect(3, 6, 6, 7);
+  g.fill(PALETTE.RED_DARK);
+
+  // Head
+  g.circle(6, 4, 2);
+  g.fill(0xD9B38C);
+
+  // Ushanka cap
+  g.rect(3, 1, 6, 2);
+  g.fill(0x3B3B3B);
+
+  // Legs
+  g.rect(4, 13, 1.5, 2);
+  g.fill(0x2A2A2A);
+  g.rect(6.5, 13, 1.5, 2);
+  g.fill(0x2A2A2A);
+
+  const tex = renderer.generateTexture(g);
+  g.destroy();
+  return tex;
 }

@@ -4,6 +4,7 @@ import { EventBus } from '../core/EventBus';
 import { GameStateData } from '../core/GameState';
 import { PlacedBuilding } from '../buildings/BuildingTypes';
 import { ZoneType } from '../grid/Cell';
+import { computeQueuePressure, queuePressureBand } from '../simulation/QueuePressureModel';
 
 export class InfoPanel {
   private el: HTMLDivElement;
@@ -72,6 +73,7 @@ export class InfoPanel {
     }
 
     const serviceCoverage = this.grid.getCell(building.gx, building.gy)?.serviceCoverage ?? 0;
+    const queuePressure = this.estimateQueuePressure(building, serviceCoverage);
 
     const rows: [string, string, boolean?][] = [
       ['Size', `${def.width}x${def.height}`],
@@ -79,6 +81,11 @@ export class InfoPanel {
       ['Maintenance', `${def.maintenance}\u20BD/wk`],
       ['Service Cover', `${Math.round(serviceCoverage)}%`],
     ];
+
+    if (queuePressure > 0) {
+      const band = queuePressureBand(queuePressure).toUpperCase();
+      rows.push(['Queue Press.', `${queuePressure}% (${band})`, queuePressure >= 70]);
+    }
 
     if (def.housingCapacity) {
       rows.push(['Housing', `${def.housingCapacity}`]);
@@ -263,5 +270,18 @@ export class InfoPanel {
     }
 
     return blockers;
+  }
+
+  private estimateQueuePressure(building: PlacedBuilding, localCoverage: number): number {
+    const def = this.registry.get(building.defId);
+    if (!def) return 0;
+    return computeQueuePressure({
+      eligible: def.category === 'government' || def.id === 'metro_station',
+      civicDemand: this.state.civicDemand,
+      residentialDemand: this.state.residentialDemand,
+      localCoverage,
+      budget: this.state.budget,
+      powered: !def.powerConsumption || building.powered,
+    });
   }
 }

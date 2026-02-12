@@ -1,11 +1,12 @@
 import { Application, Container } from 'pixi.js';
 import { EventBus } from './EventBus';
-import { GameStateData, createInitialState } from './GameState';
+import { GameStateData, createInitialState, GraphicsQuality } from './GameState';
 import { Grid } from '../grid/Grid';
 import { BuildingPlacer } from '../grid/BuildingPlacer';
 import { BuildingRegistry } from '../buildings/BuildingRegistry';
 import { TextureFactory } from '../graphics/TextureFactory';
 import { TerrainRenderer } from '../rendering/TerrainRenderer';
+import { EnvironmentPropRenderer } from '../rendering/EnvironmentPropRenderer';
 import { BuildingRenderer } from '../rendering/BuildingRenderer';
 import { OverlayRenderer } from '../rendering/OverlayRenderer';
 import { ZoneRenderer } from '../rendering/ZoneRenderer';
@@ -45,6 +46,7 @@ export class Game {
   private worldContainer!: Container;
 
   private terrainRenderer!: TerrainRenderer;
+  private propRenderer!: EnvironmentPropRenderer;
   private zoneRenderer!: ZoneRenderer;
   private buildingRenderer!: BuildingRenderer;
   private overlayRenderer!: OverlayRenderer;
@@ -134,8 +136,9 @@ export class Game {
 
     // Renderers
     this.terrainRenderer = new TerrainRenderer(this.grid, this.textures, this.events);
+    this.propRenderer = new EnvironmentPropRenderer(this.grid, this.registry, this.textures, this.events);
     this.zoneRenderer = new ZoneRenderer(this.grid, this.textures, this.events);
-    this.buildingRenderer = new BuildingRenderer(this.grid, this.registry, this.textures, this.events);
+    this.buildingRenderer = new BuildingRenderer(this.grid, this.registry, this.textures, this.events, this.state);
     this.overlayRenderer = new OverlayRenderer(this.grid, this.registry, this.textures, this.events);
 
     this.smokeParticles = new SmokeParticles(this.app.renderer, this.grid, this.registry, this.events);
@@ -143,10 +146,25 @@ export class Game {
     this.weatherEffects.setScreenSize(this.app.screen.width, this.app.screen.height);
 
     this.worldContainer.addChild(this.terrainRenderer.container);
+    this.worldContainer.addChild(this.propRenderer.container);
     this.worldContainer.addChild(this.zoneRenderer.container);
     this.worldContainer.addChild(this.buildingRenderer.container);
     this.worldContainer.addChild(this.smokeParticles.container);
     this.worldContainer.addChild(this.overlayRenderer.container);
+
+    this.events.on('graphics:quality:changed', ({ quality }) => {
+      const changed = this.state.graphicsQuality !== quality;
+      this.state.graphicsQuality = quality;
+      this.applyGraphicsQuality(quality);
+      if (changed) {
+        this.events.emit('notification', {
+          message: `Graphics quality set to ${quality.toUpperCase()}`,
+          type: 'info',
+        });
+      }
+    });
+
+    this.applyGraphicsQuality(this.state.graphicsQuality);
 
     // Weather effects on top of world (but within world container so it scrolls)
     this.app.stage.addChild(this.weatherEffects.container);
@@ -169,6 +187,8 @@ export class Game {
 
     // UI
     this.setupUI();
+    // Sync UI controls with current graphics quality (including loaded saves).
+    this.events.emit('graphics:quality:changed', { quality: this.state.graphicsQuality });
 
     // Start simulation
     this.simulation.start();
@@ -300,6 +320,12 @@ export class Game {
             this.toolController.setTool('build', this.toolController.lastBuildingId);
           }
           break;
+        case 'g':
+        case 'G':
+          this.events.emit('graphics:quality:changed', {
+            quality: this.nextGraphicsQuality(this.state.graphicsQuality),
+          });
+          break;
         case 'Tab':
           e.preventDefault();
           this.toolbar.cycleCategory(e.shiftKey ? -1 : 1);
@@ -328,6 +354,22 @@ export class Game {
           break;
       }
     });
+  }
+
+  private applyGraphicsQuality(quality: GraphicsQuality): void {
+    this.terrainRenderer.setQuality(quality);
+    this.propRenderer.setQuality(quality);
+    this.zoneRenderer.setQuality(quality);
+    this.buildingRenderer.setQuality(quality);
+    this.overlayRenderer.setQuality(quality);
+    this.smokeParticles.setQuality(quality);
+    this.weatherEffects.setQuality(quality);
+  }
+
+  private nextGraphicsQuality(current: GraphicsQuality): GraphicsQuality {
+    if (current === 'low') return 'medium';
+    if (current === 'medium') return 'high';
+    return 'low';
   }
 
   private lastFrameTime = 0;

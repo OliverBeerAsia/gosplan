@@ -1,4 +1,5 @@
 import { Container, Graphics, Renderer, Sprite, Texture } from 'pixi.js';
+import { GraphicsQuality } from '../core/GameState';
 
 interface SnowParticle {
   sprite: Sprite;
@@ -15,6 +16,7 @@ export class WeatherEffects {
   private screenWidth = 1200;
   private screenHeight = 800;
   private maxParticles = 50;
+  private spawnChance = 0.3;
 
   constructor(renderer: Renderer) {
     this.container = new Container();
@@ -52,7 +54,7 @@ export class WeatherEffects {
     if (!this.active) return;
 
     // Spawn new particles
-    if (this.particles.length < this.maxParticles && Math.random() < 0.3) {
+    if (this.particles.length < this.maxParticles && Math.random() < this.spawnChance) {
       const sprite = new Sprite(this.snowTexture);
       sprite.anchor.set(0.5);
       sprite.x = Math.random() * this.screenWidth;
@@ -88,6 +90,26 @@ export class WeatherEffects {
         p.sprite.destroy();
         this.particles.splice(i, 1);
       }
+    }
+  }
+
+  setQuality(quality: GraphicsQuality): void {
+    if (quality === 'low') {
+      this.maxParticles = 22;
+      this.spawnChance = 0.16;
+    } else if (quality === 'medium') {
+      this.maxParticles = 40;
+      this.spawnChance = 0.24;
+    } else {
+      this.maxParticles = 64;
+      this.spawnChance = 0.34;
+    }
+
+    while (this.particles.length > this.maxParticles) {
+      const p = this.particles.pop();
+      if (!p) break;
+      this.container.removeChild(p.sprite);
+      p.sprite.destroy();
     }
   }
 }

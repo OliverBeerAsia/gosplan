@@ -4,6 +4,7 @@ import { BuildingRegistry } from '../buildings/BuildingRegistry';
 import { gridToWorld } from './IsometricRenderer';
 import { PALETTE } from '../graphics/SovietPalette';
 import { EventBus } from '../core/EventBus';
+import { GraphicsQuality } from '../core/GameState';
 
 interface Particle {
   sprite: Sprite;
@@ -18,6 +19,8 @@ export class SmokeParticles {
   private particles: Particle[] = [];
   private smokeTexture: Texture;
   private spawnTimer = 0;
+  private spawnInterval = 260;
+  private maxParticles = 120;
 
   constructor(
     renderer: Renderer,
@@ -27,6 +30,7 @@ export class SmokeParticles {
   ) {
     this.container = new Container();
     this.smokeTexture = this.createSmokeTexture(renderer);
+    this.events.on('graphics:quality:changed', ({ quality }) => this.setQuality(quality));
   }
 
   private createSmokeTexture(renderer: Renderer): Texture {
@@ -44,7 +48,7 @@ export class SmokeParticles {
     this.spawnTimer += dt;
 
     // Spawn new particles from factories and power plants
-    if (this.spawnTimer > 300) { // every 300ms
+    if (this.spawnTimer > this.spawnInterval && this.particles.length < this.maxParticles) {
       this.spawnTimer = 0;
       this.spawnFromBuildings();
     }
@@ -104,6 +108,26 @@ export class SmokeParticles {
 
       this.particles.push(particle);
       this.container.addChild(sprite);
+    }
+  }
+
+  setQuality(quality: GraphicsQuality): void {
+    if (quality === 'low') {
+      this.spawnInterval = 520;
+      this.maxParticles = 45;
+    } else if (quality === 'medium') {
+      this.spawnInterval = 340;
+      this.maxParticles = 80;
+    } else {
+      this.spawnInterval = 240;
+      this.maxParticles = 130;
+    }
+
+    while (this.particles.length > this.maxParticles) {
+      const removed = this.particles.pop();
+      if (!removed) break;
+      this.container.removeChild(removed.sprite);
+      removed.sprite.destroy();
     }
   }
 }

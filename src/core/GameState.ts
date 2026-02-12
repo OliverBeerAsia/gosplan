@@ -1,5 +1,7 @@
 import { STARTING_BUDGET, STARTING_YEAR, BASE_HAPPINESS } from '../constants';
 
+export type GraphicsQuality = 'low' | 'medium' | 'high';
+
 export interface FiveYearPlanGoal {
   description: string;
   type: 'population' | 'power' | 'industrial' | 'housing' | 'happiness';
@@ -36,6 +38,7 @@ export interface GameStateData {
   residentialDemand: number; // -100..100
   industrialDemand: number; // -100..100
   civicDemand: number; // -100..100
+  graphicsQuality: GraphicsQuality;
 }
 
 export function createInitialState(): GameStateData {
@@ -59,5 +62,6 @@ export function createInitialState(): GameStateData {
     residentialDemand: 0,
     industrialDemand: 0,
     civicDemand: 0,
+    graphicsQuality: 'high',
   };
 }

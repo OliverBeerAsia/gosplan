@@ -27,6 +27,7 @@ export type GameEvents = {
   'service:updated': { average: number };
   'tile:selected': { gx: number; gy: number };
   'overlay:service:toggle': {};
+  'graphics:quality:changed': { quality: import('./GameState').GraphicsQuality };
   'game:loaded': {};
   'game:saved': {};
 };

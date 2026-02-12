@@ -4,8 +4,33 @@ Soviet city builder inspired by SimCity 2000-style planning, layouts, and progre
 
 ## Current Release
 
-- Version: `1.1.0`
+- Version: `1.2.0`
 - Status: playable, desktop-first, production build passing
+
+## What Is In 1.2.0
+
+- Terrain fidelity pass:
+  - deterministic material variants
+  - boundary edge shading
+  - subtle ground decals
+- Building fidelity pass:
+  - procedural facade variants
+  - district-specific facade presets (`worker_housing`, `heavy_industry`, `scientific_city`, `historic_core`)
+  - service/power condition tinting
+  - Soviet-style queue visuals near service buildings under pressure, tuned by shared queue model
+- Zone readability pass:
+  - planning-map hatch patterns by zone type
+- Environment prop pass:
+  - kiosks
+  - bus stops
+  - lamp posts
+  - fences
+  - utility poles
+  - courtyard trees
+- Graphics quality system:
+  - `LOW`, `MED`, `HIGH`
+  - toolbar controls and keyboard cycle (`G`)
+  - quality-aware particles, overlays, terrain detail, building queues, and props
 
 ## What Is In 1.1.0
 
@@ -30,7 +55,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open the URL printed by Vite in your terminal (commonly `http://localhost:5173/` for dev).
 
 Production build:
 
@@ -55,6 +80,7 @@ npm run preview
   - `V`: select/query
   - `X`: demolish
   - `Q`: repeat last building
+  - `G`: cycle graphics quality (`LOW -> MED -> HIGH`)
   - `Tab`: cycle toolbar categories
 - Overlays:
   - `P`: power overlay
@@ -78,7 +104,8 @@ npm run preview
 
 1. Procedural terrain/building textures
 2. Optional authored atlas overrides from `public/assets/atlas/pixel-city.json`
-3. Generated unpowered variants for applicable buildings
+3. Generated building style variants (`_var1`, `_var2`) and district variants (`_district_*`)
+4. Generated unpowered variants for applicable buildings
 
 If the atlas or specific frames are missing, the game still runs via procedural fallback.
 
@@ -99,4 +126,12 @@ If the atlas or specific frames are missing, the game still runs via procedural 
 - `docs/IMPLEMENTATION_NOTES_v1.1.0.md`
 - `docs/MULTI_AGENT_REVIEW_v1.1.0.md`
 - `docs/TEST_REPORT_v1.1.0.md`
+- `docs/IMPLEMENTATION_NOTES_v1.2.0.md`
+- `docs/MULTI_AGENT_REVIEW_v1.2.0.md`
+- `docs/TEST_REPORT_v1.2.0.md`
+- `docs/BUG_CHECK_v1.2.0.md`
+- `docs/RELEASE_NOTES_v1.2.0.md`
 - `docs/RELEASE_RUNBOOK.md`
+- `docs/ART_DIRECTION.md`
+- `docs/GRAPHICS_CONTINUOUS_IMPROVEMENT_PLAN.md`
+- `docs/VISUAL_QA_CHECKLIST.md`

@@ -3,6 +3,7 @@ import { BuildingDef, BuildingCategory } from '../buildings/BuildingTypes';
 import { EventBus } from '../core/EventBus';
 import { ToolType } from '../input/ToolController';
 import { ZoneType } from '../grid/Cell';
+import { GraphicsQuality } from '../core/GameState';
 
 type ToolCallback = (tool: ToolType, buildingId?: string, zone?: ZoneType) => void;
 
@@ -21,6 +22,8 @@ export class Toolbar {
   private buildingPanel: HTMLDivElement;
   private activeCategory: string | null = null;
   private selectedBuildingBtn: HTMLElement | null = null;
+  private graphicsQuality: GraphicsQuality = 'high';
+  private qualityButtons: HTMLButtonElement[] = [];
 
   constructor(
     container: HTMLElement,
@@ -50,6 +53,11 @@ export class Toolbar {
     this.el.appendChild(this.buildingPanel);
 
     container.appendChild(this.el);
+
+    this.events.on('graphics:quality:changed', ({ quality }) => {
+      this.graphicsQuality = quality;
+      this.refreshQualityButtons();
+    });
   }
 
   private selectCategory(catId: string, catBar: HTMLElement): void {
@@ -170,6 +178,36 @@ export class Toolbar {
       this.events.emit('overlay:service:toggle', {});
     });
     this.buildingPanel.appendChild(svcBtn);
+
+    const qualityWrap = document.createElement('div');
+    qualityWrap.className = 'graphics-quality-controls';
+
+    const qualityLabel = document.createElement('div');
+    qualityLabel.className = 'graphics-quality-label';
+    qualityLabel.textContent = 'GRAPHICS';
+    qualityWrap.appendChild(qualityLabel);
+
+    this.qualityButtons = [];
+    const qualities: { label: string; value: GraphicsQuality }[] = [
+      { label: 'LOW', value: 'low' },
+      { label: 'MED', value: 'medium' },
+      { label: 'HIGH', value: 'high' },
+    ];
+
+    for (const q of qualities) {
+      const btn = document.createElement('button');
+      btn.className = 'quality-btn';
+      btn.textContent = q.label;
+      btn.dataset.quality = q.value;
+      btn.addEventListener('click', () => {
+        this.events.emit('graphics:quality:changed', { quality: q.value });
+      });
+      this.qualityButtons.push(btn);
+      qualityWrap.appendChild(btn);
+    }
+
+    this.buildingPanel.appendChild(qualityWrap);
+    this.refreshQualityButtons();
   }
 
   cycleCategory(dir: number): void {
@@ -206,6 +244,13 @@ export class Toolbar {
     }
     this.activeCategory = null;
     this.buildingPanel.classList.remove('visible');
+  }
+
+  private refreshQualityButtons(): void {
+    for (const btn of this.qualityButtons) {
+      const active = btn.dataset.quality === this.graphicsQuality;
+      btn.classList.toggle('active', active);
+    }
   }
 
   private createBuildingButton(def: BuildingDef): HTMLElement {

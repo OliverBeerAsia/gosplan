@@ -5,6 +5,7 @@ import { TILE_HALF_W, TILE_HALF_H } from '../constants';
 import { Grid } from '../grid/Grid';
 import { BuildingRegistry } from '../buildings/BuildingRegistry';
 import { EventBus } from '../core/EventBus';
+import { GraphicsQuality } from '../core/GameState';
 
 export class OverlayRenderer {
   readonly container: Container;
@@ -15,6 +16,7 @@ export class OverlayRenderer {
   private selectionSprite: Sprite | null = null;
   private showPowerOverlay = false;
   private showServiceOverlay = false;
+  private quality: GraphicsQuality = 'high';
 
   constructor(
     private grid: Grid,
@@ -38,6 +40,10 @@ export class OverlayRenderer {
 
     events?.on('overlay:service:toggle', () => {
       this.toggleServiceOverlay();
+    });
+
+    events?.on('graphics:quality:changed', ({ quality }) => {
+      this.setQuality(quality);
     });
   }
 
@@ -163,12 +169,13 @@ export class OverlayRenderer {
       for (let gy = 0; gy < size; gy++) {
         const cell = this.grid.getCell(gx, gy);
         if (!cell || !cell.building) continue;
+        if (this.quality === 'low' && (gx + gy) % 2 !== 0) continue;
         if (cell.building.powered) {
           const pos = gridToWorld(gx, gy, 0);
           const sprite = new Sprite(this.textures.get('power_overlay'));
           sprite.x = pos.x - TILE_HALF_W;
           sprite.y = pos.y - TILE_HALF_H;
-          sprite.alpha = 0.4;
+          sprite.alpha = this.quality === 'high' ? 0.42 : 0.32;
           this.powerOverlayContainer.addChild(sprite);
         }
       }
@@ -193,15 +200,23 @@ export class OverlayRenderer {
       for (let gy = 0; gy < size; gy++) {
         const cell = this.grid.getCell(gx, gy);
         if (!cell || cell.serviceCoverage <= 0) continue;
+        if (this.quality === 'low' && (gx + gy) % 2 !== 0) continue;
         if (cell.terrain === 'water' || cell.terrain === 'hill') continue;
 
         const pos = gridToWorld(gx, gy, 0);
         const sprite = new Sprite(this.textures.get('service_overlay'));
         sprite.x = pos.x - TILE_HALF_W;
         sprite.y = pos.y - TILE_HALF_H;
-        sprite.alpha = Math.min(0.85, 0.12 + cell.serviceCoverage / 120);
+        const alphaScale = this.quality === 'high' ? 1 : this.quality === 'medium' ? 0.85 : 0.7;
+        sprite.alpha = Math.min(0.85, 0.12 + cell.serviceCoverage / 120) * alphaScale;
         this.serviceOverlayContainer.addChild(sprite);
       }
     }
+  }
+
+  setQuality(quality: GraphicsQuality): void {
+    this.quality = quality;
+    if (this.showPowerOverlay) this.updatePowerOverlay();
+    if (this.showServiceOverlay) this.updateServiceOverlay();
   }
 }
