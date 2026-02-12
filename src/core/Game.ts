@@ -1,6 +1,12 @@
 import { Application, Container } from 'pixi.js';
 import { EventBus } from './EventBus';
-import { GameMode, GameStateData, createInitialState, GraphicsQuality } from './GameState';
+import {
+  CampaignScenarioId,
+  GameMode,
+  GameStateData,
+  createInitialState,
+  GraphicsQuality
+} from './GameState';
 import { Grid } from '../grid/Grid';
 import { BuildingPlacer } from '../grid/BuildingPlacer';
 import { BuildingRegistry } from '../buildings/BuildingRegistry';
@@ -28,12 +34,15 @@ import { DistrictPanel } from '../ui/DistrictPanel';
 import { BulletinPanel } from '../ui/BulletinPanel';
 import { EventChoiceModal } from '../ui/EventChoiceModal';
 import { AmbienceOverlay } from '../ui/AmbienceOverlay';
+import { AchievementPanel } from '../ui/AchievementPanel';
+import { CampaignEndingModal } from '../ui/CampaignEndingModal';
 import { hasSave, saveGame, loadGame } from './SaveLoad';
 import { gridToWorld } from '../rendering/IsometricRenderer';
 import { MAP_SIZE } from '../constants';
 import { MapGenerator } from './MapGenerator';
 import { getSeason, getSeasonalTerrainTint, isWinter, Season } from '../rendering/SeasonalEffects';
 import { WeatherEffects } from '../rendering/WeatherEffects';
+import { applyCampaignScenario } from '../simulation/CampaignScenarios';
 
 export class Game {
   private app!: Application;
@@ -71,6 +80,8 @@ export class Game {
   private bulletinPanel!: BulletinPanel;
   private eventModal!: EventChoiceModal;
   private ambienceOverlay!: AmbienceOverlay;
+  private achievementPanel!: AchievementPanel;
+  private campaignEndingModal!: CampaignEndingModal;
 
   private uiContainer!: HTMLDivElement;
 
@@ -106,25 +117,33 @@ export class Game {
     const canLoad = hasSave();
     const titleScreen = new TitleScreen(
       this.uiContainer,
-      () => this.startGame(false, 'campaign'),
+      (scenario) => this.startGame(false, 'campaign', scenario),
       () => this.startGame(false, 'sandbox'),
       canLoad ? () => this.startGame(true, 'campaign') : null
     );
   }
 
-  private startGame(loadSave: boolean, mode: GameMode): void {
+  private startGame(
+    loadSave: boolean,
+    mode: GameMode,
+    scenarioId: CampaignScenarioId = 'reconstruction'
+  ): void {
     // Initialize game state
     this.grid = new Grid(MAP_SIZE);
     this.state = createInitialState();
     this.state.mode = mode;
+    let loadedFromSave = false;
+    if (!loadSave && mode === 'campaign') {
+      applyCampaignScenario(this.state, scenarioId);
+    }
     this.placer = new BuildingPlacer(this.grid, this.registry, this.events);
 
     if (loadSave) {
       const loaded = loadGame(this.grid, this.registry, this.placer);
       if (loaded) {
         Object.assign(this.state, loaded);
+        loadedFromSave = true;
         this.addBulletinEntry('State archives restored from previous session.', 'info');
-        this.events.emit('game:loaded', {});
       }
     }
 
@@ -134,7 +153,7 @@ export class Game {
       this.addBulletinEntry(
         this.state.mode === 'sandbox'
           ? 'Sandbox mode initialized. Central command grants full planning autonomy.'
-          : 'Campaign mode initialized. Awaiting first Five-Year directive.',
+          : `Campaign mode initialized: ${this.state.campaignScenarioLabel}. Evaluation year ${this.state.campaignTargetYear}.`,
         'info'
       );
     }
@@ -204,6 +223,34 @@ export class Game {
 
     // UI
     this.setupUI();
+
+    if (loadedFromSave) {
+      this.events.emit('game:loaded', {});
+    }
+
+    this.events.on('mode:changed', ({ mode: nextMode }) => {
+      if (this.state.mode === nextMode) return;
+      this.state.mode = nextMode;
+
+      if (nextMode === 'sandbox') {
+        this.state.currentPlan = null;
+        this.state.activeDirective = 'Sandbox autonomy: experiment with city layouts and policy outcomes.';
+        this.events.emit('directive:changed', {
+          directive: this.state.activeDirective,
+          pressure: this.state.performancePressure,
+        });
+        this.addBulletinEntry('Campaign cycle closed. City transferred to sandbox autonomy.', 'info');
+      } else {
+        this.addBulletinEntry('Campaign controls restored by central planners.', 'warning');
+      }
+
+      this.planPanel.update();
+      this.events.emit('notification', {
+        message: `Mode switched to ${nextMode.toUpperCase()}.`,
+        type: nextMode === 'sandbox' ? 'info' : 'warning',
+      });
+    });
+
     // Sync UI controls with current graphics quality (including loaded saves).
     this.events.emit('graphics:quality:changed', { quality: this.state.graphicsQuality });
 
@@ -255,6 +302,8 @@ export class Game {
     this.districtPanel = new DistrictPanel(this.uiContainer, this.state, this.events);
     this.bulletinPanel = new BulletinPanel(this.uiContainer, this.state, this.events);
     this.eventModal = new EventChoiceModal(this.uiContainer, this.state, this.events);
+    this.achievementPanel = new AchievementPanel(this.uiContainer, this.state, this.events);
+    this.campaignEndingModal = new CampaignEndingModal(this.uiContainer, this.state, this.events);
 
     // Update resource bar initially
     this.resourceBar.update();

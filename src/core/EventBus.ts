@@ -37,6 +37,9 @@ export type GameEvents = {
   'event:triggered': { event: import('./GameState').ActiveCityEvent };
   'event:choice:selected': { eventId: string; choiceId: string };
   'event:resolved': { eventId: string; choiceId: string; summary: string };
+  'achievement:unlocked': { id: string; title: string; description: string };
+  'campaign:ended': { endingId: string; title: string; summary: string; score: number };
+  'mode:changed': { mode: import('./GameState').GameMode };
   'bulletin:added': { entry: import('./GameState').BulletinEntry };
   'tile:selected': { gx: number; gy: number };
   'overlay:service:toggle': {};

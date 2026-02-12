@@ -459,7 +459,7 @@
   font-size: 22px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 4px;
+  letter-spacing: 2px;
   padding: 14px 48px;
   cursor: pointer;
   margin: 8px;
@@ -470,6 +470,47 @@
   background: var(--gold);
   color: var(--red-dark);
   transform: scale(1.05);
+}
+
+#title-scenarios {
+  width: min(940px, calc(100vw - 80px));
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.title-scenario-btn {
+  text-align: left;
+  padding: 12px 14px;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.title-scenario-label {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+}
+
+.title-scenario-subtitle {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: #f6db8e;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.title-scenario-target {
+  margin-top: auto;
+  padding-top: 10px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--white);
+  opacity: 0.82;
 }
 
 #title-screen .subtitle {
@@ -766,6 +807,163 @@
   padding: 8px 10px;
 }
 
+/* ===== ACHIEVEMENT PANEL ===== */
+#achievement-panel {
+  position: absolute;
+  left: 12px;
+  top: 580px;
+  width: 300px;
+  max-height: 220px;
+  display: flex;
+  flex-direction: column;
+  background: rgba(18, 18, 18, 0.9);
+  border: 2px solid #6d5a2a;
+  z-index: 90;
+}
+
+#achievement-panel-header {
+  background: linear-gradient(90deg, #5f461d, #8a6a2a);
+  color: var(--gold);
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#achievement-summary {
+  padding: 6px 10px;
+  border-bottom: 1px solid #3c3a2e;
+  font-size: 11px;
+  color: #d9c98a;
+  text-transform: uppercase;
+}
+
+#achievement-list {
+  max-height: 176px;
+  overflow-y: auto;
+}
+
+.achievement-item {
+  padding: 7px 10px;
+  border-bottom: 1px solid #2f2f2f;
+}
+
+.achievement-item.locked {
+  opacity: 0.52;
+}
+
+.achievement-item.unlocked {
+  opacity: 1;
+  background: rgba(106, 126, 64, 0.12);
+}
+
+.achievement-item.highlight {
+  border-left: 3px solid var(--gold);
+  padding-left: 7px;
+}
+
+.achievement-title {
+  font-size: 12px;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.achievement-desc {
+  margin-top: 3px;
+  font-size: 11px;
+  line-height: 1.3;
+  color: #ddd3a7;
+}
+
+/* ===== CAMPAIGN ENDING MODAL ===== */
+#campaign-ending-modal {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.58);
+  z-index: 220;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+#campaign-ending-panel {
+  width: min(670px, calc(100vw - 44px));
+  background: rgba(21, 18, 18, 0.97);
+  border: 2px solid var(--gold);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
+}
+
+#campaign-ending-header {
+  background: linear-gradient(90deg, #651d1d, var(--red));
+  color: var(--gold);
+  padding: 10px 14px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+#campaign-ending-title {
+  padding: 12px 14px 4px 14px;
+  font-size: 18px;
+  color: var(--gold);
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+
+#campaign-ending-summary {
+  padding: 0 14px 10px 14px;
+  font-size: 13px;
+  color: var(--white);
+  line-height: 1.5;
+}
+
+#campaign-ending-score,
+#campaign-ending-scenario {
+  padding: 0 14px 10px 14px;
+  font-size: 12px;
+  color: #dac58e;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+#campaign-ending-actions {
+  display: flex;
+  gap: 8px;
+  padding: 0 14px 14px 14px;
+}
+
+.campaign-ending-btn {
+  border: 1px solid #6a5d3f;
+  background: #2b2b2b;
+  color: var(--white);
+  font-family: 'PT Sans Narrow', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 7px 11px;
+  cursor: pointer;
+}
+
+.campaign-ending-btn.primary {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: #4f1f1f;
+}
+
+.campaign-ending-btn:hover {
+  border-color: var(--gold);
+  background: #3a3333;
+}
+
+.campaign-ending-btn.primary:hover {
+  background: #5f2525;
+}
+
 /* ===== EVENT MODAL ===== */
 #event-modal {
   position: absolute;
@@ -841,4 +1039,36 @@
   font-size: 12px;
   color: #ddd;
   line-height: 1.35;
+}
+
+@media (max-width: 980px) {
+  #title-scenarios {
+    grid-template-columns: 1fr;
+    width: min(520px, calc(100vw - 32px));
+  }
+
+  .title-scenario-btn {
+    min-height: 104px;
+  }
+
+  #achievement-panel,
+  #district-panel,
+  #bulletin-panel {
+    width: 260px;
+  }
+
+  #achievement-panel {
+    top: auto;
+    bottom: 102px;
+    left: 12px;
+    max-height: 180px;
+  }
+
+  #district-panel {
+    max-height: 250px;
+  }
+
+  #bulletin-panel {
+    top: 250px;
+  }
 }

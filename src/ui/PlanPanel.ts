@@ -46,6 +46,21 @@ export class PlanPanel {
       return;
     }
 
+    if (this.state.campaignEnded) {
+      while (this.headerEl.firstChild) this.headerEl.removeChild(this.headerEl.firstChild);
+      const title = document.createElement('span');
+      title.textContent = 'CAMPAIGN COMPLETE';
+      this.headerEl.appendChild(title);
+
+      while (this.bodyEl.firstChild) this.bodyEl.removeChild(this.bodyEl.firstChild);
+      const msg = document.createElement('div');
+      msg.className = 'plan-goal-text';
+      msg.textContent = `Score ${this.state.campaignScore}/100 - ${this.state.campaignEndingTitle ?? 'Awaiting report'}.
+Choose "Continue as Sandbox" to keep building without campaign directives.`;
+      this.bodyEl.appendChild(msg);
+      return;
+    }
+
     const plan = this.state.currentPlan;
     if (!plan) {
       this.headerEl.textContent = 'AWAITING DIRECTIVES';

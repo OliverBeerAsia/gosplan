@@ -42,6 +42,7 @@ export class ResourceBar {
   private mobilityEl!: HTMLSpanElement;
   private dateEl!: HTMLSpanElement;
   private trendEls: Record<string, HTMLSpanElement> = {};
+  private speedControlEl!: HTMLDivElement;
 
   // Previous values for trend arrows
   private prevPop = 0;
@@ -62,7 +63,7 @@ export class ResourceBar {
     this.el.appendChild(resourceItem('\u2630', 'Date', 'date', 'W1 1980', 'Current week and year'));
 
     // Speed controls
-    const speedDiv = createEl('div', { id: 'speed-controls' });
+    this.speedControlEl = createEl('div', { id: 'speed-controls' }) as HTMLDivElement;
     const speeds = [
       { speed: '0', label: '\u23F8' },
       { speed: '1', label: '1x' },
@@ -70,17 +71,15 @@ export class ResourceBar {
       { speed: '4', label: '4x' },
     ];
     for (const s of speeds) {
-      const btn = createEl('button', { className: 'speed-btn' + (s.speed === '1' ? ' active' : '') }, s.label);
+      const btn = createEl('button', { className: 'speed-btn' }, s.label);
       btn.dataset.speed = s.speed;
       btn.addEventListener('click', () => {
         const speed = parseInt(s.speed);
         this.events.emit('speed:changed', { speed });
-        speedDiv.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
       });
-      speedDiv.appendChild(btn);
+      this.speedControlEl.appendChild(btn);
     }
-    this.el.appendChild(speedDiv);
+    this.el.appendChild(this.speedControlEl);
 
     container.appendChild(this.el);
 
@@ -107,6 +106,9 @@ export class ResourceBar {
     events.on('demand:updated', () => this.update());
     events.on('district:updated', () => this.update());
     events.on('commute:updated', () => this.update());
+    events.on('speed:changed', ({ speed }) => this.setSpeedActive(speed));
+
+    this.setSpeedActive(this.state.speed);
   }
 
   update(): void {
@@ -161,5 +163,11 @@ export class ResourceBar {
     } else {
       el.textContent = '';
     }
+  }
+
+  private setSpeedActive(speed: number): void {
+    this.speedControlEl.querySelectorAll<HTMLButtonElement>('.speed-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.speed === String(speed));
+    });
   }
 }

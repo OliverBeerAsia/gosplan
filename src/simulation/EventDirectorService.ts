@@ -155,6 +155,10 @@ export class EventDirectorService {
       return;
     }
 
+    if (this.state.mode === 'campaign' && this.state.campaignEnded) {
+      return;
+    }
+
     if (this.state.totalTicks % 8 !== 0) return;
 
     const baseChance = this.state.mode === 'campaign' ? 0.12 : 0.08;

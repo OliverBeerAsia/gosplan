@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.4.0] - 2026-02-12
+
+### Added
+
+- Campaign scenario system (`CampaignScenarios`) with three starts:
+  - `reconstruction`
+  - `industrial_surge`
+  - `stagnation`
+- Campaign outcome evaluation service (`CampaignOutcomeService`):
+  - weighted score calculation
+  - narrative ending classification
+  - campaign completion event + report modal flow
+- Achievement simulation (`AchievementService`) with unlock notifications and bulletin integration.
+- New UI components:
+  - `AchievementPanel`
+  - `CampaignEndingModal`
+- Campaign ending metadata persisted in state for reload-safe report continuity.
+
+### Changed
+
+- Title screen now presents campaign scenario cards with objective context.
+- `SimulationManager` tick flow now includes campaign outcome and achievement processing.
+- Resource bar speed controls now stay synced to non-button speed changes.
+- Plan panel now displays campaign completion summary when campaign closes.
+- Event director now suppresses new events after campaign completion in campaign mode.
+- Load flow now emits `game:loaded` after UI initialization so load-reactive panels/modals update correctly.
+
 ## [1.3.0] - 2026-02-12
 
 ### Added

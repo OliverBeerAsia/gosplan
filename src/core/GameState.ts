@@ -3,6 +3,7 @@ import { STARTING_BUDGET, STARTING_YEAR, BASE_HAPPINESS } from '../constants';
 export type GraphicsQuality = 'low' | 'medium' | 'high';
 export type GameMode = 'campaign' | 'sandbox';
 export type DistrictStyle = 'worker_housing' | 'heavy_industry' | 'scientific_city' | 'historic_core';
+export type CampaignScenarioId = 'none' | 'reconstruction' | 'industrial_surge' | 'stagnation';
 
 export interface DistrictSnapshot {
   id: string;
@@ -75,6 +76,14 @@ export interface FiveYearPlan {
 
 export interface GameStateData {
   mode: GameMode;
+  campaignScenarioId: CampaignScenarioId;
+  campaignScenarioLabel: string;
+  campaignTargetYear: number;
+  campaignEnded: boolean;
+  campaignEndingId: string | null;
+  campaignEndingTitle: string | null;
+  campaignEndingSummary: string | null;
+  campaignScore: number;
   budget: number;
   population: number;
   housingCapacity: number;
@@ -106,11 +115,20 @@ export interface GameStateData {
   districtStats: DistrictSnapshot[];
   activeEvent: ActiveCityEvent | null;
   bulletin: BulletinEntry[];
+  achievementsUnlocked: string[];
 }
 
 export function createInitialState(): GameStateData {
   return {
     mode: 'campaign',
+    campaignScenarioId: 'none',
+    campaignScenarioLabel: 'General Plan',
+    campaignTargetYear: STARTING_YEAR + 8,
+    campaignEnded: false,
+    campaignEndingId: null,
+    campaignEndingTitle: null,
+    campaignEndingSummary: null,
+    campaignScore: 0,
     budget: STARTING_BUDGET,
     population: 50,
     housingCapacity: 0,
@@ -142,5 +160,6 @@ export function createInitialState(): GameStateData {
     districtStats: [],
     activeEvent: null,
     bulletin: [],
+    achievementsUnlocked: [],
   };
 }

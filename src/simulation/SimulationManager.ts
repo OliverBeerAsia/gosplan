@@ -13,6 +13,8 @@ import { CommuteService } from './CommuteService';
 import { DistrictService } from './DistrictService';
 import { CampaignDirectorService } from './CampaignDirectorService';
 import { EventDirectorService } from './EventDirectorService';
+import { AchievementService } from './AchievementService';
+import { CampaignOutcomeService } from './CampaignOutcomeService';
 import {
   BASE_TICK_MS, TICKS_PER_YEAR, BASE_HAPPINESS,
   PARK_BONUS, SERVICE_BONUS, MONUMENT_BONUS,
@@ -30,6 +32,8 @@ export class SimulationManager {
   private district: DistrictService;
   private campaignDirector: CampaignDirectorService;
   private eventDirector: EventDirectorService;
+  private achievement: AchievementService;
+  private campaignOutcome: CampaignOutcomeService;
   private accumulator = 0;
   private lastTime = 0;
   private running = false;
@@ -51,6 +55,8 @@ export class SimulationManager {
     this.district = new DistrictService(grid, registry, state, events);
     this.campaignDirector = new CampaignDirectorService(state, events);
     this.eventDirector = new EventDirectorService(state, events);
+    this.achievement = new AchievementService(state, events);
+    this.campaignOutcome = new CampaignOutcomeService(state, events);
 
     events.on('speed:changed', ({ speed }) => {
       this.state.speed = speed;
@@ -93,7 +99,8 @@ export class SimulationManager {
     }
 
     // Update order keeps deterministic economy and city behavior:
-    // infrastructure -> district metrics -> directives -> core economy/population -> events.
+    // infrastructure -> district metrics -> directives -> core economy/population
+    // -> events -> campaign outcomes -> achievement checks.
     this.power.tick();
     this.serviceCoverage.tick();
     this.commute.tick();
@@ -105,6 +112,8 @@ export class SimulationManager {
     this.zoneGrowth.tick();
     this.fiveYearPlan.tick();
     this.eventDirector.tick();
+    this.campaignOutcome.tick();
+    this.achievement.tick();
 
     this.events.emit('tick', { week: this.state.week, year: this.state.year });
   }

@@ -1,12 +1,15 @@
+import { CampaignScenarioId } from '../core/GameState';
+import { CAMPAIGN_SCENARIOS } from '../simulation/CampaignScenarios';
+
 export class TitleScreen {
   private el: HTMLDivElement;
-  private onNewCampaign: () => void;
+  private onNewCampaign: (scenario: CampaignScenarioId) => void;
   private onNewSandbox: () => void;
   private onLoadGame: (() => void) | null;
 
   constructor(
     container: HTMLElement,
-    onNewCampaign: () => void,
+    onNewCampaign: (scenario: CampaignScenarioId) => void,
     onNewSandbox: () => void,
     onLoadGame: (() => void) | null
   ) {
@@ -31,14 +34,36 @@ export class TitleScreen {
     star.style.cssText = 'font-size:48px;color:#FFD700;margin-bottom:32px;';
     this.el.appendChild(star);
 
-    const campaignBtn = document.createElement('button');
-    campaignBtn.className = 'title-btn';
-    campaignBtn.textContent = 'NEW CAMPAIGN';
-    campaignBtn.addEventListener('click', () => {
-      this.hide();
-      this.onNewCampaign();
-    });
-    this.el.appendChild(campaignBtn);
+    const scenarioWrap = document.createElement('div');
+    scenarioWrap.id = 'title-scenarios';
+
+    for (const scenario of CAMPAIGN_SCENARIOS) {
+      const btn = document.createElement('button');
+      btn.className = 'title-btn title-scenario-btn';
+      btn.title = scenario.subtitle;
+
+      const label = document.createElement('div');
+      label.className = 'title-scenario-label';
+      label.textContent = scenario.label.toUpperCase();
+      btn.appendChild(label);
+
+      const sub = document.createElement('div');
+      sub.className = 'title-scenario-subtitle';
+      sub.textContent = scenario.subtitle;
+      btn.appendChild(sub);
+
+      const target = document.createElement('div');
+      target.className = 'title-scenario-target';
+      target.textContent = `Target Year ${scenario.targetYear}`;
+      btn.appendChild(target);
+
+      btn.addEventListener('click', () => {
+        this.hide();
+        this.onNewCampaign(scenario.id);
+      });
+      scenarioWrap.appendChild(btn);
+    }
+    this.el.appendChild(scenarioWrap);
 
     const sandboxBtn = document.createElement('button');
     sandboxBtn.className = 'title-btn';
@@ -62,7 +87,7 @@ export class TitleScreen {
 
     const subtitle = document.createElement('div');
     subtitle.className = 'subtitle';
-    subtitle.textContent = 'Build the workers\u2019 paradise \u2022 campaign or sandbox';
+    subtitle.textContent = 'Select campaign scenario or start sandbox autonomy';
     this.el.appendChild(subtitle);
 
     container.appendChild(this.el);
