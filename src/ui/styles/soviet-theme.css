@@ -37,7 +37,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 24px;
+  gap: 18px;
   padding: 0 16px;
   border-bottom: 3px solid var(--gold);
   z-index: 100;
@@ -48,7 +48,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -117,10 +117,11 @@
   display: flex;
   gap: 0;
   border-bottom: 2px solid var(--red-dark);
+  overflow-x: auto;
 }
 
 .category-btn {
-  flex: 1;
+  flex: 1 0 90px;
   background: none;
   border: none;
   color: var(--concrete-light);
@@ -368,8 +369,8 @@
   position: absolute;
   bottom: 100px;
   right: 12px;
-  width: 150px;
-  height: 150px;
+  width: 180px;
+  height: 180px;
   background: rgba(26,26,26,0.8);
   border: 2px solid var(--red);
   z-index: 90;
@@ -438,6 +439,119 @@
   text-transform: uppercase;
   letter-spacing: 2px;
 }
+
+/* ===== RESOURCE BAR ENHANCEMENTS ===== */
+.resource-value-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.resource-trend {
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 10px;
+}
+
+/* ===== PLAN GOAL HINTS ===== */
+.plan-goal-hint {
+  font-size: 10px;
+  font-style: italic;
+  color: var(--concrete-light);
+  opacity: 0.6;
+  margin-top: 2px;
+}
+
+/* ===== TUTORIAL HINTS ===== */
+#tutorial-hint {
+  position: absolute;
+  top: 55px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(26,26,26,0.95);
+  border: 2px solid var(--gold);
+  color: var(--gold);
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+}
+
+.tutorial-message {
+  flex: 1;
+}
+
+.tutorial-dismiss {
+  background: none;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 6px;
+  font-family: 'PT Sans Narrow', sans-serif;
+}
+
+.tutorial-dismiss:hover {
+  background: var(--gold);
+  color: var(--black);
+}
+
+/* ===== NOTIFICATION ENHANCEMENTS ===== */
+#notification-history-btn {
+  position: absolute;
+  top: 55px;
+  right: 12px;
+  background: rgba(26,26,26,0.8);
+  border: 1px solid var(--concrete-dark);
+  color: var(--concrete-light);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  z-index: 95;
+}
+
+#notification-history-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+#notification-history {
+  position: absolute;
+  top: 85px;
+  right: 12px;
+  width: 300px;
+  max-height: 400px;
+  overflow-y: auto;
+  background: rgba(26,26,26,0.95);
+  border: 2px solid var(--concrete-dark);
+  z-index: 95;
+}
+
+.notif-history-title {
+  background: var(--red-dark);
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.notif-history-item {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-bottom: 1px solid #333;
+}
+
+.notif-history-item.info { color: var(--gold); }
+.notif-history-item.warning { color: var(--yellow); }
+.notif-history-item.success { color: var(--green); }
+.notif-history-item.error { color: var(--red-light); }
 
 /* ===== HELP OVERLAY ===== */
 .help-text {

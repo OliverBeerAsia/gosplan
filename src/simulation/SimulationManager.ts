@@ -2,10 +2,13 @@ import { GameStateData } from '../core/GameState';
 import { EventBus } from '../core/EventBus';
 import { Grid } from '../grid/Grid';
 import { BuildingRegistry } from '../buildings/BuildingRegistry';
+import { BuildingPlacer } from '../grid/BuildingPlacer';
 import { EconomyService } from './EconomyService';
 import { PopulationService } from './PopulationService';
 import { PowerService } from './PowerService';
 import { FiveYearPlanService } from './FiveYearPlan';
+import { ZoneGrowthService } from './ZoneGrowthService';
+import { ServiceCoverageService } from './ServiceCoverageService';
 import {
   BASE_TICK_MS, TICKS_PER_YEAR, BASE_HAPPINESS,
   PARK_BONUS, SERVICE_BONUS, MONUMENT_BONUS,
@@ -17,6 +20,8 @@ export class SimulationManager {
   private population: PopulationService;
   private power: PowerService;
   private fiveYearPlan: FiveYearPlanService;
+  private zoneGrowth: ZoneGrowthService;
+  private serviceCoverage: ServiceCoverageService;
   private accumulator = 0;
   private lastTime = 0;
   private running = false;
@@ -24,6 +29,7 @@ export class SimulationManager {
   constructor(
     private grid: Grid,
     private registry: BuildingRegistry,
+    private placer: BuildingPlacer,
     private state: GameStateData,
     private events: EventBus
   ) {
@@ -31,6 +37,8 @@ export class SimulationManager {
     this.population = new PopulationService(grid, registry, state, events);
     this.power = new PowerService(grid, registry, state, events);
     this.fiveYearPlan = new FiveYearPlanService(grid, registry, state, events);
+    this.zoneGrowth = new ZoneGrowthService(grid, registry, placer, state, events);
+    this.serviceCoverage = new ServiceCoverageService(grid, registry, events);
 
     events.on('speed:changed', ({ speed }) => {
       this.state.speed = speed;
@@ -72,11 +80,13 @@ export class SimulationManager {
       this.state.year++;
     }
 
-    // Update in order: power -> happiness -> economy -> population -> plan
+    // Update in order: power -> coverage -> happiness -> economy -> population -> zoning growth -> plan
     this.power.tick();
+    this.serviceCoverage.tick();
     this.updateHappiness();
     this.economy.tick();
     this.population.tick();
+    this.zoneGrowth.tick();
     this.fiveYearPlan.tick();
 
     this.events.emit('tick', { week: this.state.week, year: this.state.year });
@@ -102,10 +112,13 @@ export class SimulationManager {
       }
 
       if (b.powered || !def.powerConsumption) {
-        if (def.id === 'park') parkCount++;
-        if (def.id === 'monument') monumentCount++;
-        if (def.id === 'hospital' || def.id === 'school') serviceCount++;
+        if (def.id === 'park' || def.id === 'fountain') parkCount++;
+        if (def.id === 'monument' || def.id === 'plaza') monumentCount++;
+        if (def.id === 'hospital' || def.id === 'school' || def.id === 'cinema') serviceCount++;
         if (def.id === 'party_hq') serviceCount += 2;
+        if (def.id === 'radio_tower') serviceCount++;
+        if (def.id === 'sports_complex') serviceCount += 2;
+        if (def.id === 'metro_station') serviceCount++;
       }
     }
 
@@ -133,6 +146,8 @@ export class SimulationManager {
     happiness += Math.min(parkCount * PARK_BONUS, 25);
     happiness += Math.min(serviceCount * SERVICE_BONUS, 30);
     happiness += Math.min(monumentCount * MONUMENT_BONUS, 15);
+    // City-wide service reach bonus from spatial coverage map.
+    happiness += Math.min(Math.floor(this.serviceCoverage.getAverageCoverage() / 6), 18);
 
     this.state.happiness = Math.max(0, Math.min(100, happiness));
     this.events.emit('happiness:changed', { happiness: this.state.happiness });

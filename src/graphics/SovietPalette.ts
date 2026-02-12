@@ -57,6 +57,17 @@ export const PALETTE = {
   // Star / monument
   STAR_RED: 0xCC0000,
   PEDESTAL: 0x999999,
+
+  // Forest
+  FOREST_GREEN: 0x3E6B2F,
+  FOREST_DARK: 0x2D5020,
+
+  // Hill
+  HILL_GREY: 0x8A8A78,
+  HILL_ROCK: 0x9A9A8A,
+
+  // Dirt
+  DIRT_BROWN: 0x8B7D5A,
 };
 
 // CSS color versions for UI

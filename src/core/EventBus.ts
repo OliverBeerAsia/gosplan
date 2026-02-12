@@ -1,7 +1,16 @@
 export type GameEvents = {
-  'building:placed': { buildingId: string; gx: number; gy: number };
-  'building:demolished': { gx: number; gy: number };
-  'tool:selected': { tool: string; buildingId?: string };
+  'building:placed': {
+    building: import('../buildings/BuildingTypes').PlacedBuilding;
+    defId: string;
+    gx: number;
+    gy: number;
+  };
+  'building:demolished': {
+    building: import('../buildings/BuildingTypes').PlacedBuilding;
+    gx: number;
+    gy: number;
+  };
+  'tool:selected': { tool: string; buildingId?: string; zone?: import('../grid/Cell').ZoneType };
   'tick': { week: number; year: number };
   'speed:changed': { speed: number };
   'budget:changed': { budget: number };
@@ -12,6 +21,12 @@ export type GameEvents = {
   'notification': { message: string; type: 'info' | 'warning' | 'success' | 'error' };
   'camera:moved': { x: number; y: number; zoom: number };
   'building:selected': { building: import('../buildings/BuildingTypes').PlacedBuilding } | null;
+  'terrain:changed': { gx: number; gy: number };
+  'zone:changed': { gx: number; gy: number; zone: import('../grid/Cell').ZoneType };
+  'demand:updated': { residential: number; industrial: number; civic: number };
+  'service:updated': { average: number };
+  'tile:selected': { gx: number; gy: number };
+  'overlay:service:toggle': {};
   'game:loaded': {};
   'game:saved': {};
 };

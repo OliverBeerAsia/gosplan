@@ -8,6 +8,7 @@ import { TextureFactory } from '../graphics/TextureFactory';
 import { TerrainRenderer } from '../rendering/TerrainRenderer';
 import { BuildingRenderer } from '../rendering/BuildingRenderer';
 import { OverlayRenderer } from '../rendering/OverlayRenderer';
+import { ZoneRenderer } from '../rendering/ZoneRenderer';
 import { SmokeParticles } from '../rendering/SmokeParticles';
 import { Camera } from '../rendering/Camera';
 import { CameraController } from '../input/CameraController';
@@ -20,10 +21,14 @@ import { PlanPanel } from '../ui/PlanPanel';
 import { NotificationManager } from '../ui/NotificationManager';
 import { BuildingTooltip } from '../ui/BuildingPanel';
 import { Minimap } from '../ui/Minimap';
+import { TutorialManager } from '../ui/TutorialManager';
 import { TitleScreen } from '../ui/TitleScreen';
 import { hasSave, saveGame, loadGame } from './SaveLoad';
 import { gridToWorld } from '../rendering/IsometricRenderer';
 import { MAP_SIZE } from '../constants';
+import { MapGenerator } from './MapGenerator';
+import { getSeason, getSeasonalTerrainTint, isWinter, Season } from '../rendering/SeasonalEffects';
+import { WeatherEffects } from '../rendering/WeatherEffects';
 
 export class Game {
   private app!: Application;
@@ -40,9 +45,12 @@ export class Game {
   private worldContainer!: Container;
 
   private terrainRenderer!: TerrainRenderer;
+  private zoneRenderer!: ZoneRenderer;
   private buildingRenderer!: BuildingRenderer;
   private overlayRenderer!: OverlayRenderer;
   private smokeParticles!: SmokeParticles;
+  private weatherEffects!: WeatherEffects;
+  private currentSeason: Season = 'winter';
 
   // UI
   private resourceBar!: ResourceBar;
@@ -52,6 +60,7 @@ export class Game {
   private notifications!: NotificationManager;
   private tooltip!: BuildingTooltip;
   private minimap!: Minimap;
+  private tutorial!: TutorialManager;
 
   private uiContainer!: HTMLDivElement;
 
@@ -75,7 +84,7 @@ export class Game {
     container.appendChild(this.app.canvas);
 
     // Generate textures
-    this.textures.generate(this.app.renderer);
+    await this.textures.generate(this.app.renderer);
 
     // UI overlay container
     this.uiContainer = document.createElement('div');
@@ -124,16 +133,23 @@ export class Game {
     this.camera.centerOn(centerPos.x, centerPos.y);
 
     // Renderers
-    this.terrainRenderer = new TerrainRenderer(this.grid, this.textures);
+    this.terrainRenderer = new TerrainRenderer(this.grid, this.textures, this.events);
+    this.zoneRenderer = new ZoneRenderer(this.grid, this.textures, this.events);
     this.buildingRenderer = new BuildingRenderer(this.grid, this.registry, this.textures, this.events);
-    this.overlayRenderer = new OverlayRenderer(this.grid, this.registry, this.textures);
+    this.overlayRenderer = new OverlayRenderer(this.grid, this.registry, this.textures, this.events);
 
     this.smokeParticles = new SmokeParticles(this.app.renderer, this.grid, this.registry, this.events);
+    this.weatherEffects = new WeatherEffects(this.app.renderer);
+    this.weatherEffects.setScreenSize(this.app.screen.width, this.app.screen.height);
 
     this.worldContainer.addChild(this.terrainRenderer.container);
+    this.worldContainer.addChild(this.zoneRenderer.container);
     this.worldContainer.addChild(this.buildingRenderer.container);
     this.worldContainer.addChild(this.smokeParticles.container);
     this.worldContainer.addChild(this.overlayRenderer.container);
+
+    // Weather effects on top of world (but within world container so it scrolls)
+    this.app.stage.addChild(this.weatherEffects.container);
 
     // Input
     this.cameraController = new CameraController(this.camera, this.app.canvas);
@@ -149,7 +165,7 @@ export class Game {
     }
 
     // Simulation
-    this.simulation = new SimulationManager(this.grid, this.registry, this.state, this.events);
+    this.simulation = new SimulationManager(this.grid, this.registry, this.placer, this.state, this.events);
 
     // UI
     this.setupUI();
@@ -173,38 +189,31 @@ export class Game {
     // Handle resize
     window.addEventListener('resize', () => {
       this.camera.setScreenSize(this.app.screen.width, this.app.screen.height);
+      this.weatherEffects.setScreenSize(this.app.screen.width, this.app.screen.height);
     });
   }
 
   private generateTerrain(): void {
-    // Add a small lake
-    const cx = 10 + Math.floor(Math.random() * 12);
-    const cy = 10 + Math.floor(Math.random() * 12);
-    const r = 2 + Math.floor(Math.random() * 2);
-    for (let dx = -r; dx <= r; dx++) {
-      for (let dy = -r; dy <= r; dy++) {
-        if (dx * dx + dy * dy <= r * r) {
-          this.grid.setTerrain(cx + dx, cy + dy, 'water');
-        }
-      }
-    }
+    const generator = new MapGenerator();
+    generator.generate(this.grid);
   }
 
   private setupUI(): void {
     this.resourceBar = new ResourceBar(this.uiContainer, this.state, this.events);
-    this.toolbar = new Toolbar(this.uiContainer, this.registry, this.events, (tool, buildingId) => {
-      this.toolController.setTool(tool, buildingId);
+    this.toolbar = new Toolbar(this.uiContainer, this.registry, this.events, (tool, buildingId, zone) => {
+      this.toolController.setTool(tool, buildingId, zone);
       if (buildingId) {
         this.tooltip.show(buildingId);
       } else {
         this.tooltip.hide();
       }
     });
-    this.infoPanel = new InfoPanel(this.uiContainer, this.grid, this.registry, this.events);
+    this.infoPanel = new InfoPanel(this.uiContainer, this.grid, this.registry, this.state, this.events);
     this.planPanel = new PlanPanel(this.uiContainer, this.state, this.events);
     this.notifications = new NotificationManager(this.uiContainer, this.events);
     this.tooltip = new BuildingTooltip(this.uiContainer, this.registry);
     this.minimap = new Minimap(this.uiContainer, this.grid, this.registry, this.camera, this.events);
+    this.tutorial = new TutorialManager(this.uiContainer, this.state, this.grid, this.registry, this.events);
 
     // Update resource bar initially
     this.resourceBar.update();
@@ -213,9 +222,11 @@ export class Game {
     this.events.on('building:selected', (data) => {
       if (data && data.building) {
         this.infoPanel.show(data.building);
-      } else {
-        this.infoPanel.hide();
       }
+    });
+
+    this.events.on('tile:selected', ({ gx, gy }) => {
+      this.infoPanel.showTile(gx, gy);
     });
 
     this.events.on('tool:selected', ({ tool }) => {
@@ -227,6 +238,29 @@ export class Game {
 
   private setupKeyboard(): void {
     window.addEventListener('keydown', (e) => {
+      // Undo/Redo (check first since they use modifiers)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          this.toolController.undoManager.redo();
+        } else {
+          this.toolController.undoManager.undo();
+        }
+        return;
+      }
+
+      // Save
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        saveGame(this.grid, this.state, this.placer);
+        this.events.emit('notification', { message: 'Game saved!', type: 'success' });
+        this.events.emit('game:saved', {});
+        return;
+      }
+
+      // Don't process shortcuts when ctrl/meta held
+      if (e.ctrlKey || e.metaKey) return;
+
       switch (e.key) {
         case 'Escape':
           this.toolController.setTool('select');
@@ -244,16 +278,53 @@ export class Game {
         case '4':
           this.events.emit('speed:changed', { speed: 4 });
           break;
-        case 's':
-          if (e.ctrlKey || e.metaKey) {
-            e.preventDefault();
-            saveGame(this.grid, this.state, this.placer);
-            this.events.emit('notification', { message: 'Game saved!', type: 'success' });
-            this.events.emit('game:saved', {});
-          }
-          break;
         case 'p':
           this.overlayRenderer.togglePowerOverlay();
+          break;
+        case 'c':
+        case 'C':
+          this.overlayRenderer.toggleServiceOverlay();
+          break;
+        case 'x':
+        case 'X':
+          this.toolController.setTool('demolish');
+          break;
+        case 'v':
+        case 'V':
+          this.toolController.setTool('select');
+          break;
+        case 'q':
+        case 'Q':
+          // Repeat last building
+          if (this.toolController.lastBuildingId) {
+            this.toolController.setTool('build', this.toolController.lastBuildingId);
+          }
+          break;
+        case 'Tab':
+          e.preventDefault();
+          this.toolbar.cycleCategory(e.shiftKey ? -1 : 1);
+          break;
+        case 'h':
+        case 'H':
+        case 'Home':
+          // Center camera on map
+          const centerPos = gridToWorld(MAP_SIZE / 2, MAP_SIZE / 2, 0);
+          this.camera.centerOn(centerPos.x, centerPos.y);
+          break;
+        case '+':
+        case '=':
+          this.camera.zoomAt(
+            this.app.screen.width / 2,
+            this.app.screen.height / 2,
+            -100 // zoom in
+          );
+          break;
+        case '-':
+          this.camera.zoomAt(
+            this.app.screen.width / 2,
+            this.app.screen.height / 2,
+            100 // zoom out
+          );
           break;
       }
     });
@@ -266,12 +337,27 @@ export class Game {
     const dt = this.lastFrameTime ? now - this.lastFrameTime : 16;
     this.lastFrameTime = now;
 
+    // Update camera (WASD/arrow key panning)
+    this.cameraController.update(dt);
+
     // Update simulation
     this.simulation.update(now);
 
     // Update smoke particles
     if (this.state.speed > 0) {
       this.smokeParticles.update(dt);
+    }
+
+    // Update weather effects
+    this.weatherEffects.update(dt);
+
+    // Update seasonal effects (only changes ~4 times per year)
+    const season = getSeason(this.state.week);
+    if (season !== this.currentSeason) {
+      this.currentSeason = season;
+      const tint = getSeasonalTerrainTint(season);
+      this.terrainRenderer.updateSeason(tint);
+      this.weatherEffects.setActive(isWinter(season));
     }
 
     // Update camera transform

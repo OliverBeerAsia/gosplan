@@ -27,6 +27,11 @@ export interface BuildingDef {
   // Flags
   conductsPower?: boolean;
   isRoad?: boolean;
+  roadAccessRequired?: boolean;
+
+  // Growth / zoning metadata
+  zoneCompat?: ('housing' | 'industry' | 'civic' | 'green')[];
+  level?: number;
 }
 
 export interface PlacedBuilding {

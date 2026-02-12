@@ -134,6 +134,103 @@ const buildings: BuildingDef[] = [
     happinessBonus: 3,
     serviceRadius: 4,
   },
+
+  // === NEW BUILDINGS ===
+
+  // Residential
+  {
+    id: 'panelak',
+    name: 'Panelak',
+    category: 'residential',
+    width: 2, height: 2,
+    cost: 3000, maintenance: 55,
+    description: '9-story prefabricated panel tower. Mass housing for the masses!',
+    housingCapacity: 400,
+    powerConsumption: 4,
+  },
+
+  // Industrial
+  {
+    id: 'warehouse',
+    name: 'Warehouse',
+    category: 'industrial',
+    width: 2, height: 2,
+    cost: 2500, maintenance: 30,
+    description: 'Storage facility for industrial goods. Keeps the supply chain moving!',
+    industrialOutput: 100,
+    powerConsumption: 2,
+  },
+
+  // Government / Services
+  {
+    id: 'cinema',
+    name: 'Cinema',
+    category: 'government',
+    width: 2, height: 1,
+    cost: 2500, maintenance: 50,
+    description: 'Socialist realist films for cultural enrichment of the people!',
+    powerConsumption: 3,
+    happinessBonus: 7,
+    serviceRadius: 5,
+  },
+  {
+    id: 'radio_tower',
+    name: 'Radio Tower',
+    category: 'government',
+    width: 1, height: 1,
+    cost: 3000, maintenance: 40,
+    description: 'Broadcasting the voice of the Party across the city!',
+    powerConsumption: 5,
+    happinessBonus: 4,
+    serviceRadius: 10,
+  },
+
+  // Infrastructure
+  {
+    id: 'metro_station',
+    name: 'Metro Station',
+    category: 'infrastructure',
+    width: 2, height: 1,
+    cost: 8000, maintenance: 100,
+    description: 'Underground railway station. Palace of the people beneath the streets!',
+    powerConsumption: 8,
+    happinessBonus: 6,
+    serviceRadius: 8,
+    conductsPower: true,
+  },
+
+  // Decoration
+  {
+    id: 'plaza',
+    name: 'Plaza',
+    category: 'decoration',
+    width: 2, height: 2,
+    cost: 2000, maintenance: 20,
+    description: 'Public square for gatherings and parades. Glory to the workers!',
+    happinessBonus: 6,
+    serviceRadius: 5,
+  },
+  {
+    id: 'fountain',
+    name: 'Fountain',
+    category: 'decoration',
+    width: 1, height: 1,
+    cost: 800, maintenance: 15,
+    description: 'Ornamental fountain symbolizing the flowing wealth of socialism.',
+    happinessBonus: 4,
+    serviceRadius: 3,
+  },
+  {
+    id: 'sports_complex',
+    name: 'Sports Complex',
+    category: 'decoration',
+    width: 3, height: 2,
+    cost: 6000, maintenance: 80,
+    description: 'Athletic training facility. Strong bodies build a strong nation!',
+    powerConsumption: 5,
+    happinessBonus: 10,
+    serviceRadius: 7,
+  },
 ];
 
 export class BuildingRegistry {

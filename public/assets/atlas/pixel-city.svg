@@ -1,0 +1,188 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="320" viewBox="0 0 1024 320" shape-rendering="crispEdges">
+  <defs>
+    <style>
+      .line { stroke:#1f1f1f; stroke-width:1; fill:none; }
+    </style>
+  </defs>
+
+  <!-- Terrain row (64x32 each) -->
+  <g transform="translate(0,0)">
+    <!-- ground -->
+    <polygon points="32,0 64,16 32,32 0,16" fill="#607d4c" stroke="#3d4b33" />
+    <line x1="32" y1="0" x2="64" y2="16" class="line" opacity="0.35"/>
+    <line x1="0" y1="16" x2="32" y2="32" class="line" opacity="0.45"/>
+  </g>
+
+  <g transform="translate(64,0)">
+    <!-- water -->
+    <polygon points="32,0 64,16 32,32 0,16" fill="#2f6f95" stroke="#224d68" />
+    <line x1="18" y1="13" x2="46" y2="13" stroke="#84bdd9" stroke-width="1" opacity="0.55"/>
+    <line x1="24" y1="19" x2="40" y2="19" stroke="#84bdd9" stroke-width="1" opacity="0.35"/>
+  </g>
+
+  <g transform="translate(128,0)">
+    <!-- forest -->
+    <polygon points="32,0 64,16 32,32 0,16" fill="#3e6f3d" stroke="#284826" />
+    <polygon points="20,8 14,18 26,18" fill="#2f4f2d"/>
+    <polygon points="34,10 28,20 40,20" fill="#2f4f2d"/>
+    <polygon points="44,7 38,17 50,17" fill="#2f4f2d"/>
+  </g>
+
+  <g transform="translate(192,0)">
+    <!-- hill -->
+    <polygon points="32,0 64,16 32,32 0,16" fill="#7a7468" stroke="#535048" />
+    <polygon points="18,14 28,8 39,14 28,19" fill="#8e8677"/>
+    <polygon points="35,17 46,11 54,16 43,22" fill="#908777"/>
+  </g>
+
+  <g transform="translate(256,0)">
+    <!-- dirt -->
+    <polygon points="32,0 64,16 32,32 0,16" fill="#86684b" stroke="#604832" />
+    <rect x="22" y="12" width="2" height="2" fill="#755a40"/>
+    <rect x="36" y="17" width="2" height="2" fill="#755a40"/>
+    <rect x="28" y="22" width="2" height="2" fill="#755a40"/>
+  </g>
+
+  <g transform="translate(320,0)">
+    <!-- ground_highlight -->
+    <polygon points="32,0 64,16 32,32 0,16" fill="#1eff55" opacity="0.26" stroke="#1eff55" opacity="0.7" />
+  </g>
+
+  <g transform="translate(384,0)">
+    <!-- ground_invalid -->
+    <polygon points="32,0 64,16 32,32 0,16" fill="#ff4747" opacity="0.26" stroke="#ff4747" opacity="0.7" />
+  </g>
+
+  <g transform="translate(448,0)">
+    <!-- power_overlay -->
+    <polygon points="32,0 64,16 32,32 0,16" fill="#ffe04a" opacity="0.23" stroke="#ffe04a" opacity="0.65" />
+  </g>
+
+  <g transform="translate(512,0)">
+    <!-- zone_housing -->
+    <polygon points="32,0 64,16 32,32 0,16" fill="#59ba67" opacity="0.22" stroke="#59ba67" opacity="0.6" />
+  </g>
+
+  <g transform="translate(576,0)">
+    <!-- zone_industry -->
+    <polygon points="32,0 64,16 32,32 0,16" fill="#f7a43f" opacity="0.22" stroke="#f7a43f" opacity="0.6" />
+  </g>
+
+  <g transform="translate(640,0)">
+    <!-- zone_civic -->
+    <polygon points="32,0 64,16 32,32 0,16" fill="#3db8e6" opacity="0.22" stroke="#3db8e6" opacity="0.6" />
+  </g>
+
+  <g transform="translate(704,0)">
+    <!-- zone_green -->
+    <polygon points="32,0 64,16 32,32 0,16" fill="#8fd146" opacity="0.22" stroke="#8fd146" opacity="0.6" />
+  </g>
+
+  <!-- Infrastructure row -->
+  <g transform="translate(0,40)">
+    <!-- road -->
+    <polygon points="32,0 64,16 32,32 0,16" fill="#3e3e3e" stroke="#2a2a2a" />
+    <line x1="12" y1="16" x2="52" y2="16" stroke="#d9c88f" stroke-width="1" opacity="0.5"/>
+    <line x1="32" y1="4" x2="32" y2="28" stroke="#d9c88f" stroke-width="1" opacity="0.35"/>
+  </g>
+
+  <g transform="translate(64,40)">
+    <!-- power line -->
+    <polygon points="32,0 64,16 32,32 0,16" fill="#5e6a59" opacity="0.45"/>
+    <line x1="32" y1="18" x2="32" y2="2" stroke="#8f9890" stroke-width="2"/>
+    <line x1="22" y1="7" x2="42" y2="7" stroke="#8f9890" stroke-width="2"/>
+    <line x1="22" y1="7" x2="8" y2="11" stroke="#6a726b" stroke-width="1"/>
+    <line x1="42" y1="7" x2="56" y2="11" stroke="#6a726b" stroke-width="1"/>
+  </g>
+
+  <g transform="translate(128,40)">
+    <!-- service overlay -->
+    <polygon points="32,0 64,16 32,32 0,16" fill="#47c7f4" opacity="0.25" stroke="#47c7f4" opacity="0.6" />
+  </g>
+
+  <!-- Building row (128x160 each) -->
+  <g transform="translate(0,96)">
+    <!-- kommunalka -->
+    <polygon points="64,126 96,142 64,158 32,142" fill="#7a6a5b"/>
+    <polygon points="64,46 64,126 32,142 32,62" fill="#8d7562"/>
+    <polygon points="64,46 96,62 96,142 64,126" fill="#6f5e50"/>
+    <rect x="45" y="74" width="5" height="7" fill="#b4d0df"/>
+    <rect x="55" y="79" width="5" height="7" fill="#b4d0df"/>
+    <rect x="67" y="79" width="5" height="7" fill="#7f99a5"/>
+    <rect x="74" y="84" width="5" height="7" fill="#b4d0df"/>
+  </g>
+
+  <g transform="translate(128,96)">
+    <!-- khrushchyovka -->
+    <polygon points="64,126 102,145 64,164 26,145" fill="#898989"/>
+    <polygon points="64,20 64,126 26,145 26,39" fill="#a0a0a0"/>
+    <polygon points="64,20 102,39 102,145 64,126" fill="#777777"/>
+    <rect x="34" y="48" width="6" height="8" fill="#88a5b2"/>
+    <rect x="44" y="53" width="6" height="8" fill="#b2c8d1"/>
+    <rect x="54" y="58" width="6" height="8" fill="#88a5b2"/>
+    <rect x="34" y="67" width="6" height="8" fill="#b2c8d1"/>
+    <rect x="44" y="72" width="6" height="8" fill="#88a5b2"/>
+    <rect x="54" y="77" width="6" height="8" fill="#b2c8d1"/>
+    <rect x="68" y="60" width="6" height="8" fill="#88a5b2"/>
+    <rect x="76" y="55" width="6" height="8" fill="#b2c8d1"/>
+    <rect x="84" y="50" width="6" height="8" fill="#88a5b2"/>
+  </g>
+
+  <g transform="translate(256,96)">
+    <!-- panelak -->
+    <polygon points="64,126 104,146 64,166 24,146" fill="#8d8d8d"/>
+    <polygon points="64,8 64,126 24,146 24,28" fill="#a6a6a6"/>
+    <polygon points="64,8 104,28 104,146 64,126" fill="#757575"/>
+    <rect x="32" y="34" width="5" height="6" fill="#b9d4df"/>
+    <rect x="40" y="38" width="5" height="6" fill="#90a8b2"/>
+    <rect x="48" y="42" width="5" height="6" fill="#b9d4df"/>
+    <rect x="56" y="46" width="5" height="6" fill="#90a8b2"/>
+    <rect x="32" y="52" width="5" height="6" fill="#90a8b2"/>
+    <rect x="40" y="56" width="5" height="6" fill="#b9d4df"/>
+    <rect x="48" y="60" width="5" height="6" fill="#90a8b2"/>
+    <rect x="56" y="64" width="5" height="6" fill="#b9d4df"/>
+    <rect x="68" y="64" width="5" height="6" fill="#90a8b2"/>
+    <rect x="76" y="60" width="5" height="6" fill="#b9d4df"/>
+    <rect x="84" y="56" width="5" height="6" fill="#90a8b2"/>
+  </g>
+
+  <g transform="translate(384,96)">
+    <!-- factory -->
+    <polygon points="64,130 108,152 64,174 20,152" fill="#505a64"/>
+    <polygon points="64,66 64,130 20,152 20,88" fill="#61707b"/>
+    <polygon points="64,66 108,88 108,152 64,130" fill="#404a52"/>
+    <rect x="36" y="42" width="8" height="38" fill="#616161"/>
+    <rect x="74" y="48" width="7" height="33" fill="#575757"/>
+    <rect x="35" y="81" width="6" height="10" fill="#7ea4b9"/>
+    <rect x="47" y="87" width="6" height="10" fill="#7ea4b9"/>
+    <rect x="59" y="93" width="6" height="10" fill="#7ea4b9"/>
+  </g>
+
+  <g transform="translate(512,96)">
+    <!-- coal power plant -->
+    <polygon points="64,132 112,156 64,180 16,156" fill="#777777"/>
+    <polygon points="64,76 64,132 16,156 16,100" fill="#8f8f8f"/>
+    <polygon points="64,76 112,100 112,156 64,132" fill="#666666"/>
+    <rect x="38" y="28" width="9" height="56" fill="#5b5b5b"/>
+    <rect x="71" y="18" width="10" height="66" fill="#4f4f4f"/>
+    <rect x="39" y="43" width="9" height="5" fill="#c13a3a"/>
+    <rect x="71" y="38" width="10" height="6" fill="#c13a3a"/>
+  </g>
+
+  <g transform="translate(640,96)">
+    <!-- park -->
+    <polygon points="64,130 96,146 64,162 32,146" fill="#568f45"/>
+    <rect x="47" y="118" width="3" height="18" fill="#5f4330"/>
+    <polygon points="49,104 40,121 58,121" fill="#2f6c30"/>
+    <rect x="71" y="123" width="3" height="16" fill="#5f4330"/>
+    <polygon points="73,109 64,126 82,126" fill="#2f6c30"/>
+  </g>
+
+  <g transform="translate(768,96)">
+    <!-- monument -->
+    <polygon points="64,130 96,146 64,162 32,146" fill="#727272"/>
+    <rect x="58" y="88" width="12" height="42" fill="#8a8a8a"/>
+    <polygon points="64,78 56,88 72,88" fill="#989898"/>
+    <polygon points="64,72 60,78 68,78" fill="#c43b3b"/>
+  </g>
+</svg>

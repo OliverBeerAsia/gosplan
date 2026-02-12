@@ -93,20 +93,16 @@ export class PowerService {
 
         const def = this.registry.get(cell.building.defId);
 
-        // Power conducts through: power lines, roads, and any building
         if (def) {
           const master = this.grid.getMasterBuilding(nx, ny);
           if (master) {
             master.powered = true;
           }
-          // Only continue BFS through conductors and adjacent buildings
-          if (def.conductsPower || def.powerConsumption || def.powerGeneration) {
+          // Only conductors (roads, power lines, power plants) propagate BFS further
+          // Non-conductor buildings receive power but don't spread it
+          if (def.conductsPower || def.powerGeneration) {
             queue.push([nx, ny]);
           }
-          // Non-conductor buildings receive power but don't spread it further
-          // unless they also have adjacent powered buildings
-          // Actually: let any building conduct to immediate neighbors
-          queue.push([nx, ny]);
         }
       }
     }

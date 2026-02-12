@@ -3,21 +3,56 @@ import { GameStateData, createInitialState } from './GameState';
 import { BuildingPlacer } from '../grid/BuildingPlacer';
 import { BuildingRegistry } from '../buildings/BuildingRegistry';
 import { PlacedBuilding } from '../buildings/BuildingTypes';
+import { TerrainType, ZoneType } from '../grid/Cell';
 
 const SAVE_KEY = 'gosplan_save';
 
-interface SaveData {
+interface SaveBuilding {
+  defId: string;
+  gx: number;
+  gy: number;
+  id: number;
+}
+
+interface SaveTerrainCell {
+  gx: number;
+  gy: number;
+  terrain: TerrainType;
+  elevation: number;
+}
+
+interface SaveZoneCell {
+  gx: number;
+  gy: number;
+  zone: ZoneType;
+}
+
+interface SaveDataV1 {
   version: 1;
   state: GameStateData;
-  buildings: {
-    defId: string;
-    gx: number;
-    gy: number;
-    id: number;
-  }[];
+  buildings: SaveBuilding[];
   nextBuildingId: number;
   waterCells: [number, number][];
 }
+
+interface SaveDataV2 {
+  version: 2;
+  state: GameStateData;
+  buildings: SaveBuilding[];
+  nextBuildingId: number;
+  terrainCells: SaveTerrainCell[];
+}
+
+interface SaveDataV3 {
+  version: 3;
+  state: GameStateData;
+  buildings: SaveBuilding[];
+  nextBuildingId: number;
+  terrainCells: SaveTerrainCell[];
+  zoneCells: SaveZoneCell[];
+}
+
+type SaveData = SaveDataV1 | SaveDataV2 | SaveDataV3;
 
 export function hasSave(): boolean {
   return localStorage.getItem(SAVE_KEY) !== null;
@@ -31,22 +66,31 @@ export function saveGame(grid: Grid, state: GameStateData, placer: BuildingPlace
     id: b.id,
   }));
 
-  const waterCells: [number, number][] = [];
+  const terrainCells: SaveTerrainCell[] = [];
+  const zoneCells: SaveZoneCell[] = [];
+
   for (let gx = 0; gx < grid.size; gx++) {
     for (let gy = 0; gy < grid.size; gy++) {
       const cell = grid.getCell(gx, gy);
-      if (cell?.terrain === 'water') {
-        waterCells.push([gx, gy]);
+      if (!cell) continue;
+
+      if (cell.terrain !== 'ground' || cell.elevation !== 0) {
+        terrainCells.push({ gx, gy, terrain: cell.terrain, elevation: cell.elevation });
+      }
+
+      if (cell.zone !== 'none') {
+        zoneCells.push({ gx, gy, zone: cell.zone });
       }
     }
   }
 
-  const data: SaveData = {
-    version: 1,
+  const data: SaveDataV3 = {
+    version: 3,
     state: { ...state },
     buildings,
     nextBuildingId: placer.getNextId(),
-    waterCells,
+    terrainCells,
+    zoneCells,
   };
 
   localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -62,18 +106,33 @@ export function loadGame(
 
   try {
     const data: SaveData = JSON.parse(raw);
-    if (data.version !== 1) return null;
 
-    // Restore water
-    for (const [gx, gy] of data.waterCells) {
-      grid.setTerrain(gx, gy, 'water');
+    if (data.version === 1) {
+      for (const [gx, gy] of data.waterCells) {
+        grid.setTerrain(gx, gy, 'water');
+      }
+    } else if (data.version === 2 || data.version === 3) {
+      for (const t of data.terrainCells) {
+        grid.setTerrain(t.gx, t.gy, t.terrain);
+        const cell = grid.getCell(t.gx, t.gy);
+        if (cell) cell.elevation = t.elevation;
+      }
+
+      if (data.version === 3) {
+        for (const z of data.zoneCells) {
+          grid.setZone(z.gx, z.gy, z.zone);
+        }
+      }
+    } else {
+      return null;
     }
 
-    // Restore buildings
     placer.setNextId(data.nextBuildingId);
     for (const b of data.buildings) {
       const def = registry.get(b.defId);
       if (!def) continue;
+      if (!grid.canPlace(b.gx, b.gy, def.width, def.height)) continue;
+
       const building: PlacedBuilding = {
         defId: b.defId,
         gx: b.gx,
@@ -84,7 +143,11 @@ export function loadGame(
       grid.placeBuilding(building, def.width, def.height);
     }
 
-    return data.state;
+    // Merge with fresh defaults to support forward-compatible state extension.
+    return {
+      ...createInitialState(),
+      ...data.state,
+    };
   } catch {
     return null;
   }

@@ -25,7 +25,7 @@ export const STARTING_BUDGET = 50000;
 export const STARTING_YEAR = 1980;
 
 // Population
-export const BASE_GROWTH_RATE = 0.015; // 1.5% per tick when conditions met
+export const BASE_GROWTH_RATE = 0.03; // 3% per tick when conditions met
 export const HAPPINESS_THRESHOLD = 30; // minimum happiness for growth
 
 // Power

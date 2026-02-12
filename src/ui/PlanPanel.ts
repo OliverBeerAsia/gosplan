@@ -1,6 +1,14 @@
 import { GameStateData } from '../core/GameState';
 import { EventBus } from '../core/EventBus';
 
+const GOAL_HINTS: Record<string, string> = {
+  population: 'Paint Housing Zones, ensure power and happiness',
+  power: 'Build Coal Power Plants (50MW each)',
+  industrial: 'Paint Industry Zones near roads and power',
+  housing: 'Build Kommunalka, Khrushchyovka, Stalinka, Panelak',
+  happiness: 'Paint Green/Civic Zones and build services',
+};
+
 export class PlanPanel {
   private el: HTMLDivElement;
   private headerEl: HTMLDivElement;
@@ -74,6 +82,16 @@ export class PlanPanel {
       barEl.appendChild(labelEl);
 
       goalEl.appendChild(barEl);
+
+      // Hint below goal bar
+      const hint = GOAL_HINTS[goal.type];
+      if (hint) {
+        const hintEl = document.createElement('div');
+        hintEl.className = 'plan-goal-hint';
+        hintEl.textContent = hint;
+        goalEl.appendChild(hintEl);
+      }
+
       this.bodyEl.appendChild(goalEl);
     }
   }

@@ -33,7 +33,7 @@ export class PopulationService {
       // Grow
       const availableSpace = totalCapacity - this.state.population;
       const growth = Math.max(1, Math.floor(
-        Math.min(availableSpace, this.state.population * BASE_GROWTH_RATE + 5)
+        Math.min(availableSpace, this.state.population * BASE_GROWTH_RATE + 5 + Math.floor(totalCapacity * 0.02))
       ));
       this.state.population += growth;
     } else if (this.state.population > totalCapacity) {

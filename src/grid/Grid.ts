@@ -1,10 +1,19 @@
 import { MAP_SIZE } from '../constants';
-import { Cell, TerrainType } from './Cell';
+import { Cell, TerrainType, ZoneType } from './Cell';
 import { PlacedBuilding } from '../buildings/BuildingTypes';
+
+interface BuildingFootprint {
+  gx: number;
+  gy: number;
+  width: number;
+  height: number;
+}
 
 export class Grid {
   readonly size: number;
   private cells: Cell[][];
+  private buildingsById = new Map<number, PlacedBuilding>();
+  private footprintsById = new Map<number, BuildingFootprint>();
 
   constructor(size: number = MAP_SIZE) {
     this.size = size;
@@ -16,6 +25,8 @@ export class Grid {
           gx,
           gy,
           terrain: 'ground',
+          zone: 'none',
+          serviceCoverage: 0,
           elevation: 0,
           building: null,
           masterGx: -1,
@@ -40,15 +51,43 @@ export class Grid {
     if (cell) cell.terrain = terrain;
   }
 
+  setZone(gx: number, gy: number, zone: ZoneType): boolean {
+    const cell = this.getCell(gx, gy);
+    if (!cell) return false;
+
+    // Zones only apply to empty cells; clearing a zone is always allowed.
+    if (cell.building && zone !== 'none') return false;
+    if (cell.zone === zone) return false;
+
+    cell.zone = zone;
+    return true;
+  }
+
+  getZone(gx: number, gy: number): ZoneType {
+    const cell = this.getCell(gx, gy);
+    return cell?.zone ?? 'none';
+  }
+
   canPlace(gx: number, gy: number, width: number, height: number): boolean {
     for (let dx = 0; dx < width; dx++) {
       for (let dy = 0; dy < height; dy++) {
         const cell = this.getCell(gx + dx, gy + dy);
         if (!cell) return false;
-        if (cell.terrain === 'water') return false;
+        if (!this.isBuildable(cell.terrain)) return false;
         if (cell.building) return false;
       }
     }
+    return true;
+  }
+
+  isBuildable(terrain: TerrainType): boolean {
+    return terrain === 'ground' || terrain === 'dirt';
+  }
+
+  clearForest(gx: number, gy: number): boolean {
+    const cell = this.getCell(gx, gy);
+    if (!cell || cell.terrain !== 'forest') return false;
+    cell.terrain = 'dirt';
     return true;
   }
 
@@ -58,11 +97,15 @@ export class Grid {
       for (let dy = 0; dy < height; dy++) {
         const cell = this.cells[gx + dx][gy + dy];
         cell.building = building;
+        cell.zone = 'none';
         cell.masterGx = gx;
         cell.masterGy = gy;
         cell.isMaster = (dx === 0 && dy === 0);
       }
     }
+
+    this.buildingsById.set(building.id, building);
+    this.footprintsById.set(building.id, { gx, gy, width, height });
   }
 
   removeBuilding(gx: number, gy: number): PlacedBuilding | null {
@@ -74,36 +117,29 @@ export class Grid {
     if (!masterCell || !masterCell.building) return null;
 
     const building = masterCell.building;
-    const mgx = cell.masterGx;
-    const mgy = cell.masterGy;
+    const footprint = this.footprintsById.get(building.id);
+    if (!footprint) return null;
 
-    // Clear all cells of this building
-    for (let x = 0; x < this.size; x++) {
-      for (let y = 0; y < this.size; y++) {
-        const c = this.cells[x][y];
-        if (c.masterGx === mgx && c.masterGy === mgy && c.building) {
-          c.building = null;
-          c.masterGx = -1;
-          c.masterGy = -1;
-          c.isMaster = false;
-        }
+    // Clear only this footprint (O(width*height) instead of O(map^2)).
+    for (let dx = 0; dx < footprint.width; dx++) {
+      for (let dy = 0; dy < footprint.height; dy++) {
+        const target = this.getCell(footprint.gx + dx, footprint.gy + dy);
+        if (!target) continue;
+        target.building = null;
+        target.masterGx = -1;
+        target.masterGy = -1;
+        target.isMaster = false;
       }
     }
+
+    this.buildingsById.delete(building.id);
+    this.footprintsById.delete(building.id);
 
     return building;
   }
 
   getAllBuildings(): PlacedBuilding[] {
-    const buildings: PlacedBuilding[] = [];
-    for (let gx = 0; gx < this.size; gx++) {
-      for (let gy = 0; gy < this.size; gy++) {
-        const cell = this.cells[gx][gy];
-        if (cell.isMaster && cell.building) {
-          buildings.push(cell.building);
-        }
-      }
-    }
-    return buildings;
+    return [...this.buildingsById.values()];
   }
 
   getMasterBuilding(gx: number, gy: number): PlacedBuilding | null {
@@ -111,5 +147,13 @@ export class Grid {
     if (!cell || !cell.building) return null;
     const master = this.getCell(cell.masterGx, cell.masterGy);
     return master?.building ?? null;
+  }
+
+  getBuildingById(id: number): PlacedBuilding | null {
+    return this.buildingsById.get(id) ?? null;
+  }
+
+  getBuildingFootprint(id: number): BuildingFootprint | null {
+    return this.footprintsById.get(id) ?? null;
   }
 }

@@ -100,10 +100,25 @@ export function generateBuildingTextures(renderer: Renderer): Map<string, Textur
   textures.set('party_hq', drawPartyHQ(renderer));
   textures.set('hospital', drawHospital(renderer));
   textures.set('school', drawSchool(renderer));
-  textures.set('road', drawRoad(renderer));
-  textures.set('power_line', drawPowerLine(renderer));
+  for (let mask = 0; mask < 16; mask++) {
+    textures.set(`road_${mask}`, drawRoad(renderer, mask));
+    textures.set(`power_line_${mask}`, drawPowerLine(renderer, mask));
+  }
+  // Backward-compatible defaults used by hover ghosts and fallbacks.
+  textures.set('road', textures.get('road_5')!);
+  textures.set('power_line', textures.get('power_line_5')!);
   textures.set('park', drawPark(renderer));
   textures.set('monument', drawMonument(renderer));
+
+  // New buildings
+  textures.set('panelak', drawPanelak(renderer));
+  textures.set('warehouse', drawWarehouse(renderer));
+  textures.set('cinema', drawCinema(renderer));
+  textures.set('radio_tower', drawRadioTower(renderer));
+  textures.set('metro_station', drawMetroStation(renderer));
+  textures.set('plaza', drawPlaza(renderer));
+  textures.set('fountain', drawFountain(renderer));
+  textures.set('sports_complex', drawSportsComplex(renderer));
 
   return textures;
 }
@@ -454,8 +469,8 @@ function drawSchool(renderer: Renderer): Texture {
 
 // ===== INFRASTRUCTURE =====
 
-function drawRoad(renderer: Renderer): Texture {
-  // 1x1 tile
+function drawRoad(renderer: Renderer, mask: number): Texture {
+  // 1x1 tile road with connection-aware markings
   const g = new Graphics();
 
   // Asphalt diamond
@@ -467,10 +482,37 @@ function drawRoad(renderer: Renderer): Texture {
   ]);
   g.fill(PALETTE.ROAD_ASPHALT);
 
-  // Center line dashes
-  g.moveTo(TILE_HALF_W - 6, TILE_HALF_H - 3);
-  g.lineTo(TILE_HALF_W + 6, TILE_HALF_H + 3);
-  g.stroke({ width: 1, color: PALETTE.ROAD_LINE, alpha: 0.4 });
+  const cx = TILE_HALF_W;
+  const cy = TILE_HALF_H;
+  const endpoints = [
+    { bit: 1, x: TILE_HALF_W, y: 1 },                  // N
+    { bit: 2, x: TILE_HALF_W * 2 - 1, y: TILE_HALF_H }, // E
+    { bit: 4, x: TILE_HALF_W, y: TILE_HALF_H * 2 - 1 }, // S
+    { bit: 8, x: 1, y: TILE_HALF_H },                  // W
+  ];
+
+  const hasLinks = (mask & 0xF) !== 0;
+
+  for (const end of endpoints) {
+    if ((mask & end.bit) === 0) continue;
+
+    // Asphalt branch.
+    g.moveTo(cx, cy);
+    g.lineTo(end.x, end.y);
+    g.stroke({ width: 9, color: PALETTE.ROAD_ASPHALT });
+
+    // Central lane marking.
+    g.moveTo(cx, cy);
+    g.lineTo(end.x, end.y);
+    g.stroke({ width: 1.5, color: PALETTE.ROAD_LINE, alpha: 0.45 });
+  }
+
+  if (!hasLinks) {
+    g.circle(cx, cy, 5);
+    g.fill(PALETTE.ROAD_ASPHALT);
+    g.circle(cx, cy, 1.2);
+    g.fill({ color: PALETTE.ROAD_LINE, alpha: 0.35 });
+  }
 
   // Edge lines
   g.poly([
@@ -486,8 +528,8 @@ function drawRoad(renderer: Renderer): Texture {
   return texture;
 }
 
-function drawPowerLine(renderer: Renderer): Texture {
-  // 1x1 tile with pylon
+function drawPowerLine(renderer: Renderer, mask: number): Texture {
+  // 1x1 tile with connection-aware wire routing
   const g = new Graphics();
 
   // Base tile (subtle)
@@ -516,14 +558,24 @@ function drawPowerLine(renderer: Renderer): Texture {
   g.lineTo(px + 6, py - 35);
   g.stroke({ width: 1.5, color: PALETTE.POWER_LINE_METAL });
 
-  // Wires drooping
-  g.moveTo(px - 10, py - 30);
-  g.quadraticCurveTo(px - 20, py - 22, px - 28, py - 26);
-  g.stroke({ width: 0.8, color: PALETTE.IRON });
+  const endpoints = [
+    { bit: 1, x: TILE_HALF_W, y: 1 },                    // N
+    { bit: 2, x: TILE_HALF_W * 2 - 2, y: TILE_HALF_H }, // E
+    { bit: 4, x: TILE_HALF_W, y: TILE_HALF_H * 2 - 2 }, // S
+    { bit: 8, x: 2, y: TILE_HALF_H },                    // W
+  ];
 
-  g.moveTo(px + 10, py - 30);
-  g.quadraticCurveTo(px + 20, py - 22, px + 28, py - 26);
-  g.stroke({ width: 0.8, color: PALETTE.IRON });
+  for (const end of endpoints) {
+    if ((mask & end.bit) === 0) continue;
+    g.moveTo(px, py - 30);
+    g.quadraticCurveTo(
+      (px + end.x) / 2,
+      Math.min(py - 10, end.y - 8),
+      end.x,
+      end.y
+    );
+    g.stroke({ width: 1, color: PALETTE.IRON, alpha: 0.85 });
+  }
 
   // Base support struts
   g.moveTo(px, py);
@@ -607,6 +659,403 @@ function drawMonument(renderer: Renderer): Texture {
 
   // Red star at top
   drawStar(g, px, py - 50, 6, PALETTE.STAR_RED);
+
+  const texture = renderer.generateTexture(g);
+  g.destroy();
+  return texture;
+}
+
+// ===== NEW BUILDINGS =====
+
+function drawPanelak(renderer: Renderer): Texture {
+  // 2x2 tile, 9-story grey tower, dense window grid, two TV antennas
+  const g = new Graphics();
+  const bw = TILE_HALF_W * 1.8;
+  const bh = 110;
+  const ox = TILE_HALF_W * 2;
+  const oy = bh + 8;
+
+  // Main body - concrete grey
+  isoBox(g, ox, oy - bh, bw, bw * 0.8, bh,
+    PALETTE.CONCRETE_LIGHT, PALETTE.CONCRETE_MID, PALETTE.CONCRETE_DARK);
+
+  // Dense window grid - left face (9 rows x 5 cols)
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 5; c++) {
+      const wx = ox - bw + 4 + c * 9;
+      const wy = oy - bh + bw * 0.8 + 5 + r * 11 + c * 4.5;
+      g.rect(wx, wy, 5, 7);
+      g.fill(r % 2 === 0 ? PALETTE.WINDOW : PALETTE.WINDOW_DARK);
+    }
+  }
+
+  // Right face windows (9 rows x 4 cols)
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 4; c++) {
+      const wx = ox + 4 + c * 9;
+      const wy = oy - bh + bw * 0.8 + 7 + r * 11 - c * 4.5;
+      g.rect(wx, wy, 5, 7);
+      g.fill(r % 2 === 1 ? PALETTE.WINDOW : PALETTE.WINDOW_DARK);
+    }
+  }
+
+  // Two TV antennas
+  g.moveTo(ox - 8, oy - bh - 2);
+  g.lineTo(ox - 8, oy - bh - 18);
+  g.stroke({ width: 1, color: PALETTE.IRON });
+  g.moveTo(ox - 12, oy - bh - 14);
+  g.lineTo(ox - 4, oy - bh - 14);
+  g.stroke({ width: 0.8, color: PALETTE.IRON });
+
+  g.moveTo(ox + 6, oy - bh - 2);
+  g.lineTo(ox + 6, oy - bh - 15);
+  g.stroke({ width: 1, color: PALETTE.IRON });
+  g.moveTo(ox + 3, oy - bh - 12);
+  g.lineTo(ox + 9, oy - bh - 12);
+  g.stroke({ width: 0.8, color: PALETTE.IRON });
+
+  const texture = renderer.generateTexture(g);
+  g.destroy();
+  return texture;
+}
+
+function drawWarehouse(renderer: Renderer): Texture {
+  // 2x2 tile, squat corrugated-roof building, steel blue, rolling door
+  const g = new Graphics();
+  const bw = TILE_HALF_W * 1.8;
+  const bh = 40;
+  const ox = TILE_HALF_W * 2;
+  const oy = bh + 8;
+
+  // Main body - steel blue
+  isoBox(g, ox, oy - bh, bw, bw * 0.8, bh,
+    PALETTE.STEEL_BLUE, PALETTE.STEEL_DARK, PALETTE.IRON);
+
+  // Corrugated roof lines
+  for (let i = 0; i < 5; i++) {
+    const rx = ox - bw * 0.8 + i * bw * 0.4;
+    g.moveTo(rx, oy - bh + bw * 0.3 + i * (bw * 0.1));
+    g.lineTo(rx + bw * 0.2, oy - bh + bw * 0.3 + i * (bw * 0.1) + bw * 0.1);
+    g.stroke({ width: 1, color: PALETTE.CONCRETE_LIGHT, alpha: 0.4 });
+  }
+
+  // Rolling door on left face
+  g.rect(ox - bw + 8, oy - 28, 18, 26);
+  g.fill(PALETTE.CONCRETE_SHADOW);
+  // Door segments
+  for (let i = 0; i < 4; i++) {
+    g.moveTo(ox - bw + 8, oy - 28 + i * 7);
+    g.lineTo(ox - bw + 26, oy - 28 + i * 7);
+    g.stroke({ width: 0.5, color: PALETTE.IRON, alpha: 0.5 });
+  }
+
+  // Red badge/star
+  drawStar(g, ox + bw * 0.3, oy - bh * 0.5, 5, PALETTE.RED);
+
+  const texture = renderer.generateTexture(g);
+  g.destroy();
+  return texture;
+}
+
+function drawCinema(renderer: Renderer): Texture {
+  // 2x1 tile, art deco stepped facade, red marquee
+  const g = new Graphics();
+  const bw = TILE_HALF_W * 1.4;
+  const bh = 55;
+  const ox = TILE_HALF_W * 1.5;
+  const oy = bh + 4;
+
+  // Main body
+  isoBox(g, ox, oy - bh, bw, bw * 0.6, bh,
+    PALETTE.CONCRETE_LIGHT, PALETTE.CONCRETE_MID, PALETTE.CONCRETE_DARK);
+
+  // Stepped facade top
+  isoBox(g, ox, oy - bh - 5, bw * 0.7, bw * 0.7 * 0.6, 8,
+    PALETTE.CONCRETE_LIGHT, PALETTE.CONCRETE_MID, PALETTE.CONCRETE_DARK);
+  isoBox(g, ox, oy - bh - 12, bw * 0.4, bw * 0.4 * 0.6, 6,
+    PALETTE.CONCRETE_LIGHT, PALETTE.CONCRETE_MID, PALETTE.CONCRETE_DARK);
+
+  // Red marquee banner across front
+  g.poly([
+    { x: ox - bw + 3, y: oy - bh + bw * 0.6 + 2 },
+    { x: ox - 1, y: oy - bh + bw * 0.6 + 2 + bw / 2 - 2 },
+    { x: ox - 1, y: oy - bh + bw * 0.6 + 14 + bw / 2 - 2 },
+    { x: ox - bw + 3, y: oy - bh + bw * 0.6 + 14 },
+  ]);
+  g.fill(PALETTE.RED);
+
+  // Gold border on marquee
+  g.moveTo(ox - bw + 3, oy - bh + bw * 0.6 + 2);
+  g.lineTo(ox - 1, oy - bh + bw * 0.6 + 2 + bw / 2 - 2);
+  g.stroke({ width: 1.5, color: PALETTE.GOLD });
+
+  // Arched entrance
+  g.rect(ox - bw + 10, oy - 18, 12, 18);
+  g.fill(PALETTE.CONCRETE_SHADOW);
+  // Arch top
+  g.arc(ox - bw + 16, oy - 18, 6, Math.PI, 0);
+  g.fill(PALETTE.CONCRETE_SHADOW);
+
+  const texture = renderer.generateTexture(g);
+  g.destroy();
+  return texture;
+}
+
+function drawRadioTower(renderer: Renderer): Texture {
+  // 1x1 tile, lattice tower with red warning light
+  const g = new Graphics();
+  const px = TILE_HALF_W;
+  const py = TILE_HALF_H;
+
+  // Base tile
+  g.poly([
+    { x: TILE_HALF_W, y: 0 },
+    { x: TILE_HALF_W * 2, y: TILE_HALF_H },
+    { x: TILE_HALF_W, y: TILE_HALF_H * 2 },
+    { x: 0, y: TILE_HALF_H },
+  ]);
+  g.fill({ color: PALETTE.GROUND, alpha: 0.3 });
+
+  // Base platform
+  isoBox(g, px, py - 4, 10, 7, 5,
+    PALETTE.CONCRETE_LIGHT, PALETTE.CONCRETE_MID, PALETTE.CONCRETE_DARK);
+
+  // Lattice tower - main vertical
+  g.moveTo(px, py - 4);
+  g.lineTo(px, py - 55);
+  g.stroke({ width: 2, color: PALETTE.POWER_LINE_METAL });
+
+  // Tapered sides
+  g.moveTo(px - 8, py - 4);
+  g.lineTo(px - 2, py - 55);
+  g.stroke({ width: 1.5, color: PALETTE.POWER_LINE_METAL });
+  g.moveTo(px + 8, py - 4);
+  g.lineTo(px + 2, py - 55);
+  g.stroke({ width: 1.5, color: PALETTE.POWER_LINE_METAL });
+
+  // Cross bracing (diagonal lines)
+  for (let i = 0; i < 5; i++) {
+    const y1 = py - 8 - i * 9;
+    const y2 = y1 - 9;
+    const w1 = 7 - i * 1.1;
+    const w2 = 7 - (i + 1) * 1.1;
+    g.moveTo(px - w1, y1);
+    g.lineTo(px + w2, y2);
+    g.stroke({ width: 0.7, color: PALETTE.IRON });
+    g.moveTo(px + w1, y1);
+    g.lineTo(px - w2, y2);
+    g.stroke({ width: 0.7, color: PALETTE.IRON });
+  }
+
+  // Red warning light at top
+  g.circle(px, py - 57, 3);
+  g.fill(PALETTE.RED);
+  g.circle(px, py - 57, 2);
+  g.fill(PALETTE.RED_LIGHT);
+
+  // Guy-wires
+  g.moveTo(px - 2, py - 50);
+  g.lineTo(px - 18, py - 2);
+  g.stroke({ width: 0.5, color: PALETTE.IRON, alpha: 0.5 });
+  g.moveTo(px + 2, py - 50);
+  g.lineTo(px + 18, py - 2);
+  g.stroke({ width: 0.5, color: PALETTE.IRON, alpha: 0.5 });
+
+  const texture = renderer.generateTexture(g);
+  g.destroy();
+  return texture;
+}
+
+function drawMetroStation(renderer: Renderer): Texture {
+  // 2x1 tile, low entrance with grand arch, Soviet "M" sign
+  const g = new Graphics();
+  const bw = TILE_HALF_W * 1.4;
+  const bh = 35;
+  const ox = TILE_HALF_W * 1.5;
+  const oy = bh + 4;
+
+  // Main low building body
+  isoBox(g, ox, oy - bh, bw, bw * 0.6, bh,
+    PALETTE.CONCRETE_LIGHT, PALETTE.CONCRETE_MID, PALETTE.CONCRETE_DARK);
+
+  // Grand arch entrance on left face
+  g.rect(ox - bw + 10, oy - 24, 16, 22);
+  g.fill(PALETTE.CONCRETE_SHADOW);
+  g.arc(ox - bw + 18, oy - 24, 8, Math.PI, 0);
+  g.fill(PALETTE.CONCRETE_SHADOW);
+
+  // Columns flanking entrance
+  g.rect(ox - bw + 8, oy - 28, 3, 26);
+  g.fill(PALETTE.WHITE);
+  g.rect(ox - bw + 25, oy - 28 + 9, 3, 17);
+  g.fill(PALETTE.WHITE);
+
+  // Soviet "M" sign in red circle
+  const mX = ox - bw * 0.5;
+  const mY = oy - bh - 5;
+  g.circle(mX, mY, 7);
+  g.fill(PALETTE.RED);
+  // M letter (simplified as lines)
+  g.moveTo(mX - 4, mY + 3);
+  g.lineTo(mX - 4, mY - 3);
+  g.lineTo(mX, mY + 1);
+  g.lineTo(mX + 4, mY - 3);
+  g.lineTo(mX + 4, mY + 3);
+  g.stroke({ width: 1.5, color: PALETTE.WHITE });
+
+  // Descending steps (right side detail)
+  for (let i = 0; i < 3; i++) {
+    g.rect(ox + 4 + i * 5, oy - 6 + i * 2, 5, 2);
+    g.fill(PALETTE.CONCRETE_DARK);
+  }
+
+  const texture = renderer.generateTexture(g);
+  g.destroy();
+  return texture;
+}
+
+function drawPlaza(renderer: Renderer): Texture {
+  // 2x2 tile, flat paved surface with concentric diamond pattern, central flagpole
+  const g = new Graphics();
+  const ox = TILE_HALF_W * 2;
+  const oy = TILE_HALF_H * 2;
+
+  // Paved base - full footprint
+  const hw = TILE_HALF_W * 2;
+  const hh = TILE_HALF_H * 2;
+  g.poly([
+    { x: ox, y: oy - hh },
+    { x: ox + hw, y: oy },
+    { x: ox, y: oy + hh },
+    { x: ox - hw, y: oy },
+  ]);
+  g.fill(PALETTE.CONCRETE_MID);
+
+  // Concentric diamond pattern
+  for (let i = 1; i <= 3; i++) {
+    const s = i * 0.25;
+    g.poly([
+      { x: ox, y: oy - hh * s },
+      { x: ox + hw * s, y: oy },
+      { x: ox, y: oy + hh * s },
+      { x: ox - hw * s, y: oy },
+    ]);
+    g.stroke({ width: 1, color: PALETTE.CONCRETE_LIGHT, alpha: 0.5 });
+  }
+
+  // Central flagpole
+  g.moveTo(ox, oy);
+  g.lineTo(ox, oy - 40);
+  g.stroke({ width: 2, color: PALETTE.IRON });
+
+  // Red flag
+  g.poly([
+    { x: ox, y: oy - 40 },
+    { x: ox + 12, y: oy - 36 },
+    { x: ox, y: oy - 32 },
+  ]);
+  g.fill(PALETTE.RED);
+
+  // Gold star on flag
+  drawStar(g, ox + 5, oy - 36, 3, PALETTE.GOLD);
+
+  const texture = renderer.generateTexture(g);
+  g.destroy();
+  return texture;
+}
+
+function drawFountain(renderer: Renderer): Texture {
+  // 1x1 tile, circular basin, water fill, central pedestal, water jet
+  const g = new Graphics();
+  const px = TILE_HALF_W;
+  const py = TILE_HALF_H;
+
+  // Base tile
+  g.poly([
+    { x: TILE_HALF_W, y: 0 },
+    { x: TILE_HALF_W * 2, y: TILE_HALF_H },
+    { x: TILE_HALF_W, y: TILE_HALF_H * 2 },
+    { x: 0, y: TILE_HALF_H },
+  ]);
+  g.fill(PALETTE.GROUND);
+
+  // Circular basin (ellipse for iso perspective)
+  g.ellipse(px, py + 2, 14, 8);
+  g.fill(PALETTE.CONCRETE_MID);
+  g.ellipse(px, py, 12, 6);
+  g.fill(PALETTE.WATER);
+  g.ellipse(px, py, 12, 6);
+  g.stroke({ width: 1, color: PALETTE.CONCRETE_DARK });
+
+  // Central pedestal
+  g.rect(px - 2, py - 12, 4, 12);
+  g.fill(PALETTE.PEDESTAL);
+
+  // Water jet lines
+  g.moveTo(px, py - 12);
+  g.lineTo(px, py - 22);
+  g.stroke({ width: 1.5, color: PALETTE.WATER_LIGHT, alpha: 0.7 });
+  g.moveTo(px, py - 20);
+  g.lineTo(px - 5, py - 14);
+  g.stroke({ width: 0.8, color: PALETTE.WATER_LIGHT, alpha: 0.5 });
+  g.moveTo(px, py - 20);
+  g.lineTo(px + 5, py - 14);
+  g.stroke({ width: 0.8, color: PALETTE.WATER_LIGHT, alpha: 0.5 });
+
+  // Water splash dots
+  g.circle(px - 3, py - 16, 1);
+  g.fill({ color: PALETTE.WATER_LIGHT, alpha: 0.5 });
+  g.circle(px + 4, py - 15, 1);
+  g.fill({ color: PALETTE.WATER_LIGHT, alpha: 0.5 });
+
+  const texture = renderer.generateTexture(g);
+  g.destroy();
+  return texture;
+}
+
+function drawSportsComplex(renderer: Renderer): Texture {
+  // 3x2 tile, elongated building, red track oval on top, floodlight poles
+  const g = new Graphics();
+  const bw = TILE_HALF_W * 2.2;
+  const bh = 45;
+  const ox = TILE_HALF_W * 2.5;
+  const oy = bh + 20;
+
+  // Main building body
+  isoBox(g, ox, oy - bh, bw, bw * 0.6, bh,
+    PALETTE.CONCRETE_LIGHT, PALETTE.CONCRETE_MID, PALETTE.CONCRETE_DARK);
+
+  // Red track oval on rooftop (ellipse)
+  const roofY = oy - bh + bw * 0.3;
+  g.ellipse(ox, roofY, bw * 0.7, bw * 0.3);
+  g.fill(PALETTE.RED_DARK);
+  // Green field inside track
+  g.ellipse(ox, roofY, bw * 0.5, bw * 0.2);
+  g.fill(PALETTE.GREEN);
+
+  // Seating tiers on right face
+  for (let i = 0; i < 3; i++) {
+    const ty = oy - bh + bw * 0.6 + 5 + i * 10;
+    g.moveTo(ox + 3, ty - i * 3);
+    g.lineTo(ox + bw - 3, ty - i * 3 - (bw - 6) / 2);
+    g.stroke({ width: 2, color: PALETTE.CONCRETE_LIGHT, alpha: 0.5 });
+  }
+
+  // Floodlight poles (4 corners)
+  const lightPositions = [
+    { x: ox - bw * 0.6, y: oy - bh - 5 },
+    { x: ox + bw * 0.6, y: oy - bh - 5 },
+    { x: ox - bw * 0.3, y: oy - bh - 8 },
+    { x: ox + bw * 0.3, y: oy - bh - 8 },
+  ];
+  for (const lp of lightPositions) {
+    g.moveTo(lp.x, oy - bh);
+    g.lineTo(lp.x, lp.y - 15);
+    g.stroke({ width: 1.5, color: PALETTE.IRON });
+    // Light fixture
+    g.rect(lp.x - 2, lp.y - 17, 4, 3);
+    g.fill(PALETTE.YELLOW);
+  }
 
   const texture = renderer.generateTexture(g);
   g.destroy();

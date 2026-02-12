@@ -20,7 +20,12 @@ export class EconomyService {
       const def = this.registry.get(b.defId);
       if (!def) continue;
 
-      totalMaintenance += def.maintenance;
+      // Unpowered buildings that require power pay 30% maintenance
+      if (def.powerConsumption && !b.powered) {
+        totalMaintenance += Math.floor(def.maintenance * 0.3);
+      } else {
+        totalMaintenance += def.maintenance;
+      }
 
       // Only produce if powered (or no power needed)
       if (def.industrialOutput && b.powered) {
@@ -30,9 +35,13 @@ export class EconomyService {
 
     // Central planning base allocation (scales with population)
     const baseAllocation = 500 + Math.floor(this.state.population * 0.5);
+    const totalIncome = baseAllocation + totalIndustrial;
 
     this.state.industrialOutput = totalIndustrial;
-    this.state.budget += baseAllocation + totalIndustrial - totalMaintenance;
+    this.state.lastTickIncome = totalIncome;
+    this.state.lastTickExpense = totalMaintenance;
+    this.state.lastTickNet = totalIncome - totalMaintenance;
+    this.state.budget += this.state.lastTickNet;
 
     // Clamp budget (can go negative = debt)
     this.events.emit('budget:changed', { budget: this.state.budget });

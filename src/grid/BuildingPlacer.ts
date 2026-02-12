@@ -32,14 +32,14 @@ export class BuildingPlacer {
     };
 
     this.grid.placeBuilding(building, def.width, def.height);
-    this.events.emit('building:placed', { buildingId, gx, gy });
+    this.events.emit('building:placed', { building, defId: buildingId, gx, gy });
     return building;
   }
 
   demolish(gx: number, gy: number): boolean {
     const building = this.grid.removeBuilding(gx, gy);
     if (building) {
-      this.events.emit('building:demolished', { gx: building.gx, gy: building.gy });
+      this.events.emit('building:demolished', { building, gx: building.gx, gy: building.gy });
       return true;
     }
     return false;

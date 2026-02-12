@@ -30,12 +30,18 @@ export interface GameStateData {
   speed: number; // 0=pause, 1=1x, 2=2x, 4=4x
   currentPlan: FiveYearPlan | null;
   planIndex: number;
+  lastTickIncome: number;
+  lastTickExpense: number;
+  lastTickNet: number;
+  residentialDemand: number; // -100..100
+  industrialDemand: number; // -100..100
+  civicDemand: number; // -100..100
 }
 
 export function createInitialState(): GameStateData {
   return {
     budget: STARTING_BUDGET,
-    population: 0,
+    population: 50,
     housingCapacity: 0,
     powerCapacity: 0,
     powerDemand: 0,
@@ -47,5 +53,11 @@ export function createInitialState(): GameStateData {
     speed: 1,
     currentPlan: null,
     planIndex: 0,
+    lastTickIncome: 0,
+    lastTickExpense: 0,
+    lastTickNet: 0,
+    residentialDemand: 0,
+    industrialDemand: 0,
+    civicDemand: 0,
   };
 }
