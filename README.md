@@ -4,8 +4,16 @@ Soviet city builder inspired by SimCity 2000-style planning, layouts, and progre
 
 ## Current Release
 
-- Version: `1.4.0`
+- Version: `1.4.1`
 - Status: playable, desktop-first, production build passing
+
+## What Is In 1.4.1
+
+- Full development-day recap document:
+  - `docs/SESSION_RECAP_2026-02-12.md`
+- Project best-practices playbook:
+  - `docs/PROJECT_BEST_PRACTICES.md`
+- Release documentation index refresh for continuity and onboarding.
 
 ## What Is In 1.4.0
 
@@ -167,6 +175,13 @@ If the atlas or specific frames are missing, the game still runs via procedural 
 ## Release Docs
 
 - `CHANGELOG.md`
+- `docs/SESSION_RECAP_2026-02-12.md`
+- `docs/PROJECT_BEST_PRACTICES.md`
+- `docs/IMPLEMENTATION_NOTES_v1.4.1.md`
+- `docs/MULTI_AGENT_REVIEW_v1.4.1.md`
+- `docs/TEST_REPORT_v1.4.1.md`
+- `docs/BUG_CHECK_v1.4.1.md`
+- `docs/RELEASE_NOTES_v1.4.1.md`
 - `docs/IMPLEMENTATION_NOTES_v1.1.0.md`
 - `docs/MULTI_AGENT_REVIEW_v1.1.0.md`
 - `docs/TEST_REPORT_v1.1.0.md`

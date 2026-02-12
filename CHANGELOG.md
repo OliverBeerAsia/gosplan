@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.4.1] - 2026-02-12
+
+### Added
+
+- Session recap document with full-day shipped timeline and lessons learned:
+  - `docs/SESSION_RECAP_2026-02-12.md`
+- Project best-practices playbook for architecture, rendering, UI, QA, and release workflow:
+  - `docs/PROJECT_BEST_PRACTICES.md`
+- Documentation release artifacts:
+  - `docs/IMPLEMENTATION_NOTES_v1.4.1.md`
+  - `docs/MULTI_AGENT_REVIEW_v1.4.1.md`
+  - `docs/TEST_REPORT_v1.4.1.md`
+  - `docs/BUG_CHECK_v1.4.1.md`
+  - `docs/RELEASE_NOTES_v1.4.1.md`
+
+### Changed
+
+- Updated `README.md` current release metadata and docs index for `v1.4.1`.
+
 ## [1.4.0] - 2026-02-12
 
 ### Added
