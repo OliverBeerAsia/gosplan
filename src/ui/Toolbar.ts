@@ -179,6 +179,20 @@ export class Toolbar {
     });
     this.buildingPanel.appendChild(svcBtn);
 
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'building-btn';
+    const saveName = document.createElement('span');
+    saveName.textContent = 'SAVE GAME';
+    saveBtn.appendChild(saveName);
+    const saveHint = document.createElement('span');
+    saveHint.className = 'building-cost';
+    saveHint.textContent = 'LOCAL (CTRL+S)';
+    saveBtn.appendChild(saveHint);
+    saveBtn.addEventListener('click', () => {
+      this.events.emit('game:save:requested', {});
+    });
+    this.buildingPanel.appendChild(saveBtn);
+
     const qualityWrap = document.createElement('div');
     qualityWrap.className = 'graphics-quality-controls';
 

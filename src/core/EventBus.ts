@@ -46,6 +46,7 @@ export type GameEvents = {
   'graphics:quality:changed': { quality: import('./GameState').GraphicsQuality };
   'game:loaded': {};
   'game:saved': {};
+  'game:save:requested': {};
 };
 
 type Handler<T> = (data: T) => void;

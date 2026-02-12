@@ -36,13 +36,14 @@ import { EventChoiceModal } from '../ui/EventChoiceModal';
 import { AmbienceOverlay } from '../ui/AmbienceOverlay';
 import { AchievementPanel } from '../ui/AchievementPanel';
 import { CampaignEndingModal } from '../ui/CampaignEndingModal';
-import { hasSave, saveGame, loadGame } from './SaveLoad';
+import { hasSave, saveGame, loadGame, exportSaveArchive } from './SaveLoad';
 import { gridToWorld } from '../rendering/IsometricRenderer';
 import { MAP_SIZE } from '../constants';
 import { MapGenerator } from './MapGenerator';
 import { getSeason, getSeasonalTerrainTint, isWinter, Season } from '../rendering/SeasonalEffects';
 import { WeatherEffects } from '../rendering/WeatherEffects';
 import { applyCampaignScenario } from '../simulation/CampaignScenarios';
+import { LoadingInterstitial, LoadingMode } from '../ui/LoadingInterstitial';
 
 export class Game {
   private app!: Application;
@@ -82,6 +83,9 @@ export class Game {
   private ambienceOverlay!: AmbienceOverlay;
   private achievementPanel!: AchievementPanel;
   private campaignEndingModal!: CampaignEndingModal;
+  private loadingInterstitial!: LoadingInterstitial;
+  private titleScreen!: TitleScreen;
+  private bootInProgress = false;
 
   private uiContainer!: HTMLDivElement;
 
@@ -112,15 +116,43 @@ export class Game {
     this.uiContainer.className = 'soviet-ui';
     this.uiContainer.style.cssText = 'position:absolute;inset:0;pointer-events:none;';
     container.appendChild(this.uiContainer);
+    this.loadingInterstitial = new LoadingInterstitial(this.uiContainer);
 
     // Show title screen
     const canLoad = hasSave();
-    const titleScreen = new TitleScreen(
+    this.titleScreen = new TitleScreen(
       this.uiContainer,
-      (scenario) => this.startGame(false, 'campaign', scenario),
-      () => this.startGame(false, 'sandbox'),
-      canLoad ? () => this.startGame(true, 'campaign') : null
+      (scenario) => this.launchFromTitle(false, 'campaign', scenario),
+      () => this.launchFromTitle(false, 'sandbox'),
+      canLoad ? () => this.launchFromTitle(true, 'campaign') : null,
+      () => exportSaveArchive()
     );
+  }
+
+  private async launchFromTitle(
+    loadSave: boolean,
+    mode: GameMode,
+    scenarioId: CampaignScenarioId = 'reconstruction'
+  ): Promise<void> {
+    if (this.bootInProgress) return;
+    this.bootInProgress = true;
+    this.titleScreen.hide();
+
+    try {
+      const loadingMode: LoadingMode = loadSave
+        ? 'load'
+        : mode === 'sandbox'
+          ? 'sandbox'
+          : 'campaign';
+      await this.loadingInterstitial.play(loadingMode);
+      this.startGame(loadSave, mode, scenarioId);
+    } catch (error) {
+      this.loadingInterstitial.hide();
+      this.titleScreen.show();
+      console.error(error);
+    } finally {
+      this.bootInProgress = false;
+    }
   }
 
   private startGame(
@@ -251,6 +283,10 @@ export class Game {
       });
     });
 
+    this.events.on('game:save:requested', () => {
+      this.saveCurrentGame();
+    });
+
     // Sync UI controls with current graphics quality (including loaded saves).
     this.events.emit('graphics:quality:changed', { quality: this.state.graphicsQuality });
 
@@ -345,9 +381,7 @@ export class Game {
       // Save
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
-        saveGame(this.grid, this.state, this.placer);
-        this.events.emit('notification', { message: 'Game saved!', type: 'success' });
-        this.events.emit('game:saved', {});
+        this.saveCurrentGame();
         return;
       }
 
@@ -427,6 +461,12 @@ export class Game {
           break;
       }
     });
+  }
+
+  private saveCurrentGame(): void {
+    saveGame(this.grid, this.state, this.placer);
+    this.events.emit('notification', { message: 'Game saved!', type: 'success' });
+    this.events.emit('game:saved', {});
   }
 
   private applyGraphicsQuality(quality: GraphicsQuality): void {

@@ -105,6 +105,25 @@ export function saveGame(grid: Grid, state: GameStateData, placer: BuildingPlace
   localStorage.setItem(SAVE_KEY, JSON.stringify(data));
 }
 
+export function exportSaveArchive(): boolean {
+  const raw = localStorage.getItem(SAVE_KEY);
+  if (!raw) return false;
+
+  const timestamp = new Date().toISOString().replace(/:/g, '-').replace(/\..+$/, '');
+  const blob = new Blob([raw], { type: 'application/json' });
+  const href = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = href;
+  link.download = `gosplan-save-${timestamp}.json`;
+  (document.body || document.documentElement).appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(href), 0);
+
+  return true;
+}
+
 export function loadGame(
   grid: Grid,
   registry: BuildingRegistry,
