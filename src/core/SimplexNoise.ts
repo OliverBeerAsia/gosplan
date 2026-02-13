@@ -14,7 +14,7 @@ export class SimplexNoise {
   private perm: Uint8Array;
   private permMod12: Uint8Array;
 
-  constructor(seed: number = Math.random() * 65536) {
+  constructor(seed: number = 1337) {
     const p = new Uint8Array(256);
     // Seed-based permutation using simple LCG
     let s = seed | 0;

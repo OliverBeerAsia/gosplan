@@ -38,9 +38,11 @@
   background: linear-gradient(180deg, rgba(10, 6, 6, 0.95), rgba(18, 4, 4, 0.98));
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 12px;
   padding: 0 24px;
+  overflow-x: auto;
+  overflow-y: hidden;
   border-bottom: 4px solid #a72a2a;
   z-index: 105;
   box-shadow:
@@ -50,6 +52,7 @@
 
 .resource-item {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 8px;
   font-size: 12px;
@@ -267,6 +270,8 @@
   right: 12px;
   top: 60px;
   width: 220px;
+  max-height: calc(100vh - 170px);
+  overflow-y: auto;
   background: linear-gradient(180deg, rgba(8, 8, 8, 0.95), rgba(20, 6, 6, 0.92));
   border: 3px solid #b72b2b;
   display: none;
@@ -1664,5 +1669,57 @@
 
   #bulletin-panel {
     top: 250px;
+  }
+}
+
+@media (max-width: 1366px) {
+  #resource-bar {
+    gap: 8px;
+    padding: 0 10px;
+  }
+
+  .resource-item {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+
+  #plan-panel,
+  #district-panel,
+  #achievement-panel,
+  #bulletin-panel {
+    width: 260px;
+  }
+}
+
+@media (max-height: 900px) {
+  #plan-panel {
+    width: 240px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  #district-panel {
+    width: 250px;
+    max-height: 180px;
+    top: auto;
+    bottom: 308px;
+  }
+
+  #achievement-panel {
+    width: 250px;
+    top: auto;
+    bottom: 102px;
+    max-height: 180px;
+  }
+
+  #bulletin-panel {
+    width: 270px;
+    max-height: 220px;
+    top: auto;
+    bottom: 102px;
+  }
+
+  #info-panel {
+    max-height: calc(100vh - 180px);
   }
 }

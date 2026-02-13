@@ -38,12 +38,14 @@ import { AchievementPanel } from '../ui/AchievementPanel';
 import { CampaignEndingModal } from '../ui/CampaignEndingModal';
 import { hasSave, saveGame, loadGame, exportSaveArchive } from './SaveLoad';
 import { gridToWorld } from '../rendering/IsometricRenderer';
-import { MAP_SIZE } from '../constants';
+import { MAP_SIZE, TILE_HALF_H, TILE_HALF_W } from '../constants';
 import { MapGenerator } from './MapGenerator';
 import { getSeason, getSeasonalTerrainTint, isWinter, Season } from '../rendering/SeasonalEffects';
 import { WeatherEffects } from '../rendering/WeatherEffects';
 import { applyCampaignScenario } from '../simulation/CampaignScenarios';
 import { LoadingInterstitial, LoadingMode } from '../ui/LoadingInterstitial';
+import { createRuntimeSeed, deriveSeed } from './Rng';
+import { pushBulletinEntry } from './Bulletin';
 
 export class Game {
   private app!: Application;
@@ -164,6 +166,12 @@ export class Game {
     this.grid = new Grid(MAP_SIZE);
     this.state = createInitialState();
     this.state.mode = mode;
+    if (!loadSave) {
+      const runSeed = createRuntimeSeed();
+      this.state.rngSeed = runSeed;
+      this.state.rngState = runSeed;
+      this.state.mapSeed = deriveSeed(runSeed, 0x4D4150);
+    }
     let loadedFromSave = false;
     if (!loadSave && mode === 'campaign') {
       applyCampaignScenario(this.state, scenarioId);
@@ -197,6 +205,7 @@ export class Game {
     // Camera
     this.camera = new Camera(this.events);
     this.camera.setScreenSize(this.app.screen.width, this.app.screen.height);
+    this.configureCameraBounds();
 
     // Center camera on map
     const centerPos = gridToWorld(MAP_SIZE / 2, MAP_SIZE / 2, 0);
@@ -314,8 +323,20 @@ export class Game {
   }
 
   private generateTerrain(): void {
-    const generator = new MapGenerator();
+    const generator = new MapGenerator(this.state.mapSeed);
     generator.generate(this.grid);
+  }
+
+  private configureCameraBounds(): void {
+    // World bounds sized to map footprint plus a small buffer to preserve edge readability.
+    const spanX = (MAP_SIZE - 1) * TILE_HALF_W;
+    const spanY = (MAP_SIZE - 1) * TILE_HALF_H * 2;
+    this.camera.setWorldBounds(
+      -spanX - TILE_HALF_W * 2,
+      -TILE_HALF_H * 4,
+      spanX + TILE_HALF_W * 2,
+      spanY + TILE_HALF_H * 4
+    );
   }
 
   private setupUI(): void {
@@ -489,19 +510,7 @@ export class Game {
     text: string,
     level: 'info' | 'warning' | 'success' | 'error'
   ): void {
-    const entry = {
-      id: `boot_${this.state.totalTicks}_${Math.floor(Math.random() * 10000)}`,
-      tick: this.state.totalTicks,
-      week: this.state.week,
-      year: this.state.year,
-      text,
-      level,
-    };
-    this.state.bulletin.push(entry);
-    if (this.state.bulletin.length > 60) {
-      this.state.bulletin.splice(0, this.state.bulletin.length - 60);
-    }
-    this.events.emit('bulletin:added', { entry });
+    pushBulletinEntry(this.state, this.events, text, level, 'boot');
   }
 
   private lastFrameTime = 0;

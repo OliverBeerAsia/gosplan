@@ -1,5 +1,6 @@
 import { EventBus } from '../core/EventBus';
 import { BulletinEntry, GameStateData } from '../core/GameState';
+import { pushBulletinEntry } from '../core/Bulletin';
 
 type EndingId = 'model_city' | 'brittle_giant' | 'reformist_transition' | 'ration_state_survival';
 
@@ -139,18 +140,6 @@ export class CampaignOutcomeService {
     level: BulletinEntry['level'],
     endingId: EndingId
   ): void {
-    const entry: BulletinEntry = {
-      id: `ending_${endingId}_${this.state.totalTicks}`,
-      tick: this.state.totalTicks,
-      year: this.state.year,
-      week: this.state.week,
-      text,
-      level,
-    };
-    this.state.bulletin.push(entry);
-    if (this.state.bulletin.length > 60) {
-      this.state.bulletin.splice(0, this.state.bulletin.length - 60);
-    }
-    this.events.emit('bulletin:added', { entry });
+    pushBulletinEntry(this.state, this.events, text, level, `ending_${endingId}`);
   }
 }

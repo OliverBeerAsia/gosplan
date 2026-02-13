@@ -5,6 +5,7 @@ import { GameStateData } from '../core/GameState';
 import { BuildingPlacer } from '../grid/BuildingPlacer';
 import { Grid } from '../grid/Grid';
 import { ZoneType } from '../grid/Cell';
+import { nextGameRandom, nextGameRandomInt } from '../core/Rng';
 
 const DEMAND_MIN = -100;
 const DEMAND_MAX = 100;
@@ -93,7 +94,7 @@ export class ZoneGrowthService {
     const attempts = demand >= 70 ? 3 : demand >= 40 ? 2 : 1;
 
     for (let i = 0; i < attempts; i++) {
-      const cell = candidates[Math.floor(Math.random() * candidates.length)];
+      const cell = candidates[nextGameRandomInt(this.state, candidates.length)];
       if (!cell) continue;
 
       const chosen = this.pickBuildingForCell(category, zone, cell.gx, cell.gy, demand);
@@ -108,7 +109,7 @@ export class ZoneGrowthService {
       this.state.budget -= allocationCost;
       this.events.emit('budget:changed', { budget: this.state.budget });
 
-      if (Math.random() < 0.2) {
+      if (nextGameRandom(this.state) < 0.2) {
         this.events.emit('notification', {
           message: `State construction bureau completed ${chosen.name}.`,
           type: 'info',
@@ -150,7 +151,7 @@ export class ZoneGrowthService {
 
     const ranked = [...buildable].sort((a, b) => this.scoreBuilding(b, demand) - this.scoreBuilding(a, demand));
     const topN = Math.min(3, ranked.length);
-    return ranked[Math.floor(Math.random() * topN)] ?? null;
+    return ranked[nextGameRandomInt(this.state, topN)] ?? null;
   }
 
   private isGrowthEligible(def: BuildingDef, zone: ZoneType): boolean {

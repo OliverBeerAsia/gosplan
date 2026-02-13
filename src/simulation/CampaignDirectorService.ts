@@ -1,5 +1,6 @@
 import { EventBus } from '../core/EventBus';
 import { BulletinEntry, GameStateData } from '../core/GameState';
+import { pushBulletinEntry } from '../core/Bulletin';
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -92,18 +93,6 @@ export class CampaignDirectorService {
   }
 
   private pushBulletin(text: string, level: BulletinEntry['level']): void {
-    const entry: BulletinEntry = {
-      id: `directive_${this.state.totalTicks}_${Math.floor(Math.random() * 10000)}`,
-      tick: this.state.totalTicks,
-      year: this.state.year,
-      week: this.state.week,
-      text,
-      level,
-    };
-    this.state.bulletin.push(entry);
-    if (this.state.bulletin.length > 60) {
-      this.state.bulletin.splice(0, this.state.bulletin.length - 60);
-    }
-    this.events.emit('bulletin:added', { entry });
+    pushBulletinEntry(this.state, this.events, text, level, 'directive');
   }
 }

@@ -14,7 +14,8 @@ This runbook describes how to publish GOSPLAN releases to GitHub with traceable 
    - `docs/TEST_REPORT_<version>.md`
 4. Run automated checks:
    - `npm run build`
-   - Atlas sanity script
+   - `npm run check:atlas`
+   - `npm run check:determinism`
    - Dev server startup smoke
 5. Confirm git status is clean except intended release files.
 

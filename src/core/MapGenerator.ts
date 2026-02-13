@@ -1,16 +1,19 @@
 import { Grid } from '../grid/Grid';
 import { TerrainType } from '../grid/Cell';
 import { SimplexNoise, octaveNoise } from './SimplexNoise';
+import { SeededRandom, deriveSeed } from './Rng';
 
 export class MapGenerator {
   private elevNoise: SimplexNoise;
   private moistNoise: SimplexNoise;
   private detailNoise: SimplexNoise;
+  private rng: SeededRandom;
 
-  constructor(private seed: number = Math.random() * 65536) {
+  constructor(private seed: number = 0x4D415047) {
     this.elevNoise = new SimplexNoise(seed);
     this.moistNoise = new SimplexNoise(seed + 1000);
     this.detailNoise = new SimplexNoise(seed + 2000);
+    this.rng = new SeededRandom(deriveSeed(seed, 0x52495652));
   }
 
   generate(grid: Grid): void {
@@ -79,19 +82,19 @@ export class MapGenerator {
 
   private carveRivers(grid: Grid, elevation: number[][], size: number): void {
     // 1-2 rivers via gradient descent from high to low terrain
-    const numRivers = 1 + Math.floor(Math.random() * 2);
+    const numRivers = 1 + this.rng.nextInt(2);
     for (let r = 0; r < numRivers; r++) {
       // Start from a high point near edge
       let sx: number, sy: number;
       let bestElev = -Infinity;
       for (let attempt = 0; attempt < 20; attempt++) {
-        const edge = Math.floor(Math.random() * 4);
+        const edge = this.rng.nextInt(4);
         let tx: number, ty: number;
         switch (edge) {
-          case 0: tx = Math.floor(Math.random() * size); ty = 0; break;
-          case 1: tx = Math.floor(Math.random() * size); ty = size - 1; break;
-          case 2: tx = 0; ty = Math.floor(Math.random() * size); break;
-          default: tx = size - 1; ty = Math.floor(Math.random() * size); break;
+          case 0: tx = this.rng.nextInt(size); ty = 0; break;
+          case 1: tx = this.rng.nextInt(size); ty = size - 1; break;
+          case 2: tx = 0; ty = this.rng.nextInt(size); break;
+          default: tx = size - 1; ty = this.rng.nextInt(size); break;
         }
         if (elevation[tx]?.[ty] !== undefined && elevation[tx][ty] > bestElev) {
           bestElev = elevation[tx][ty];
@@ -115,8 +118,8 @@ export class MapGenerator {
         grid.setTerrain(cx, cy, 'water');
         // Random width expansion
         const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-        if (Math.random() < 0.5) {
-          const d = dirs[Math.floor(Math.random() * 4)];
+        if (this.rng.nextFloat() < 0.5) {
+          const d = dirs[this.rng.nextInt(4)];
           const nx = cx + d[0];
           const ny = cy + d[1];
           if (grid.inBounds(nx, ny)) {
@@ -131,7 +134,7 @@ export class MapGenerator {
           const nx = cx + dx;
           const ny = cy + dy;
           if (!grid.inBounds(nx, ny)) continue;
-          const e = elevation[nx][ny] + (Math.random() - 0.5) * 0.15;
+          const e = elevation[nx][ny] + this.rng.nextSignedFloat() * 0.15;
           if (e < bestE) {
             bestE = e;
             bestNx = nx;

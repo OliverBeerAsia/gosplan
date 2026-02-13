@@ -1,5 +1,6 @@
 import { EventBus } from '../core/EventBus';
-import { BulletinEntry, GameStateData } from '../core/GameState';
+import { GameStateData } from '../core/GameState';
+import { pushBulletinEntry } from '../core/Bulletin';
 
 interface AchievementDef {
   id: string;
@@ -85,18 +86,12 @@ export class AchievementService {
   }
 
   private pushBulletin(text: string, achievementId: string): void {
-    const entry: BulletinEntry = {
-      id: `achievement_${achievementId}_${this.state.totalTicks}`,
-      tick: this.state.totalTicks,
-      year: this.state.year,
-      week: this.state.week,
+    pushBulletinEntry(
+      this.state,
+      this.events,
       text,
-      level: 'success',
-    };
-    this.state.bulletin.push(entry);
-    if (this.state.bulletin.length > 60) {
-      this.state.bulletin.splice(0, this.state.bulletin.length - 60);
-    }
-    this.events.emit('bulletin:added', { entry });
+      'success',
+      `achievement_${achievementId}`
+    );
   }
 }

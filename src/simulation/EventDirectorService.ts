@@ -6,6 +6,8 @@ import {
   CityEventChoiceEffects,
   GameStateData,
 } from '../core/GameState';
+import { nextGameRandom, nextGameRandomInt } from '../core/Rng';
+import { pushBulletinEntry } from '../core/Bulletin';
 
 interface EventTemplate {
   id: string;
@@ -170,7 +172,7 @@ export class EventDirectorService {
       0.62
     );
 
-    if (Math.random() > chance) return;
+    if (nextGameRandom(this.state) > chance) return;
 
     const candidates = this.templates.filter(t => {
       if (!t.condition(this.state)) return false;
@@ -180,7 +182,7 @@ export class EventDirectorService {
     });
     if (candidates.length === 0) return;
 
-    const template = candidates[Math.floor(Math.random() * candidates.length)];
+    const template = candidates[nextGameRandomInt(this.state, candidates.length)];
     const activeEvent: ActiveCityEvent = {
       id: template.id,
       title: template.title,
@@ -279,20 +281,7 @@ export class EventDirectorService {
   }
 
   private pushBulletin(text: string, level: BulletinEntry['level']): void {
-    const entry: BulletinEntry = {
-      id: `bulletin_${this.state.totalTicks}_${Math.floor(Math.random() * 10000)}`,
-      tick: this.state.totalTicks,
-      year: this.state.year,
-      week: this.state.week,
-      text,
-      level,
-    };
-
-    this.state.bulletin.push(entry);
-    if (this.state.bulletin.length > 60) {
-      this.state.bulletin.splice(0, this.state.bulletin.length - 60);
-    }
-    this.events.emit('bulletin:added', { entry });
+    pushBulletinEntry(this.state, this.events, text, level, 'event');
   }
 
   private toNotificationType(

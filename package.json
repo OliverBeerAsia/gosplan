@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check:determinism": "node scripts/check-determinism.cjs",
+    "check:atlas": "node scripts/check-atlas-manifest.cjs"
   },
   "dependencies": {
     "pixi.js": "^8.16.0"

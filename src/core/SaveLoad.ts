@@ -4,6 +4,7 @@ import { BuildingPlacer } from '../grid/BuildingPlacer';
 import { BuildingRegistry } from '../buildings/BuildingRegistry';
 import { PlacedBuilding } from '../buildings/BuildingTypes';
 import { TerrainType, ZoneType } from '../grid/Cell';
+import { deriveSeed, hashStringToSeed } from './Rng';
 
 const SAVE_KEY = 'gosplan_save';
 
@@ -172,10 +173,22 @@ export function loadGame(
     }
 
     // Merge with fresh defaults to support forward-compatible state extension.
-    return {
+    const mergedState: GameStateData = {
       ...createInitialState(),
       ...data.state,
     };
+
+    const legacy = data.state as Partial<GameStateData>;
+    if (typeof legacy.rngSeed !== 'number' || typeof legacy.rngState !== 'number') {
+      const fallbackSeed = hashStringToSeed(raw);
+      mergedState.rngSeed = fallbackSeed;
+      mergedState.rngState = fallbackSeed;
+    }
+    if (typeof legacy.mapSeed !== 'number') {
+      mergedState.mapSeed = deriveSeed(mergedState.rngSeed, 0x4D4150);
+    }
+
+    return mergedState;
   } catch {
     return null;
   }
