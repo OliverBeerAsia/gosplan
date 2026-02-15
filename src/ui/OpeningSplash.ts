@@ -1,3 +1,5 @@
+import { assetPath } from '../utils/assetPath';
+
 export interface OpeningSplashOptions {
   durationMs?: number;
   skipAllowed?: boolean;
@@ -20,7 +22,7 @@ export class OpeningSplash {
 
     const hero = document.createElement('img');
     hero.className = 'opening-splash-hero';
-    hero.src = '/assets/ui/opening-home.png';
+    hero.src = assetPath('assets/ui/opening-home.png');
     hero.alt = 'Gosplan opening home screen artwork';
     panel.appendChild(hero);
 

@@ -1,4 +1,5 @@
 import { CampaignScenarioId, GameStateData } from '../core/GameState';
+import { assetPath } from '../utils/assetPath';
 
 export interface CampaignScenarioDef {
   id: Exclude<CampaignScenarioId, 'none'>;
@@ -17,7 +18,7 @@ export const CAMPAIGN_SCENARIOS: CampaignScenarioDef[] = [
     subtitle: 'Restore housing and services while rebuilding trust after shortages.',
     targetYear: 1988,
     openingDirective: 'Reconstruction Priority: housing, utilities, and district stability.',
-    cardArt: '/assets/ui/scenario-reconstruction.svg',
+    cardArt: assetPath('assets/ui/scenario-reconstruction.svg'),
     applyStart: (state) => {
       state.budget += 12000;
       state.population = Math.max(80, state.population);
@@ -35,7 +36,7 @@ export const CAMPAIGN_SCENARIOS: CampaignScenarioDef[] = [
     subtitle: 'Push output aggressively while keeping labor tensions under control.',
     targetYear: 1987,
     openingDirective: 'Steel and Concrete First: maximize production with controlled unrest.',
-    cardArt: '/assets/ui/scenario-industrial.svg',
+    cardArt: assetPath('assets/ui/scenario-industrial.svg'),
     applyStart: (state) => {
       state.budget -= 5000;
       state.population = Math.max(140, state.population);
@@ -54,7 +55,7 @@ export const CAMPAIGN_SCENARIOS: CampaignScenarioDef[] = [
     subtitle: 'Fight decline, aging infrastructure, and civic fatigue under tight resources.',
     targetYear: 1986,
     openingDirective: 'Stabilization Doctrine: hold the city together under systemic strain.',
-    cardArt: '/assets/ui/scenario-stagnation.svg',
+    cardArt: assetPath('assets/ui/scenario-stagnation.svg'),
     applyStart: (state) => {
       state.budget -= 14000;
       state.population = Math.max(220, state.population);

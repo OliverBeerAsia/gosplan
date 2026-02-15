@@ -1,5 +1,5 @@
 {
-  "image": "/assets/atlas/pixel-city.svg",
+  "image": "pixel-city.svg",
   "frames": {
     "ground": { "x": 0, "y": 0, "w": 64, "h": 32 },
     "water": { "x": 64, "y": 0, "w": 64, "h": 32 },

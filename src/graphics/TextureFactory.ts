@@ -2,6 +2,7 @@ import { Graphics, Renderer, Sprite, Texture, Container } from 'pixi.js';
 import { generateTerrainTextures } from './TerrainTextures';
 import { generateBuildingTextures } from './BuildingTextures';
 import { loadSpriteAtlasTextures } from './SpriteAtlasLoader';
+import { assetPath } from '../utils/assetPath';
 
 type DistrictStyle = 'worker_housing' | 'heavy_industry' | 'scientific_city' | 'historic_core';
 
@@ -49,7 +50,7 @@ export class TextureFactory {
     for (const [k, v] of buildings) this.textures.set(k, v);
 
     // Optional authored atlas overrides procedural textures when available.
-    const atlas = await loadSpriteAtlasTextures('/assets/atlas/pixel-city.json');
+    const atlas = await loadSpriteAtlasTextures(assetPath('assets/atlas/pixel-city.json'));
     for (const [k, v] of atlas) {
       this.textures.set(k, v);
     }

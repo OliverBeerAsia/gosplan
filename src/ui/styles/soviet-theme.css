@@ -614,7 +614,7 @@
   border: var(--panel-border-gold);
   background:
     linear-gradient(180deg, rgba(16, 6, 6, 0.95), rgba(10, 2, 2, 0.95)),
-    url('/assets/ui/title-grain.svg');
+    var(--ui-grain-image, none);
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65);
   text-align: center;
   display: grid;
@@ -690,7 +690,7 @@
       transparent 4px
     ),
     radial-gradient(circle at 20% 16%, rgba(255, 215, 0, 0.25), rgba(0, 0, 0, 0) 40%),
-    url('/assets/ui/title-grain.svg'),
+    var(--ui-grain-image, none),
     linear-gradient(135deg, #1f0707 0%, #0b0303 48%, #050101 100%);
   display: flex;
   align-items: center;

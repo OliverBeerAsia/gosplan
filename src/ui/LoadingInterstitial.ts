@@ -1,4 +1,5 @@
 import { LoadingMusic } from '../audio/LoadingMusic';
+import { assetPath } from '../utils/assetPath';
 
 export type LoadingMode = 'campaign' | 'sandbox' | 'load';
 
@@ -20,21 +21,21 @@ const INTERSTITIAL_CARDS: InterstitialCard[] = [
     title: 'RED STAR ORBIT',
     caption: 'Satellite relay confirms production telemetry in all districts.',
     ticker: 'COSMODROME UPLINK',
-    artAsset: '/assets/ui/loading-card-orbit.svg',
+    artAsset: assetPath('assets/ui/loading-card-orbit.svg'),
     monoLine: ':: ORBITAL RELAY LOCKED ::',
   },
   {
     title: 'TRACTOR COLUMN',
     caption: 'Agrarian brigades cleared steel route for urban expansion.',
     ticker: 'MOTOR POOL SYNC',
-    artAsset: '/assets/ui/loading-card-tractor.svg',
+    artAsset: assetPath('assets/ui/loading-card-tractor.svg'),
     monoLine: ':: SUPPLY CONVOY IN MOTION ::',
   },
   {
     title: 'FACTORY WHISTLE',
     caption: 'Industrial output whistles ahead of current quarter projections.',
     ticker: 'FOUNDRY SIGNAL',
-    artAsset: '/assets/ui/loading-card-factory.svg',
+    artAsset: assetPath('assets/ui/loading-card-factory.svg'),
     monoLine: ':: STACK PRESSURE NOMINAL ::',
   },
 ];

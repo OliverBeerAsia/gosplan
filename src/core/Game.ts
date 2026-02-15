@@ -49,6 +49,7 @@ import { LoadingInterstitial, LoadingMode } from '../ui/LoadingInterstitial';
 import { OpeningSplash } from '../ui/OpeningSplash';
 import { createRuntimeSeed, deriveSeed } from './Rng';
 import { pushBulletinEntry } from './Bulletin';
+import { assetPath } from '../utils/assetPath';
 
 export class Game {
   private static readonly STREAMLINED_UI = true;
@@ -123,6 +124,7 @@ export class Game {
     this.uiContainer = document.createElement('div');
     this.uiContainer.className = 'soviet-ui';
     this.uiContainer.style.cssText = 'position:absolute;inset:0;pointer-events:none;';
+    this.uiContainer.style.setProperty('--ui-grain-image', `url('${assetPath('assets/ui/title-grain.svg')}')`);
     container.appendChild(this.uiContainer);
 
     this.applyUiSettings({
