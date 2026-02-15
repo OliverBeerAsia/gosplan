@@ -24,27 +24,32 @@ export class LoadingMusic {
   private stopTimer: number | null = null;
 
   async play(): Promise<void> {
-    this.stop();
+    try {
+      this.stop();
 
-    const Ctor = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!Ctor) return;
+      const Ctor = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!Ctor) return;
 
-    this.ctx = new Ctor();
-    if (this.ctx.state === 'suspended') {
-      await this.ctx.resume();
+      this.ctx = new Ctor();
+      if (this.ctx.state === 'suspended') {
+        await this.ctx.resume();
+      }
+
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.value = 0.0001;
+      this.masterGain.connect(this.ctx.destination);
+
+      // Gentle fade-in to keep it subtle.
+      const now = this.ctx.currentTime;
+      this.masterGain.gain.setValueAtTime(0.0001, now);
+      this.masterGain.gain.exponentialRampToValueAtTime(0.06, now + 0.28);
+
+      this.schedulePass(now + 0.03);
+      this.schedulePass(now + 3.8);
+    } catch {
+      // Audio is best-effort: never block loading if browser policies deny playback.
+      this.stop();
     }
-
-    this.masterGain = this.ctx.createGain();
-    this.masterGain.gain.value = 0.0001;
-    this.masterGain.connect(this.ctx.destination);
-
-    // Gentle fade-in to keep it subtle.
-    const now = this.ctx.currentTime;
-    this.masterGain.gain.setValueAtTime(0.0001, now);
-    this.masterGain.gain.exponentialRampToValueAtTime(0.06, now + 0.28);
-
-    this.schedulePass(now + 0.03);
-    this.schedulePass(now + 3.8);
   }
 
   stop(): void {
