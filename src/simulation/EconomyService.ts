@@ -4,6 +4,8 @@ import { GameStateData } from '../core/GameState';
 import { EventBus } from '../core/EventBus';
 
 export class EconomyService {
+  private nextDeficitAlertTick = 0;
+
   constructor(
     private grid: Grid,
     private registry: BuildingRegistry,
@@ -46,11 +48,17 @@ export class EconomyService {
     // Clamp budget (can go negative = debt)
     this.events.emit('budget:changed', { budget: this.state.budget });
 
-    if (this.state.budget < 0) {
+    if (this.state.budget >= 0) {
+      this.nextDeficitAlertTick = 0;
+      return;
+    }
+
+    if (this.state.totalTicks >= this.nextDeficitAlertTick) {
       this.events.emit('notification', {
         message: 'Comrade! The city treasury is in deficit!',
         type: 'warning'
       });
+      this.nextDeficitAlertTick = this.state.totalTicks + 12;
     }
   }
 }

@@ -135,7 +135,11 @@ export class Game {
     });
 
     this.openingSplash = new OpeningSplash(this.uiContainer);
-    await this.openingSplash.play({ durationMs: 2200, skipAllowed: true });
+    await this.openingSplash.play({
+      durationMs: 2800,
+      skipAllowed: false,
+      requireStartButton: true,
+    });
 
     this.loadingInterstitial = new LoadingInterstitial(this.uiContainer);
 
@@ -549,8 +553,10 @@ export class Game {
     this.advancedPanelsVisible = visible;
     const district = this.uiContainer.querySelector<HTMLElement>('#district-panel');
     const achievement = this.uiContainer.querySelector<HTMLElement>('#achievement-panel');
+    const bulletin = this.uiContainer.querySelector<HTMLElement>('#bulletin-panel');
     if (district) district.style.display = visible ? '' : 'none';
     if (achievement) achievement.style.display = visible ? '' : 'none';
+    if (bulletin) bulletin.style.display = visible ? '' : 'none';
   }
 
   private saveCurrentGame(): void {

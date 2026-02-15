@@ -670,6 +670,37 @@
   color: #f2d9a0;
 }
 
+.opening-splash-start-btn {
+  justify-self: center;
+  min-width: 280px;
+  margin-top: var(--space-2);
+  padding: 10px 14px;
+  border: 2px solid #746848;
+  background: #211714;
+  color: #8f8163;
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  cursor: not-allowed;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 2px 0 0 #000;
+}
+
+.opening-splash-start-btn.ready {
+  border-color: #ffd86f;
+  background: linear-gradient(180deg, #8f2d2d, #5b1212);
+  color: #ffd86f;
+  cursor: pointer;
+  animation: pixelPulse 2.4s linear infinite;
+}
+
+.opening-splash-start-btn:focus-visible {
+  outline: 2px dashed #ffd86f;
+  outline-offset: 3px;
+}
+
 /* ===== TITLE SCREEN ===== */
 #title-screen {
   position: absolute;

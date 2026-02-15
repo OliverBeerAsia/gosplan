@@ -79,16 +79,23 @@ export class CampaignDirectorService {
   }
 
   private setDirective(directive: string, pressure: number): void {
-    if (this.state.activeDirective === directive && this.state.performancePressure === pressure) return;
+    const directiveChanged = this.state.activeDirective !== directive;
+    const pressureChanged = this.state.performancePressure !== pressure;
+    if (!directiveChanged && !pressureChanged) return;
 
     this.state.activeDirective = directive;
     this.state.performancePressure = pressure;
-
     this.events.emit('directive:changed', { directive, pressure });
-    this.pushBulletin(`Central directive updated: ${directive}`, pressure >= 65 ? 'warning' : 'info');
+
+    if (!directiveChanged) {
+      return;
+    }
+
+    const type = pressure >= 65 ? 'warning' : 'info';
+    this.pushBulletin(`Central directive updated: ${directive}`, type);
     this.events.emit('notification', {
       message: `Directive updated: ${directive}`,
-      type: pressure >= 65 ? 'warning' : 'info',
+      type,
     });
   }
 
