@@ -22,6 +22,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Repo is currently configured for legacy Pages source + Actions deploy.
+      # Wait for the legacy dynamic build to finish so this dist artifact deploy
+      # is the last writer and remains the live site.
+      - name: Wait for Legacy Pages Builder
+        run: sleep 90
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
