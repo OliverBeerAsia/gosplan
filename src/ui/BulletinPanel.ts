@@ -14,18 +14,22 @@ export class BulletinPanel {
   ) {
     this.el = document.createElement('div');
     this.el.id = 'bulletin-panel';
+    this.el.className = 'panel-shell panel-shell--neutral';
 
     this.headerEl = document.createElement('div');
     this.headerEl.id = 'bulletin-panel-header';
+    this.headerEl.className = 'panel-shell-header';
     this.headerEl.textContent = 'STATE BULLETIN';
     this.el.appendChild(this.headerEl);
 
     this.directiveEl = document.createElement('div');
     this.directiveEl.id = 'bulletin-directive';
+    this.directiveEl.className = 'panel-shell-body';
     this.el.appendChild(this.directiveEl);
 
     this.listEl = document.createElement('div');
     this.listEl.id = 'bulletin-list';
+    this.listEl.className = 'panel-shell-body';
     this.el.appendChild(this.listEl);
 
     container.appendChild(this.el);

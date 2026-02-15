@@ -4,6 +4,18 @@ export type GraphicsQuality = 'low' | 'medium' | 'high';
 export type GameMode = 'campaign' | 'sandbox';
 export type DistrictStyle = 'worker_housing' | 'heavy_industry' | 'scientific_city' | 'historic_core';
 export type CampaignScenarioId = 'none' | 'reconstruction' | 'industrial_surge' | 'stagnation';
+export type UiMotionPreset = 'reduced' | 'standard' | 'cinematic';
+export type UiScalePreset = 'compact' | 'normal';
+
+export interface UiSettings {
+  motionPreset: UiMotionPreset;
+  uiScale: UiScalePreset;
+}
+
+export const DEFAULT_UI_SETTINGS: UiSettings = {
+  motionPreset: 'cinematic',
+  uiScale: 'normal',
+};
 
 export interface DistrictSnapshot {
   id: string;
@@ -119,6 +131,7 @@ export interface GameStateData {
   activeEvent: ActiveCityEvent | null;
   bulletin: BulletinEntry[];
   achievementsUnlocked: string[];
+  uiSettings: UiSettings;
 }
 
 export function createInitialState(): GameStateData {
@@ -167,5 +180,6 @@ export function createInitialState(): GameStateData {
     activeEvent: null,
     bulletin: [],
     achievementsUnlocked: [],
+    uiSettings: { ...DEFAULT_UI_SETTINGS },
   };
 }

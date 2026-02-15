@@ -1,5 +1,5 @@
 import { Grid } from '../grid/Grid';
-import { GameStateData, createInitialState } from './GameState';
+import { DEFAULT_UI_SETTINGS, GameStateData, createInitialState } from './GameState';
 import { BuildingPlacer } from '../grid/BuildingPlacer';
 import { BuildingRegistry } from '../buildings/BuildingRegistry';
 import { PlacedBuilding } from '../buildings/BuildingTypes';
@@ -187,6 +187,10 @@ export function loadGame(
     if (typeof legacy.mapSeed !== 'number') {
       mergedState.mapSeed = deriveSeed(mergedState.rngSeed, 0x4D4150);
     }
+    mergedState.uiSettings = {
+      ...DEFAULT_UI_SETTINGS,
+      ...(legacy.uiSettings ?? {}),
+    };
 
     return mergedState;
   } catch {

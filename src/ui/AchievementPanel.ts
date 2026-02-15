@@ -26,18 +26,22 @@ export class AchievementPanel {
   ) {
     this.el = document.createElement('div');
     this.el.id = 'achievement-panel';
+    this.el.className = 'panel-shell panel-shell--gold';
 
     const header = document.createElement('div');
     header.id = 'achievement-panel-header';
+    header.className = 'panel-shell-header';
     header.textContent = 'STATE HONORS';
     this.el.appendChild(header);
 
     this.summaryEl = document.createElement('div');
     this.summaryEl.id = 'achievement-summary';
+    this.summaryEl.className = 'panel-shell-body';
     this.el.appendChild(this.summaryEl);
 
     this.listEl = document.createElement('div');
     this.listEl.id = 'achievement-list';
+    this.listEl.className = 'panel-shell-body';
     this.el.appendChild(this.listEl);
 
     container.appendChild(this.el);

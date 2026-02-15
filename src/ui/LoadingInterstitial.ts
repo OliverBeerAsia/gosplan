@@ -1,10 +1,18 @@
+import { LoadingMusic } from '../audio/LoadingMusic';
+
 export type LoadingMode = 'campaign' | 'sandbox' | 'load';
 
 interface InterstitialCard {
   title: string;
   caption: string;
   ticker: string;
-  art: string;
+  artAsset: string;
+  monoLine: string;
+}
+
+interface LoadingPlayOptions {
+  minDurationMs?: number;
+  skipAllowed?: boolean;
 }
 
 const INTERSTITIAL_CARDS: InterstitialCard[] = [
@@ -12,41 +20,22 @@ const INTERSTITIAL_CARDS: InterstitialCard[] = [
     title: 'RED STAR ORBIT',
     caption: 'Satellite relay confirms production telemetry in all districts.',
     ticker: 'COSMODROME UPLINK',
-    art: [
-      '        ##        ',
-      '      ######      ',
-      '    ##########    ',
-      '  ######..######  ',
-      '######......######',
-      '  ######..######  ',
-      '    ##########    ',
-      '      ######      ',
-      '        ##        ',
-    ].join('\n'),
+    artAsset: '/assets/ui/loading-card-orbit.svg',
+    monoLine: ':: ORBITAL RELAY LOCKED ::',
   },
   {
     title: 'TRACTOR COLUMN',
     caption: 'Agrarian brigades cleared steel route for urban expansion.',
     ticker: 'MOTOR POOL SYNC',
-    art: [
-      '____________________________',
-      '|[]|[][][]|==|[][][]|[]|==>',
-      '  O----O      O----O       ',
-      '____________________________',
-      '  SUPPLY CONVOY IN MOTION  ',
-    ].join('\n'),
+    artAsset: '/assets/ui/loading-card-tractor.svg',
+    monoLine: ':: SUPPLY CONVOY IN MOTION ::',
   },
   {
     title: 'FACTORY WHISTLE',
     caption: 'Industrial output whistles ahead of current quarter projections.',
     ticker: 'FOUNDRY SIGNAL',
-    art: [
-      '     ||      ||      ||     ',
-      '  ___||___ ___||___ ___||___',
-      ' | [] [] | [] [] | [] [] |  ',
-      '=|______|_______|_______|===',
-      '      SMOKE STACK ARRAY      ',
-    ].join('\n'),
+    artAsset: '/assets/ui/loading-card-factory.svg',
+    monoLine: ':: STACK PRESSURE NOMINAL ::',
   },
 ];
 
@@ -70,11 +59,14 @@ export class LoadingInterstitial {
   private titleEl: HTMLDivElement;
   private captionEl: HTMLDivElement;
   private tickerEl: HTMLDivElement;
-  private artEl: HTMLPreElement;
+  private artImageEl: HTMLImageElement;
+  private artMonoEl: HTMLPreElement;
   private progressFillEl: HTMLDivElement;
   private introEl: HTMLDivElement;
   private progressValueEl: HTMLDivElement;
   private timeoutIds: number[] = [];
+  private activeCleanup: (() => void) | null = null;
+  private music = new LoadingMusic();
 
   constructor(container: HTMLElement) {
     this.el = document.createElement('div');
@@ -92,9 +84,18 @@ export class LoadingInterstitial {
     this.titleEl.className = 'loading-title';
     panel.appendChild(this.titleEl);
 
-    this.artEl = document.createElement('pre');
-    this.artEl.className = 'loading-art';
-    panel.appendChild(this.artEl);
+    const art = document.createElement('div');
+    art.className = 'loading-art';
+    panel.appendChild(art);
+
+    this.artImageEl = document.createElement('img');
+    this.artImageEl.className = 'loading-art-image';
+    this.artImageEl.alt = '';
+    art.appendChild(this.artImageEl);
+
+    this.artMonoEl = document.createElement('pre');
+    this.artMonoEl.className = 'loading-art-mono';
+    art.appendChild(this.artMonoEl);
 
     this.captionEl = document.createElement('div');
     this.captionEl.className = 'loading-caption';
@@ -123,13 +124,15 @@ export class LoadingInterstitial {
     container.appendChild(this.el);
   }
 
-  async play(mode: LoadingMode): Promise<void> {
+  async play(mode: LoadingMode, opts: LoadingPlayOptions = {}): Promise<void> {
     this.clearTimers();
+    void this.music.play();
 
+    const reduceMotion = this.prefersReducedMotion();
     const firstCardIdx = Math.floor(Math.random() * INTERSTITIAL_CARDS.length);
     const secondCardIdx =
-      (firstCardIdx + 1 + Math.floor(Math.random() * (INTERSTITIAL_CARDS.length - 1))) %
-      INTERSTITIAL_CARDS.length;
+      (firstCardIdx + 1 + Math.floor(Math.random() * (INTERSTITIAL_CARDS.length - 1)))
+      % INTERSTITIAL_CARDS.length;
 
     this.applyCard(INTERSTITIAL_CARDS[firstCardIdx], mode);
     this.progressFillEl.style.width = '0%';
@@ -138,22 +141,44 @@ export class LoadingInterstitial {
 
     this.renderIntroMessage(mode);
 
-    const durationMs = 1700 + Math.floor(Math.random() * 700);
+    const durationMs = Math.max(
+      opts.minDurationMs ?? 0,
+      reduceMotion ? 950 : 1700 + Math.floor(Math.random() * 700),
+    );
     const swapPct = 42 + Math.floor(Math.random() * 22);
     const bootLine = BOOT_LINES[Math.floor(Math.random() * BOOT_LINES.length)];
+    const skipAllowed = Boolean(opts.skipAllowed);
     let swapped = false;
+    let skipRequested = false;
+
+    const onSkip = (): void => {
+      if (!skipAllowed) return;
+      skipRequested = true;
+    };
+
+    if (skipAllowed) {
+      window.addEventListener('keydown', onSkip);
+      this.el.addEventListener('pointerdown', onSkip);
+      this.activeCleanup = () => {
+        window.removeEventListener('keydown', onSkip);
+        this.el.removeEventListener('pointerdown', onSkip);
+        this.activeCleanup = null;
+      };
+    }
 
     await new Promise<void>((resolve) => {
       const started = performance.now();
 
       const tick = (): void => {
         const elapsed = performance.now() - started;
-        const pct = Math.min(100, Math.floor((elapsed / durationMs) * 100));
+        const pct = skipRequested
+          ? 100
+          : Math.min(100, Math.floor((elapsed / durationMs) * 100));
         this.progressFillEl.style.width = `${pct}%`;
         this.progressValueEl.textContent = `${pct}%`;
-        this.tickerEl.textContent = `${bootLine} // ${this.currentTicker}`;
+        this.tickerEl.textContent = `${bootLine} // ${this.currentTicker}${skipAllowed ? ' // PRESS ANY KEY TO SKIP' : ''}`;
 
-        if (!swapped && pct >= swapPct) {
+        if (!reduceMotion && !swapped && pct >= swapPct) {
           this.applyCard(INTERSTITIAL_CARDS[secondCardIdx], mode);
           swapped = true;
         }
@@ -162,12 +187,12 @@ export class LoadingInterstitial {
           const doneId = window.setTimeout(() => {
             this.hide();
             resolve();
-          }, 240);
+          }, reduceMotion ? 80 : 240);
           this.timeoutIds.push(doneId);
           return;
         }
 
-        const waitMs = 55 + Math.floor(Math.random() * 70);
+        const waitMs = reduceMotion ? 60 : 55 + Math.floor(Math.random() * 70);
         const id = window.setTimeout(tick, waitMs);
         this.timeoutIds.push(id);
       };
@@ -178,6 +203,7 @@ export class LoadingInterstitial {
 
   hide(): void {
     this.clearTimers();
+    this.music.stop();
     this.el.classList.remove('visible');
   }
 
@@ -186,7 +212,8 @@ export class LoadingInterstitial {
   private applyCard(card: InterstitialCard, mode: LoadingMode): void {
     this.modeEl.textContent = MODE_LABEL[mode];
     this.titleEl.textContent = card.title;
-    this.artEl.textContent = card.art;
+    this.artImageEl.src = card.artAsset;
+    this.artMonoEl.textContent = card.monoLine;
     this.captionEl.textContent = card.caption;
     this.currentTicker = card.ticker;
     this.tickerEl.textContent = card.ticker;
@@ -210,5 +237,11 @@ export class LoadingInterstitial {
       window.clearTimeout(id);
     }
     this.timeoutIds.length = 0;
+    this.activeCleanup?.();
+  }
+
+  private prefersReducedMotion(): boolean {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      || document.documentElement.classList.contains('reduced-motion');
   }
 }

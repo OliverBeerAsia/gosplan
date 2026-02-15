@@ -4,6 +4,8 @@ import {
   CampaignScenarioId,
   GameMode,
   GameStateData,
+  DEFAULT_UI_SETTINGS,
+  UiSettings,
   createInitialState,
   GraphicsQuality
 } from './GameState';
@@ -44,10 +46,12 @@ import { getSeason, getSeasonalTerrainTint, isWinter, Season } from '../renderin
 import { WeatherEffects } from '../rendering/WeatherEffects';
 import { applyCampaignScenario } from '../simulation/CampaignScenarios';
 import { LoadingInterstitial, LoadingMode } from '../ui/LoadingInterstitial';
+import { OpeningSplash } from '../ui/OpeningSplash';
 import { createRuntimeSeed, deriveSeed } from './Rng';
 import { pushBulletinEntry } from './Bulletin';
 
 export class Game {
+  private static readonly STREAMLINED_UI = true;
   private app!: Application;
   private events: EventBus;
   private state!: GameStateData;
@@ -79,14 +83,16 @@ export class Game {
   private tooltip!: BuildingTooltip;
   private minimap!: Minimap;
   private tutorial!: TutorialManager;
-  private districtPanel!: DistrictPanel;
-  private bulletinPanel!: BulletinPanel;
+  private districtPanel?: DistrictPanel;
+  private bulletinPanel?: BulletinPanel;
   private eventModal!: EventChoiceModal;
   private ambienceOverlay!: AmbienceOverlay;
-  private achievementPanel!: AchievementPanel;
+  private achievementPanel?: AchievementPanel;
   private campaignEndingModal!: CampaignEndingModal;
   private loadingInterstitial!: LoadingInterstitial;
   private titleScreen!: TitleScreen;
+  private openingSplash!: OpeningSplash;
+  private advancedPanelsVisible = false;
   private bootInProgress = false;
 
   private uiContainer!: HTMLDivElement;
@@ -118,6 +124,17 @@ export class Game {
     this.uiContainer.className = 'soviet-ui';
     this.uiContainer.style.cssText = 'position:absolute;inset:0;pointer-events:none;';
     container.appendChild(this.uiContainer);
+
+    this.applyUiSettings({
+      ...DEFAULT_UI_SETTINGS,
+      motionPreset: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        ? 'reduced'
+        : DEFAULT_UI_SETTINGS.motionPreset,
+    });
+
+    this.openingSplash = new OpeningSplash(this.uiContainer);
+    await this.openingSplash.play({ durationMs: 2200, skipAllowed: true });
+
     this.loadingInterstitial = new LoadingInterstitial(this.uiContainer);
 
     // Show title screen
@@ -127,7 +144,8 @@ export class Game {
       (scenario) => this.launchFromTitle(false, 'campaign', scenario),
       () => this.launchFromTitle(false, 'sandbox'),
       canLoad ? () => this.launchFromTitle(true, 'campaign') : null,
-      () => exportSaveArchive()
+      () => exportSaveArchive(),
+      () => this.playLaunchTransition()
     );
   }
 
@@ -146,7 +164,7 @@ export class Game {
         : mode === 'sandbox'
           ? 'sandbox'
           : 'campaign';
-      await this.loadingInterstitial.play(loadingMode);
+      await this.loadingInterstitial.play(loadingMode, { skipAllowed: true });
       this.startGame(loadSave, mode, scenarioId);
     } catch (error) {
       this.loadingInterstitial.hide();
@@ -155,6 +173,14 @@ export class Game {
     } finally {
       this.bootInProgress = false;
     }
+  }
+
+  private async playLaunchTransition(): Promise<void> {
+    this.uiContainer.classList.add('ui-launching');
+    await new Promise<void>((resolve) => {
+      window.setTimeout(resolve, 150);
+    });
+    this.uiContainer.classList.remove('ui-launching');
   }
 
   private startGame(
@@ -186,6 +212,13 @@ export class Game {
         this.addBulletinEntry('State archives restored from previous session.', 'info');
       }
     }
+    if (
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      && this.state.uiSettings.motionPreset !== 'reduced'
+    ) {
+      this.state.uiSettings.motionPreset = 'reduced';
+    }
+    this.applyUiSettings(this.state.uiSettings);
 
     // Add some water features
     if (!loadSave) {
@@ -296,6 +329,14 @@ export class Game {
       this.saveCurrentGame();
     });
 
+    this.events.on('ui:settings:changed', ({ settings }) => {
+      this.state.uiSettings = {
+        ...this.state.uiSettings,
+        ...settings,
+      };
+      this.applyUiSettings(this.state.uiSettings);
+    });
+
     // Sync UI controls with current graphics quality (including loaded saves).
     this.events.emit('graphics:quality:changed', { quality: this.state.graphicsQuality });
 
@@ -341,7 +382,7 @@ export class Game {
 
   private setupUI(): void {
     this.ambienceOverlay = new AmbienceOverlay(this.uiContainer, this.state, this.events);
-    this.resourceBar = new ResourceBar(this.uiContainer, this.state, this.events);
+    this.resourceBar = new ResourceBar(this.uiContainer, this.state, this.events, Game.STREAMLINED_UI);
     this.toolbar = new Toolbar(this.uiContainer, this.registry, this.events, (tool, buildingId, zone) => {
       this.toolController.setTool(tool, buildingId, zone);
       if (buildingId) {
@@ -361,6 +402,7 @@ export class Game {
     this.eventModal = new EventChoiceModal(this.uiContainer, this.state, this.events);
     this.achievementPanel = new AchievementPanel(this.uiContainer, this.state, this.events);
     this.campaignEndingModal = new CampaignEndingModal(this.uiContainer, this.state, this.events);
+    this.setAdvancedPanelsVisible(!Game.STREAMLINED_UI);
 
     // Update resource bar initially
     this.resourceBar.update();
@@ -382,8 +424,15 @@ export class Game {
       }
     });
 
-    this.districtPanel.update();
-    this.bulletinPanel.update();
+    this.districtPanel?.update();
+    this.bulletinPanel?.update();
+
+    if (Game.STREAMLINED_UI) {
+      this.events.emit('notification', {
+        message: 'Streamlined UI active. Press I to toggle advanced intel panels.',
+        type: 'info',
+      });
+    }
   }
 
   private setupKeyboard(): void {
@@ -465,6 +514,16 @@ export class Game {
           const centerPos = gridToWorld(MAP_SIZE / 2, MAP_SIZE / 2, 0);
           this.camera.centerOn(centerPos.x, centerPos.y);
           break;
+        case 'i':
+        case 'I':
+          this.setAdvancedPanelsVisible(!this.advancedPanelsVisible);
+          this.events.emit('notification', {
+            message: this.advancedPanelsVisible
+              ? 'Advanced intel panels enabled.'
+              : 'Advanced intel panels hidden.',
+            type: 'info',
+          });
+          break;
         case '+':
         case '=':
           this.camera.zoomAt(
@@ -484,6 +543,14 @@ export class Game {
     });
   }
 
+  private setAdvancedPanelsVisible(visible: boolean): void {
+    this.advancedPanelsVisible = visible;
+    const district = this.uiContainer.querySelector<HTMLElement>('#district-panel');
+    const achievement = this.uiContainer.querySelector<HTMLElement>('#achievement-panel');
+    if (district) district.style.display = visible ? '' : 'none';
+    if (achievement) achievement.style.display = visible ? '' : 'none';
+  }
+
   private saveCurrentGame(): void {
     saveGame(this.grid, this.state, this.placer);
     this.events.emit('notification', { message: 'Game saved!', type: 'success' });
@@ -498,6 +565,12 @@ export class Game {
     this.overlayRenderer.setQuality(quality);
     this.smokeParticles.setQuality(quality);
     this.weatherEffects.setQuality(quality);
+  }
+
+  private applyUiSettings(settings: UiSettings): void {
+    document.documentElement.classList.toggle('reduced-motion', settings.motionPreset === 'reduced');
+    this.uiContainer.dataset.uiScale = settings.uiScale;
+    this.uiContainer.dataset.motionPreset = settings.motionPreset;
   }
 
   private nextGraphicsQuality(current: GraphicsQuality): GraphicsQuality {

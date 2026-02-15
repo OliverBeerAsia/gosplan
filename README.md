@@ -129,6 +129,7 @@ npm run preview
   - `X`: demolish
   - `Q`: repeat last building
   - `G`: cycle graphics quality (`LOW -> MED -> HIGH`)
+  - `I`: toggle advanced intel panels (Districts + Honors)
   - `Tab`: cycle toolbar categories
 - Overlays:
   - `P`: power overlay

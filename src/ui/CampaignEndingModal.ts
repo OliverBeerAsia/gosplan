@@ -19,27 +19,33 @@ export class CampaignEndingModal {
 
     const panel = document.createElement('div');
     panel.id = 'campaign-ending-panel';
+    panel.className = 'panel-shell panel-shell--gold';
     this.el.appendChild(panel);
 
     const header = document.createElement('div');
     header.id = 'campaign-ending-header';
+    header.className = 'panel-shell-header';
     header.textContent = 'CAMPAIGN REPORT';
     panel.appendChild(header);
 
     this.titleEl = document.createElement('div');
     this.titleEl.id = 'campaign-ending-title';
+    this.titleEl.className = 'panel-shell-body';
     panel.appendChild(this.titleEl);
 
     this.summaryEl = document.createElement('div');
     this.summaryEl.id = 'campaign-ending-summary';
+    this.summaryEl.className = 'panel-shell-body';
     panel.appendChild(this.summaryEl);
 
     this.scoreEl = document.createElement('div');
     this.scoreEl.id = 'campaign-ending-score';
+    this.scoreEl.className = 'panel-shell-body';
     panel.appendChild(this.scoreEl);
 
     this.scenarioEl = document.createElement('div');
     this.scenarioEl.id = 'campaign-ending-scenario';
+    this.scenarioEl.className = 'panel-shell-body';
     panel.appendChild(this.scenarioEl);
 
     const actions = document.createElement('div');

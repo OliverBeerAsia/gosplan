@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" role="img" aria-label="Gosplan emblem">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="62%">
+      <stop offset="0%" stop-color="#ffdc73"/>
+      <stop offset="70%" stop-color="#c13a2f"/>
+      <stop offset="100%" stop-color="#620f0f"/>
+    </radialGradient>
+    <filter id="soft" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="1.5"/>
+    </filter>
+  </defs>
+  <rect width="220" height="220" rx="28" fill="#120304"/>
+  <circle cx="110" cy="110" r="84" fill="url(#bg)"/>
+  <circle cx="110" cy="110" r="92" fill="none" stroke="#f5d37a" stroke-width="4"/>
+  <path d="M110 36l16 48h50l-40 28 16 48-42-30-42 30 16-48-40-28h50z" fill="#f8e7b8"/>
+  <circle cx="110" cy="110" r="24" fill="#7a1317"/>
+  <rect x="104" y="72" width="12" height="68" fill="#f8e7b8"/>
+  <rect x="78" y="102" width="64" height="12" fill="#f8e7b8"/>
+  <circle cx="110" cy="110" r="54" fill="none" stroke="#2f0508" stroke-width="10" opacity="0.45" filter="url(#soft)"/>
+</svg>

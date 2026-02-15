@@ -10,6 +10,7 @@ export class TitleScreen {
   private onNewSandbox: LaunchAction<[]>;
   private onLoadGame: LaunchAction<[]> | null;
   private onSaveArchive: (() => boolean) | null;
+  private onBeforeLaunch: (() => void | Promise<void>) | null;
   private mainMenuEl: HTMLDivElement;
   private startMenuEl: HTMLDivElement;
   private creditsEl: HTMLDivElement;
@@ -22,12 +23,14 @@ export class TitleScreen {
     onNewCampaign: LaunchAction<[CampaignScenarioId]>,
     onNewSandbox: LaunchAction<[]>,
     onLoadGame: LaunchAction<[]> | null,
-    onSaveArchive: (() => boolean) | null
+    onSaveArchive: (() => boolean) | null,
+    onBeforeLaunch: (() => void | Promise<void>) | null = null
   ) {
     this.onNewCampaign = onNewCampaign;
     this.onNewSandbox = onNewSandbox;
     this.onLoadGame = onLoadGame;
     this.onSaveArchive = onSaveArchive;
+    this.onBeforeLaunch = onBeforeLaunch;
 
     this.el = document.createElement('div');
     this.el.id = 'title-screen';
@@ -135,6 +138,13 @@ export class TitleScreen {
       const btn = document.createElement('button');
       btn.className = 'title-btn title-scenario-btn';
       btn.title = scenario.subtitle;
+
+      if (scenario.cardArt) {
+        const art = document.createElement('div');
+        art.className = 'title-scenario-art';
+        art.style.backgroundImage = `url("${scenario.cardArt}")`;
+        btn.appendChild(art);
+      }
 
       const label = document.createElement('div');
       label.className = 'title-scenario-label';
@@ -261,6 +271,9 @@ export class TitleScreen {
     this.setStatus('Forwarding launch order to state planners...', 'info');
 
     try {
+      if (this.onBeforeLaunch) {
+        await this.onBeforeLaunch();
+      }
       await action();
     } catch {
       this.setStatus('Operation failed. Inspect console logs and retry.', 'error');

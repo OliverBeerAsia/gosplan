@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 240">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2a0505"/>
+      <stop offset="100%" stop-color="#120102"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="240" rx="16" fill="url(#bg)"/>
+  <circle cx="188" cy="120" r="68" fill="#8f1418"/>
+  <circle cx="188" cy="120" r="38" fill="#f8d565"/>
+  <ellipse cx="188" cy="120" rx="104" ry="34" fill="none" stroke="#f8d565" stroke-width="4" stroke-dasharray="10 8"/>
+  <path d="M320 80h250M320 120h210M320 160h250" stroke="#f0d9a0" stroke-opacity="0.7" stroke-width="4"/>
+  <path d="M350 66l22 16-8 26-28 0-8-26z" fill="#f6e7c0"/>
+  <text x="324" y="196" fill="#f8d565" font-family="VT323, monospace" font-size="32" letter-spacing="2">ORBITAL NETWORK TELEMETRY</text>
+</svg>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 240">
+  <rect width="640" height="240" rx="16" fill="#140303"/>
+  <rect x="0" y="160" width="640" height="80" fill="#2e1610"/>
+  <rect x="96" y="108" width="280" height="46" rx="8" fill="#8f1f1f"/>
+  <rect x="154" y="74" width="96" height="42" rx="6" fill="#f5dd9e"/>
+  <rect x="382" y="122" width="164" height="32" rx="6" fill="#6b1a1d"/>
+  <circle cx="166" cy="170" r="30" fill="#1b0607"/>
+  <circle cx="166" cy="170" r="16" fill="#f6d77e"/>
+  <circle cx="326" cy="170" r="30" fill="#1b0607"/>
+  <circle cx="326" cy="170" r="16" fill="#f6d77e"/>
+  <circle cx="478" cy="170" r="24" fill="#1b0607"/>
+  <circle cx="478" cy="170" r="12" fill="#f6d77e"/>
+  <path d="M72 186h496" stroke="#f4d36f" stroke-width="6" stroke-dasharray="18 12"/>
+  <text x="96" y="56" fill="#f8d565" font-family="VT323, monospace" font-size="32" letter-spacing="2">AGRICULTURAL SUPPLY COLUMN</text>
+</svg>

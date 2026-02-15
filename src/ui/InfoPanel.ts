@@ -23,13 +23,16 @@ export class InfoPanel {
   ) {
     this.el = document.createElement('div');
     this.el.id = 'info-panel';
+    this.el.className = 'panel-shell panel-shell--red';
 
     this.headerEl = document.createElement('div');
     this.headerEl.id = 'info-panel-header';
+    this.headerEl.className = 'panel-shell-header';
     this.el.appendChild(this.headerEl);
 
     this.bodyEl = document.createElement('div');
     this.bodyEl.id = 'info-panel-body';
+    this.bodyEl.className = 'panel-shell-body';
     this.el.appendChild(this.bodyEl);
 
     container.appendChild(this.el);
@@ -58,16 +61,16 @@ export class InfoPanel {
     this.headerEl.textContent = def.name.toUpperCase();
     this.clearBody();
 
-    this.appendParagraph(def.description, 'margin-bottom:8px;font-style:italic;opacity:0.8;font-size:12px');
+    this.appendParagraph(def.description, 'info-intro');
 
     if (def.powerConsumption && !building.powered) {
       const warn = document.createElement('div');
-      warn.style.cssText = 'background:#B71C1C;color:#FFF;padding:4px 8px;margin-bottom:8px;font-weight:700;font-size:12px;text-align:center';
+      warn.className = 'info-pill info-pill--danger';
       warn.textContent = 'NOT POWERED';
       this.bodyEl.appendChild(warn);
 
       const hint = document.createElement('div');
-      hint.style.cssText = 'font-size:11px;color:#FFC107;margin-bottom:8px;font-style:italic';
+      hint.className = 'info-hint';
       hint.textContent = 'Connect to power grid via Roads or Power Lines';
       this.bodyEl.appendChild(hint);
     }
@@ -126,7 +129,7 @@ export class InfoPanel {
     const roadAccess = this.hasAdjacentRoad(gx, gy);
     const district = this.state.districtStats.find(d => d.id === cell.districtId);
 
-    this.appendParagraph('Tile status and growth diagnostics for Soviet planning bureau.', 'margin-bottom:8px;font-style:italic;opacity:0.8;font-size:12px');
+    this.appendParagraph('Tile status and growth diagnostics for Soviet planning bureau.', 'info-intro');
     this.appendRow('Terrain', cell.terrain.toUpperCase());
     this.appendRow('Zone', zoneLabel, cell.zone === 'none');
     this.appendRow('District', district ? district.label.toUpperCase() : 'UNASSIGNED');
@@ -143,16 +146,16 @@ export class InfoPanel {
     const blockers = this.getGrowthBlockers(gx, gy);
     if (blockers.length > 0) {
       const blockWrap = document.createElement('div');
-      blockWrap.style.cssText = 'margin-top:8px;padding:6px;background:rgba(183,28,28,0.2);border:1px solid #B71C1C';
+      blockWrap.className = 'info-blockers';
 
       const title = document.createElement('div');
-      title.style.cssText = 'font-size:11px;font-weight:700;color:#EF5350;margin-bottom:4px;text-transform:uppercase';
+      title.className = 'info-blockers-title';
       title.textContent = 'Growth Blockers';
       blockWrap.appendChild(title);
 
       for (const blocker of blockers) {
         const line = document.createElement('div');
-        line.style.cssText = 'font-size:11px;color:#EF9A9A;line-height:1.35';
+        line.className = 'info-blockers-item';
         line.textContent = `• ${blocker}`;
         blockWrap.appendChild(line);
       }
@@ -160,7 +163,7 @@ export class InfoPanel {
       this.bodyEl.appendChild(blockWrap);
     } else if (cell.zone !== 'none' && !cell.building) {
       const ready = document.createElement('div');
-      ready.style.cssText = 'margin-top:8px;padding:6px;background:rgba(85,139,47,0.2);border:1px solid #66BB6A;color:#A5D6A7;font-size:11px;font-weight:700;text-transform:uppercase';
+      ready.className = 'info-pill info-pill--success';
       ready.textContent = 'Ready For Development';
       this.bodyEl.appendChild(ready);
     }
@@ -180,9 +183,11 @@ export class InfoPanel {
     }
   }
 
-  private appendParagraph(text: string, style: string): void {
+  private appendParagraph(text: string, className?: string): void {
     const p = document.createElement('p');
-    p.style.cssText = style;
+    if (className) {
+      p.className = className;
+    }
     p.textContent = text;
     this.bodyEl.appendChild(p);
   }
@@ -199,7 +204,7 @@ export class InfoPanel {
     valueEl.className = 'info-value';
     valueEl.textContent = value;
     if (warning) {
-      valueEl.style.color = '#EF5350';
+      valueEl.classList.add('warning');
     }
 
     row.appendChild(labelEl);

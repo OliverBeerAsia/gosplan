@@ -13,13 +13,16 @@ export class DistrictPanel {
   ) {
     this.el = document.createElement('div');
     this.el.id = 'district-panel';
+    this.el.className = 'panel-shell panel-shell--red';
 
     this.headerEl = document.createElement('div');
     this.headerEl.id = 'district-panel-header';
+    this.headerEl.className = 'panel-shell-header';
     this.el.appendChild(this.headerEl);
 
     this.bodyEl = document.createElement('div');
     this.bodyEl.id = 'district-panel-body';
+    this.bodyEl.className = 'panel-shell-body';
     this.el.appendChild(this.bodyEl);
 
     container.appendChild(this.el);
@@ -82,11 +85,9 @@ export class DistrictPanel {
 
     const pct = Math.max(0, Math.min(100, value));
     fill.style.width = `${pct}%`;
-    if (inverse) {
-      fill.style.background = pct >= 65 ? '#EF5350' : pct >= 40 ? '#FFC107' : '#66BB6A';
-    } else {
-      fill.style.background = pct >= 60 ? '#66BB6A' : pct >= 40 ? '#FFC107' : '#EF5350';
-    }
+    fill.dataset.level = inverse
+      ? (pct >= 65 ? 'danger' : pct >= 40 ? 'warn' : 'good')
+      : (pct >= 60 ? 'good' : pct >= 40 ? 'warn' : 'danger');
     bar.appendChild(fill);
 
     const v = document.createElement('span');

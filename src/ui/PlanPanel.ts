@@ -17,13 +17,16 @@ export class PlanPanel {
   constructor(container: HTMLElement, private state: GameStateData, private events: EventBus) {
     this.el = document.createElement('div');
     this.el.id = 'plan-panel';
+    this.el.className = 'panel-shell panel-shell--gold';
 
     this.headerEl = document.createElement('div');
     this.headerEl.id = 'plan-panel-header';
+    this.headerEl.className = 'panel-shell-header';
     this.el.appendChild(this.headerEl);
 
     this.bodyEl = document.createElement('div');
     this.bodyEl.id = 'plan-panel-body';
+    this.bodyEl.className = 'panel-shell-body';
     this.el.appendChild(this.bodyEl);
 
     container.appendChild(this.el);
@@ -86,8 +89,11 @@ Choose "Continue as Sandbox" to keep building without campaign directives.`;
     const wLeft = weeksLeft % 52;
     const timeStr = yearsLeft > 0 ? `${yearsLeft}y ${wLeft}w` : `${wLeft}w`;
     const timer = document.createElement('span');
+    timer.className = 'plan-panel-timer';
     timer.textContent = timeStr;
-    timer.style.color = ticksLeft < 52 ? '#EF5350' : '#FFD700';
+    if (ticksLeft < 52) {
+      timer.classList.add('warning');
+    }
     this.headerEl.appendChild(timer);
 
     // Goals

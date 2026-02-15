@@ -93,7 +93,7 @@ export class NotificationManager {
 
     if (this.history.length === 0) {
       const empty = document.createElement('div');
-      empty.style.cssText = 'padding:8px;opacity:0.5;font-size:12px';
+      empty.className = 'notif-history-empty';
       empty.textContent = 'No notifications yet';
       this.historyPanel.appendChild(empty);
       return;

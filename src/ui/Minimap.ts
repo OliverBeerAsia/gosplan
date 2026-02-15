@@ -28,6 +28,7 @@ export class Minimap {
   ) {
     this.el = document.createElement('div');
     this.el.id = 'minimap';
+    this.el.className = 'panel-shell panel-shell--red';
 
     this.canvas = document.createElement('canvas');
     this.canvas.width = this.size;

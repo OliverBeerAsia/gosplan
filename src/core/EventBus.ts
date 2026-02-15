@@ -47,6 +47,7 @@ export type GameEvents = {
   'game:loaded': {};
   'game:saved': {};
   'game:save:requested': {};
+  'ui:settings:changed': { settings: Partial<import('./GameState').UiSettings> };
 };
 
 type Handler<T> = (data: T) => void;
