@@ -26,32 +26,32 @@ function clamp(value: number, min: number, max: number): number {
 function createTemplates(): EventTemplate[] {
   return [
     {
-      id: 'bread_shortage',
-      title: 'Bread Queue Surge',
-      description: 'Distribution delays have triggered long bakery queues across multiple districts.',
+      id: 'food_logistics_delay',
+      title: 'Food Logistics Delay',
+      description: 'Delivery timing slipped at several bakeries, creating longer lines than usual.',
       severity: 'warning',
       cooldown: 24,
       condition: (s) => s.unrestLevel > 40 || s.serviceAccessIndex < 45,
       choices: [
         {
-          id: 'ration_priority',
-          label: 'Prioritize Rations',
-          description: 'Spend budget to stabilize food deliveries and reduce panic.',
-          summary: 'Emergency rationing reduced unrest but strained treasury.',
+          id: 'route_priority',
+          label: 'Boost Delivery Routes',
+          description: 'Fund extra delivery routes to stabilize food distribution quickly.',
+          summary: 'Additional routes eased lines and improved confidence, but cost extra budget.',
           effects: { budget: -2200, unrestLevel: -12, cityLoyalty: 5, civicDemand: 8 },
         },
         {
           id: 'strict_order',
-          label: 'Deploy Order Patrols',
-          description: 'Maintain order with visible enforcement and stricter queue controls.',
-          summary: 'Order restored quickly, but public trust declined.',
+          label: 'Open Pop-Up Kiosks',
+          description: 'Set up temporary kiosks in dense neighborhoods to spread demand.',
+          summary: 'Lines moved faster, though residents asked for broader long-term upgrades.',
           effects: { budget: -900, unrestLevel: -8, cityLoyalty: -7, happiness: -4 },
         },
         {
           id: 'do_nothing',
           label: 'Issue a Statement',
           description: 'Promise imminent improvements without immediate resource allocation.',
-          summary: 'Citizens remained skeptical and queues persisted.',
+          summary: 'Residents remained skeptical and the delay continued.',
           effects: { unrestLevel: 10, cityLoyalty: -9, happiness: -6, civicDemand: 6 },
         },
       ],

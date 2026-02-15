@@ -2,7 +2,7 @@ import { EventBus } from '../core/EventBus';
 import { BulletinEntry, GameStateData } from '../core/GameState';
 import { pushBulletinEntry } from '../core/Bulletin';
 
-type EndingId = 'model_city' | 'brittle_giant' | 'reformist_transition' | 'ration_state_survival';
+type EndingId = 'model_city' | 'brittle_giant' | 'reformist_transition' | 'steady_recovery_track';
 
 interface EndingPayload {
   id: EndingId;
@@ -129,9 +129,9 @@ export class CampaignOutcomeService {
     }
 
     return {
-      id: 'ration_state_survival',
-      title: 'Ration-State Survival',
-      summary: 'The city endured through shortages and pressure, surviving on emergency discipline.',
+      id: 'steady_recovery_track',
+      title: 'Steady Recovery Track',
+      summary: 'The city held together and is ready for another cycle of practical improvements.',
     };
   }
 

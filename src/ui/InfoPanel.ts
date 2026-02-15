@@ -126,6 +126,7 @@ export class InfoPanel {
 
     const zoneLabel = cell.zone === 'none' ? 'NONE' : cell.zone.toUpperCase();
     const demandValue = this.getZoneDemand(cell.zone);
+    const demandLabel = this.describeDemand(demandValue);
     const roadAccess = this.hasAdjacentRoad(gx, gy);
     const district = this.state.districtStats.find(d => d.id === cell.districtId);
 
@@ -140,7 +141,7 @@ export class InfoPanel {
     this.appendRow('Power Grid', this.state.powerDemand <= this.state.powerCapacity ? 'STABLE' : 'DEFICIT', this.state.powerDemand > this.state.powerCapacity);
 
     if (cell.zone !== 'none') {
-      this.appendRow('Demand', `${demandValue >= 0 ? '+' : ''}${demandValue}`, demandValue < 12);
+      this.appendRow('Demand', demandLabel.label, demandLabel.warning);
     }
 
     const blockers = this.getGrowthBlockers(gx, gy);
@@ -240,6 +241,14 @@ export class InfoPanel {
       default:
         return 0;
     }
+  }
+
+  private describeDemand(value: number): { label: string; warning: boolean } {
+    if (value >= 45) return { label: 'HIGH', warning: false };
+    if (value >= 12) return { label: 'RISING', warning: false };
+    if (value <= -45) return { label: 'SATURATED', warning: true };
+    if (value <= -12) return { label: 'LOW', warning: true };
+    return { label: 'STEADY', warning: false };
   }
 
   private getGrowthBlockers(gx: number, gy: number): string[] {

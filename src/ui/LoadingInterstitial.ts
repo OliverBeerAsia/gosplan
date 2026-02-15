@@ -228,7 +228,7 @@ export class LoadingInterstitial {
       'COMRADE PLANNER CHECKING IN:',
       tone + ' that you, engineer, secure ' + region + '.',
       'ISOLATED RURAL STRUCTURES REQUIRE SIX MONTHS OF STEEL & SPIRIT.',
-      'MAINTAIN GRID, SUPPRESS DOUBTS, BROADCAST PROGRESS WIRELESSLY.',
+      'MAINTAIN GRID, SHARE PROGRESS, BROADCAST UPDATES WIRELESSLY.',
     ];
     this.introEl.innerHTML = lines.map(line => `<span>${line}</span>`).join('<br/>');
   }

@@ -64,7 +64,15 @@ export class ResourceBar {
     this.el.appendChild(resourceItem('\u20BD', 'Budget', 'budget', '50,000', 'City treasury - income from industry and central planning'));
     this.el.appendChild(resourceItem('\u26A1', 'Power', 'power', '0/0 MW', 'Power demand / capacity in megawatts'));
     this.el.appendChild(resourceItem('\u263A', 'Happiness', 'happy', '50%', 'City-wide happiness affects population growth'));
-    this.el.appendChild(resourceItem('\u2690', 'Demand', 'demand', 'R0 I0 C0', 'Zoning demand: Housing / Industry / Civic'));
+    this.el.appendChild(
+      resourceItem(
+        '\u2690',
+        'Demand',
+        'demand',
+        'Steady',
+        'Main growth signal. Positive means expand that zone; negative means hold.'
+      )
+    );
     if (!this.simplified) {
       this.el.appendChild(resourceItem('\u262D', 'Order', 'order', 'L50 U20', 'City loyalty and unrest pressure'));
       this.el.appendChild(resourceItem('\u21C4', 'Mobility', 'mobility', 'C45 S35', 'Commute index and service access index'));
@@ -131,10 +139,9 @@ export class ResourceBar {
     this.budgetEl.textContent = `${budgetStr} ${netStr}`;
 
     this.powerEl.textContent = `${this.state.powerDemand}/${this.state.powerCapacity} MW`;
-    this.happyEl.textContent = `${this.state.happiness}%`;
-    const fmt = (n: number) => (n >= 0 ? `+${n}` : `${n}`);
-    this.demandEl.textContent =
-      `R${fmt(this.state.residentialDemand)} I${fmt(this.state.industrialDemand)} C${fmt(this.state.civicDemand)}`;
+    this.happyEl.textContent = this.formatHappiness();
+    const demandSummary = this.summarizeDemand();
+    this.demandEl.textContent = demandSummary.text;
     if (this.orderEl) {
       this.orderEl.textContent = `L${this.state.cityLoyalty} U${this.state.unrestLevel}`;
     }
@@ -148,9 +155,7 @@ export class ResourceBar {
     this.budgetEl.style.color = this.state.budget < 0 ? '#EF5350' : '#FFD700';
     this.powerEl.style.color = this.state.powerDemand > this.state.powerCapacity ? '#EF5350' : '#FFD700';
     this.happyEl.style.color = this.state.happiness < 30 ? '#EF5350' : this.state.happiness < 50 ? '#FFC107' : '#FFD700';
-    this.demandEl.style.color = this.state.residentialDemand + this.state.industrialDemand + this.state.civicDemand < 0
-      ? '#EF5350'
-      : '#FFD700';
+    this.demandEl.style.color = demandSummary.color;
     if (this.orderEl) {
       this.orderEl.style.color =
         this.state.unrestLevel > 60 ? '#EF5350' : this.state.cityLoyalty < 45 ? '#FFC107' : '#FFD700';
@@ -182,6 +187,34 @@ export class ResourceBar {
     } else {
       el.textContent = '';
     }
+  }
+
+  private formatHappiness(): string {
+    const score = this.state.happiness;
+    if (score >= 70) return `${score}% HIGH`;
+    if (score >= 55) return `${score}% GOOD`;
+    if (score >= 40) return `${score}% FAIR`;
+    return `${score}% LOW`;
+  }
+
+  private summarizeDemand(): { text: string; color: string } {
+    const entries = [
+      { label: 'Housing', value: this.state.residentialDemand },
+      { label: 'Industry', value: this.state.industrialDemand },
+      { label: 'Civic', value: this.state.civicDemand },
+    ];
+
+    const strongest = [...entries].sort((a, b) => Math.abs(b.value) - Math.abs(a.value))[0];
+    if (!strongest || Math.abs(strongest.value) < 12) {
+      return { text: 'Stable', color: '#FFD700' };
+    }
+    if (strongest.value > 0) {
+      return { text: `Need ${strongest.label}`, color: '#9FE870' };
+    }
+    if (strongest.value < -45) {
+      return { text: `${strongest.label} Saturated`, color: '#EF5350' };
+    }
+    return { text: `${strongest.label} Slowdown`, color: '#FFC107' };
   }
 
   private setSpeedActive(speed: number): void {

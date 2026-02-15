@@ -15,7 +15,7 @@ export const CAMPAIGN_SCENARIOS: CampaignScenarioDef[] = [
   {
     id: 'reconstruction',
     label: 'Reconstruction Drive',
-    subtitle: 'Restore housing and services while rebuilding trust after shortages.',
+    subtitle: 'Restore housing and services while rebuilding district confidence.',
     targetYear: 1988,
     openingDirective: 'Reconstruction Priority: housing, utilities, and district stability.',
     cardArt: assetPath('assets/ui/scenario-reconstruction.svg'),
@@ -33,9 +33,9 @@ export const CAMPAIGN_SCENARIOS: CampaignScenarioDef[] = [
   {
     id: 'industrial_surge',
     label: 'Industrial Surge',
-    subtitle: 'Push output aggressively while keeping labor tensions under control.',
+    subtitle: 'Push output aggressively while keeping city services in balance.',
     targetYear: 1987,
-    openingDirective: 'Steel and Concrete First: maximize production with controlled unrest.',
+    openingDirective: 'Steel and Concrete First: maximize production while keeping districts stable.',
     cardArt: assetPath('assets/ui/scenario-industrial.svg'),
     applyStart: (state) => {
       state.budget -= 5000;

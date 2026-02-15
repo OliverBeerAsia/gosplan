@@ -64,7 +64,7 @@ export class CampaignDirectorService {
       return 'Emergency Electrification Drive: expand generation and connect every district.';
     }
     if (this.state.unrestLevel > 64) {
-      return 'Public Stability Campaign: expand civic services and visible order.';
+      return 'Public Stability Campaign: expand civic services and neighborhood support.';
     }
     if (this.state.residentialDemand > 40) {
       return 'Housing Acceleration Program: prioritize mass residential expansion.';
