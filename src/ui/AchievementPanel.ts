@@ -15,18 +15,16 @@ const ALL_ACHIEVEMENTS: AchievementView[] = AchievementService.getAll().map(a =>
 }));
 
 export class AchievementPanel {
-  private el: HTMLDivElement;
+  readonly el: HTMLDivElement;
   private summaryEl: HTMLDivElement;
   private listEl: HTMLDivElement;
 
   constructor(
-    container: HTMLElement,
     private state: GameStateData,
     private events: EventBus
   ) {
     this.el = document.createElement('div');
     this.el.id = 'achievement-panel';
-    this.el.className = 'panel-shell panel-shell--gold';
 
     const header = document.createElement('div');
     header.id = 'achievement-panel-header';
@@ -43,8 +41,6 @@ export class AchievementPanel {
     this.listEl.id = 'achievement-list';
     this.listEl.className = 'panel-shell-body';
     this.el.appendChild(this.listEl);
-
-    container.appendChild(this.el);
 
     events.on('achievement:unlocked', ({ id }) => this.update(id));
     events.on('game:loaded', () => this.update());

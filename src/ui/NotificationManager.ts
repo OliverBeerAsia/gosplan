@@ -1,4 +1,5 @@
 import { EventBus } from '../core/EventBus';
+import { BulletinEntry, GameStateData } from '../core/GameState';
 
 type NotificationType = 'info' | 'warning' | 'success' | 'error';
 
@@ -6,6 +7,8 @@ interface NotificationRecord {
   message: string;
   type: NotificationType;
   time: number;
+  source: 'notification' | 'bulletin';
+  timestamp?: string; // e.g. "W3 1980"
 }
 
 interface PendingNotification {
@@ -28,8 +31,9 @@ export class NotificationManager {
   private duplicateWindowMs = 6000;
   private infoCooldownMs = 1200;
   private toastDurationMs = 4000;
+  private knownBulletinIds = new Set<string>();
 
-  constructor(parent: HTMLElement, private events: EventBus) {
+  constructor(parent: HTMLElement, private events: EventBus, private state: GameStateData) {
     this.container = document.createElement('div');
     this.container.id = 'notification-container';
     parent.appendChild(this.container);
@@ -38,20 +42,53 @@ export class NotificationManager {
     const histBtn = document.createElement('button');
     histBtn.id = 'notification-history-btn';
     histBtn.textContent = '\u2630';
-    histBtn.title = 'Notification History';
+    histBtn.title = 'Event Log';
     histBtn.addEventListener('click', () => this.toggleHistory());
     parent.appendChild(histBtn);
 
     events.on('notification', ({ message, type }) => {
       this.show(message, type);
     });
+
+    // Seed known bulletin IDs from existing state
+    for (const entry of this.state.bulletin) {
+      this.knownBulletinIds.add(entry.id);
+    }
+
+    events.on('bulletin:added', () => this.syncBulletinToHistory());
+    events.on('directive:changed', () => {
+      if (this.historyVisible && this.historyPanel) {
+        this.renderHistory();
+      }
+    });
+  }
+
+  private syncBulletinToHistory(): void {
+    for (const entry of this.state.bulletin) {
+      if (!this.knownBulletinIds.has(entry.id)) {
+        this.knownBulletinIds.add(entry.id);
+        this.history.push({
+          message: entry.text,
+          type: entry.level,
+          time: Date.now(),
+          source: 'bulletin',
+          timestamp: `W${entry.week} ${entry.year}`,
+        });
+        if (this.history.length > this.maxHistory) {
+          this.history.shift();
+        }
+      }
+    }
+    if (this.historyVisible && this.historyPanel) {
+      this.renderHistory();
+    }
   }
 
   show(message: string, type: NotificationType): void {
     const now = Date.now();
 
     // Add to history
-    this.history.push({ message, type, time: now });
+    this.history.push({ message, type, time: now, source: 'notification' });
     if (this.history.length > this.maxHistory) {
       this.history.shift();
     }
@@ -76,6 +113,9 @@ export class NotificationManager {
       return;
     }
 
+    // Sync any bulletin entries we haven't seen yet
+    this.syncBulletinToHistory();
+
     this.historyPanel = document.createElement('div');
     this.historyPanel.id = 'notification-history';
     this.renderHistory();
@@ -91,23 +131,70 @@ export class NotificationManager {
 
     const title = document.createElement('div');
     title.className = 'notif-history-title';
-    title.textContent = 'NOTIFICATIONS';
+    title.textContent = 'EVENT LOG';
     this.historyPanel.appendChild(title);
 
-    if (this.history.length === 0) {
+    // Show active directive as pinned header
+    if (this.state.activeDirective) {
+      const directive = document.createElement('div');
+      directive.className = 'notif-history-directive';
+      directive.textContent = `\u2691 ${this.state.activeDirective}`;
+      this.historyPanel.appendChild(directive);
+    }
+
+    // Merge notification history with any bulletin entries not yet in history
+    const allEntries = [...this.history];
+
+    // Also pull in bulletin entries that predate our tracking
+    for (const entry of this.state.bulletin) {
+      const alreadyInHistory = allEntries.some(
+        h => h.source === 'bulletin' && h.message === entry.text && h.timestamp === `W${entry.week} ${entry.year}`
+      );
+      if (!alreadyInHistory) {
+        allEntries.push({
+          message: entry.text,
+          type: entry.level,
+          time: 0, // old entries
+          source: 'bulletin',
+          timestamp: `W${entry.week} ${entry.year}`,
+        });
+      }
+    }
+
+    // Sort reverse chronological (newest first)
+    allEntries.sort((a, b) => b.time - a.time);
+
+    if (allEntries.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'notif-history-empty';
-      empty.textContent = 'No notifications yet';
+      empty.textContent = 'No events yet';
       this.historyPanel.appendChild(empty);
       return;
     }
 
-    // Show in reverse chronological order
-    for (let i = this.history.length - 1; i >= 0; i--) {
-      const rec = this.history[i];
+    // Show up to 50 entries
+    const display = allEntries.slice(0, this.maxHistory);
+    for (const rec of display) {
       const item = document.createElement('div');
       item.className = `notif-history-item ${rec.type}`;
-      item.textContent = rec.message;
+
+      if (rec.timestamp || rec.source === 'bulletin') {
+        const ts = document.createElement('span');
+        ts.className = 'notif-history-time';
+        ts.textContent = rec.timestamp || '';
+        item.appendChild(ts);
+      }
+
+      const tag = document.createElement('span');
+      tag.className = `notif-history-tag ${rec.source}`;
+      tag.textContent = rec.source === 'bulletin' ? 'BULLETIN' : 'NOTICE';
+      item.appendChild(tag);
+
+      const text = document.createElement('span');
+      text.className = 'notif-history-text';
+      text.textContent = rec.message;
+      item.appendChild(text);
+
       this.historyPanel.appendChild(item);
     }
   }

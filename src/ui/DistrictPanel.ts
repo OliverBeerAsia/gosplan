@@ -5,6 +5,7 @@ export class DistrictPanel {
   private el: HTMLDivElement;
   private headerEl: HTMLDivElement;
   private bodyEl: HTMLDivElement;
+  private collapsed = true;
 
   constructor(
     container: HTMLElement,
@@ -18,11 +19,13 @@ export class DistrictPanel {
     this.headerEl = document.createElement('div');
     this.headerEl.id = 'district-panel-header';
     this.headerEl.className = 'panel-shell-header';
+    this.headerEl.addEventListener('click', () => this.toggleCollapse());
     this.el.appendChild(this.headerEl);
 
     this.bodyEl = document.createElement('div');
     this.bodyEl.id = 'district-panel-body';
     this.bodyEl.className = 'panel-shell-body';
+    this.bodyEl.style.display = 'none';
     this.el.appendChild(this.bodyEl);
 
     container.appendChild(this.el);
@@ -32,8 +35,30 @@ export class DistrictPanel {
     events.on('tick', () => this.update());
   }
 
+  private toggleCollapse(): void {
+    this.collapsed = !this.collapsed;
+    this.bodyEl.style.display = this.collapsed ? 'none' : '';
+    this.updateHeader();
+  }
+
+  private updateHeader(): void {
+    const chevron = this.collapsed ? '\u25B8' : '\u25BE';
+    if (this.collapsed) {
+      // Summary line
+      const avgLoyalty = this.state.districtStats.length > 0
+        ? Math.round(this.state.districtStats.reduce((s, d) => s + d.loyalty, 0) / this.state.districtStats.length)
+        : this.state.cityLoyalty;
+      const avgUnrest = this.state.districtStats.length > 0
+        ? Math.round(this.state.districtStats.reduce((s, d) => s + d.unrestRisk, 0) / this.state.districtStats.length)
+        : this.state.unrestLevel;
+      this.headerEl.textContent = `${chevron} DISTRICTS \u2014 AVG LOYALTY ${avgLoyalty}% | UNREST ${avgUnrest}%`;
+    } else {
+      this.headerEl.textContent = `${chevron} DISTRICTS | LOYALTY ${this.state.cityLoyalty}% | UNREST ${this.state.unrestLevel}%`;
+    }
+  }
+
   update(): void {
-    this.headerEl.textContent = `DISTRICTS | LOYALTY ${this.state.cityLoyalty}% | UNREST ${this.state.unrestLevel}%`;
+    this.updateHeader();
 
     while (this.bodyEl.firstChild) {
       this.bodyEl.removeChild(this.bodyEl.firstChild);
@@ -58,7 +83,7 @@ export class DistrictPanel {
 
     const title = document.createElement('div');
     title.className = 'district-title';
-    title.textContent = `${d.label} • ${this.formatStyle(d.style)}`;
+    title.textContent = `${d.label} \u2022 ${this.formatStyle(d.style)}`;
     card.appendChild(title);
 
     card.appendChild(this.metricRow('Service', d.serviceAccess));

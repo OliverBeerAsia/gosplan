@@ -74,8 +74,8 @@ export class ResourceBar {
       )
     );
     if (!this.simplified) {
-      this.el.appendChild(resourceItem('\u262D', 'Order', 'order', 'L50 U20', 'City loyalty and unrest pressure'));
-      this.el.appendChild(resourceItem('\u21C4', 'Mobility', 'mobility', 'C45 S35', 'Commute index and service access index'));
+      this.el.appendChild(resourceItem('\u262D', 'Stability', 'order', '50% STABLE', 'Composite stability score (loyalty minus unrest). Breakdown in district panel.'));
+      this.el.appendChild(resourceItem('\u21C4', 'Access', 'mobility', '50% FAIR', 'Average of commute and service access. Breakdown in district panel.'));
     }
     this.el.appendChild(resourceItem('\u2630', 'Date', 'date', 'W1 1980', 'Current week and year'));
 
@@ -144,10 +144,14 @@ export class ResourceBar {
     const demandSummary = this.summarizeDemand();
     this.demandEl.textContent = demandSummary.text;
     if (this.orderEl) {
-      this.orderEl.textContent = `L${this.state.cityLoyalty} U${this.state.unrestLevel}`;
+      const stability = Math.max(0, Math.min(100, Math.round(this.state.cityLoyalty - this.state.unrestLevel * 0.5)));
+      const stabilityLabel = stability >= 60 ? 'STABLE' : stability >= 35 ? 'SHAKY' : 'UNREST';
+      this.orderEl.textContent = `${stability}% ${stabilityLabel}`;
     }
     if (this.mobilityEl) {
-      this.mobilityEl.textContent = `C${this.state.commuteIndex} S${this.state.serviceAccessIndex}`;
+      const access = Math.max(0, Math.min(100, Math.round((this.state.commuteIndex + this.state.serviceAccessIndex) / 2)));
+      const accessLabel = access >= 65 ? 'GOOD' : access >= 40 ? 'FAIR' : 'POOR';
+      this.mobilityEl.textContent = `${access}% ${accessLabel}`;
     }
 
     const weekStr = `W${this.state.week}`;
@@ -160,12 +164,12 @@ export class ResourceBar {
     this.happyEl.style.color = this.state.happiness < 30 ? '#EF5350' : this.state.happiness < 50 ? '#FFC107' : '#FFD700';
     this.demandEl.style.color = demandSummary.color;
     if (this.orderEl) {
-      this.orderEl.style.color =
-        this.state.unrestLevel > 60 ? '#EF5350' : this.state.cityLoyalty < 45 ? '#FFC107' : '#FFD700';
+      const stability = Math.max(0, Math.min(100, Math.round(this.state.cityLoyalty - this.state.unrestLevel * 0.5)));
+      this.orderEl.style.color = stability < 35 ? '#EF5350' : stability < 60 ? '#FFC107' : '#FFD700';
     }
     if (this.mobilityEl) {
-      this.mobilityEl.style.color =
-        this.state.commuteIndex < 45 || this.state.serviceAccessIndex < 40 ? '#FFC107' : '#FFD700';
+      const access = Math.max(0, Math.min(100, Math.round((this.state.commuteIndex + this.state.serviceAccessIndex) / 2)));
+      this.mobilityEl.style.color = access < 40 ? '#EF5350' : access < 65 ? '#FFC107' : '#FFD700';
     }
 
     // Trend arrows

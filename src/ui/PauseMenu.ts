@@ -1,11 +1,13 @@
 import { EventBus } from '../core/EventBus';
 import { GameStateData, GraphicsQuality, UiScalePreset } from '../core/GameState';
 import { audioManager, AudioSettings } from '../audio/AudioManager';
+import { AchievementPanel } from './AchievementPanel';
 
 export class PauseMenu {
   private el: HTMLDivElement;
   private visible = false;
   private prevSpeed = 1;
+  private achievementPanel: AchievementPanel;
 
   constructor(
     private container: HTMLElement,
@@ -13,6 +15,7 @@ export class PauseMenu {
     private events: EventBus,
     private onQuit: () => void
   ) {
+    this.achievementPanel = new AchievementPanel(state, events);
     this.el = document.createElement('div');
     this.el.id = 'pause-menu';
     this.el.style.display = 'none';
@@ -79,6 +82,15 @@ export class PauseMenu {
     body.appendChild(this.createButton('SAVE GAME', 'secondary', () => {
       this.events.emit('game:save:requested', {});
     }));
+
+    // Achievement section
+    const honorsLabel = document.createElement('div');
+    honorsLabel.className = 'pause-menu-section';
+    honorsLabel.textContent = 'STATE HONORS';
+    body.appendChild(honorsLabel);
+
+    this.achievementPanel.update();
+    body.appendChild(this.achievementPanel.el);
 
     // Settings section
     const settingsLabel = document.createElement('div');

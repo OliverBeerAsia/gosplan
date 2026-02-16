@@ -33,10 +33,8 @@ import { Minimap } from '../ui/Minimap';
 import { TutorialManager } from '../ui/TutorialManager';
 import { TitleScreen } from '../ui/TitleScreen';
 import { DistrictPanel } from '../ui/DistrictPanel';
-import { BulletinPanel } from '../ui/BulletinPanel';
 import { EventChoiceModal } from '../ui/EventChoiceModal';
 import { AmbienceOverlay } from '../ui/AmbienceOverlay';
-import { AchievementPanel } from '../ui/AchievementPanel';
 import { AdvisorPanel } from '../ui/AdvisorPanel';
 import { StatsPanel } from '../ui/StatsPanel';
 import { CampaignEndingModal } from '../ui/CampaignEndingModal';
@@ -89,10 +87,8 @@ export class Game {
   private minimap!: Minimap;
   private tutorial!: TutorialManager;
   private districtPanel?: DistrictPanel;
-  private bulletinPanel?: BulletinPanel;
   private eventModal!: EventChoiceModal;
   private ambienceOverlay!: AmbienceOverlay;
-  private achievementPanel?: AchievementPanel;
   private advisorPanel!: AdvisorPanel;
   private statsPanel!: StatsPanel;
   private campaignEndingModal!: CampaignEndingModal;
@@ -417,14 +413,12 @@ export class Game {
     });
     this.infoPanel = new InfoPanel(this.uiContainer, this.grid, this.registry, this.state, this.events);
     this.planPanel = new PlanPanel(this.uiContainer, this.state, this.events);
-    this.notifications = new NotificationManager(this.uiContainer, this.events);
+    this.notifications = new NotificationManager(this.uiContainer, this.events, this.state);
     this.tooltip = new BuildingTooltip(this.uiContainer, this.registry);
     this.minimap = new Minimap(this.uiContainer, this.grid, this.registry, this.camera, this.events);
     this.tutorial = new TutorialManager(this.uiContainer, this.state, this.grid, this.registry, this.events);
     this.districtPanel = new DistrictPanel(this.uiContainer, this.state, this.events);
-    this.bulletinPanel = new BulletinPanel(this.uiContainer, this.state, this.events);
     this.eventModal = new EventChoiceModal(this.uiContainer, this.state, this.events);
-    this.achievementPanel = new AchievementPanel(this.uiContainer, this.state, this.events);
     this.advisorPanel = new AdvisorPanel(this.uiContainer, this.state, this.grid, this.registry, this.events);
     this.statsPanel = new StatsPanel(this.uiContainer, this.state, this.events);
     this.campaignEndingModal = new CampaignEndingModal(this.uiContainer, this.state, this.events);
@@ -454,7 +448,6 @@ export class Game {
     });
 
     this.districtPanel?.update();
-    this.bulletinPanel?.update();
 
     if (Game.STREAMLINED_UI) {
       this.events.emit('notification', {
@@ -585,11 +578,7 @@ export class Game {
   private setAdvancedPanelsVisible(visible: boolean): void {
     this.advancedPanelsVisible = visible;
     const district = this.uiContainer.querySelector<HTMLElement>('#district-panel');
-    const achievement = this.uiContainer.querySelector<HTMLElement>('#achievement-panel');
-    const bulletin = this.uiContainer.querySelector<HTMLElement>('#bulletin-panel');
     if (district) district.style.display = visible ? '' : 'none';
-    if (achievement) achievement.style.display = visible ? '' : 'none';
-    if (bulletin) bulletin.style.display = visible ? '' : 'none';
   }
 
   private saveCurrentGame(): void {

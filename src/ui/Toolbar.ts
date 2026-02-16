@@ -8,14 +8,37 @@ import { audioManager } from '../audio/AudioManager';
 
 type ToolCallback = (tool: ToolType, buildingId?: string, zone?: ZoneType) => void;
 
-const CATEGORIES: { id: BuildingCategory | 'zones' | 'tools'; label: string }[] = [
-  { id: 'residential', label: 'HOUSING' },
-  { id: 'industrial', label: 'INDUSTRY' },
-  { id: 'government', label: 'SERVICES' },
-  { id: 'infrastructure', label: 'INFRA' },
+interface CategoryDef {
+  id: BuildingCategory;
+  label: string;
+  zones?: { label: string; hint: string; zone: ZoneType }[];
+}
+
+const CATEGORIES: CategoryDef[] = [
+  {
+    id: 'residential',
+    label: 'HOUSING',
+    zones: [{ label: 'HOUSING ZONE', hint: 'AUTO HOMES', zone: 'housing' }],
+  },
+  {
+    id: 'industrial',
+    label: 'INDUSTRY',
+    zones: [{ label: 'INDUSTRY ZONE', hint: 'AUTO FACTORIES', zone: 'industry' }],
+  },
+  {
+    id: 'government',
+    label: 'SERVICES',
+    zones: [
+      { label: 'CIVIC ZONE', hint: 'AUTO SERVICES', zone: 'civic' },
+      { label: 'GREEN ZONE', hint: 'AUTO PARKS', zone: 'green' },
+    ],
+  },
+  {
+    id: 'infrastructure',
+    label: 'INFRA',
+    zones: [{ label: 'CLEAR ZONE', hint: 'ERASE MARKING', zone: 'none' }],
+  },
   { id: 'decoration', label: 'DECOR' },
-  { id: 'zones', label: 'ZONING' },
-  { id: 'tools', label: 'TOOLS' },
 ];
 
 export class Toolbar {
@@ -24,7 +47,7 @@ export class Toolbar {
   private activeCategory: string | null = null;
   private selectedBuildingBtn: HTMLElement | null = null;
   private graphicsQuality: GraphicsQuality = 'high';
-  private qualityButtons: HTMLButtonElement[] = [];
+  private quickToolBar: HTMLDivElement;
 
   constructor(
     container: HTMLElement,
@@ -56,11 +79,36 @@ export class Toolbar {
     this.buildingPanel.id = 'building-panel';
     this.el.appendChild(this.buildingPanel);
 
+    // Persistent quick-access tool bar (demolish + inspect)
+    this.quickToolBar = document.createElement('div');
+    this.quickToolBar.id = 'quick-tool-bar';
+
+    const demBtn = document.createElement('button');
+    demBtn.className = 'quick-tool-btn';
+    demBtn.textContent = '\u2716 DEMOLISH';
+    demBtn.title = 'Demolish (X)';
+    demBtn.addEventListener('click', () => {
+      audioManager.playSfx('ui_click');
+      this.onToolSelect('demolish');
+    });
+    this.quickToolBar.appendChild(demBtn);
+
+    const insBtn = document.createElement('button');
+    insBtn.className = 'quick-tool-btn';
+    insBtn.textContent = '\u{1F50D} INSPECT';
+    insBtn.title = 'Inspect (V)';
+    insBtn.addEventListener('click', () => {
+      audioManager.playSfx('ui_click');
+      this.onToolSelect('select');
+    });
+    this.quickToolBar.appendChild(insBtn);
+
+    this.el.appendChild(this.quickToolBar);
+
     container.appendChild(this.el);
 
     this.events.on('graphics:quality:changed', ({ quality }) => {
       this.graphicsQuality = quality;
-      this.refreshQualityButtons();
     });
   }
 
@@ -86,14 +134,18 @@ export class Toolbar {
     }
     this.selectedBuildingBtn = null;
 
-    if (catId === 'tools') {
-      this.showToolsPanel();
-    } else if (catId === 'zones') {
-      this.showZonesPanel();
-    } else {
-      const buildings = this.registry.getByCategory(catId);
-      for (const def of buildings) {
-        const btn = this.createBuildingButton(def);
+    // Show buildings for this category
+    const buildings = this.registry.getByCategory(catId);
+    for (const def of buildings) {
+      const btn = this.createBuildingButton(def);
+      this.buildingPanel.appendChild(btn);
+    }
+
+    // Append inline zone buttons for this category
+    const catDef = CATEGORIES.find(c => c.id === catId);
+    if (catDef?.zones) {
+      for (const zone of catDef.zones) {
+        const btn = this.createZoneButton(zone.label, zone.hint, zone.zone);
         this.buildingPanel.appendChild(btn);
       }
     }
@@ -101,131 +153,27 @@ export class Toolbar {
     this.buildingPanel.classList.add('visible');
   }
 
-  private showZonesPanel(): void {
-    const zoneDefs: { label: string; hint: string; zone: ZoneType }[] = [
-      { label: 'HOUSING ZONE', hint: 'AUTO HOMES', zone: 'housing' },
-      { label: 'INDUSTRY ZONE', hint: 'AUTO FACTORIES', zone: 'industry' },
-      { label: 'CIVIC ZONE', hint: 'AUTO SERVICES', zone: 'civic' },
-      { label: 'GREEN ZONE', hint: 'AUTO PARKS', zone: 'green' },
-      { label: 'CLEAR ZONE', hint: 'ERASE MARKING', zone: 'none' },
-    ];
+  private createZoneButton(label: string, hint: string, zone: ZoneType): HTMLElement {
+    const btn = document.createElement('button');
+    btn.className = 'building-btn zone-btn';
 
-    for (const zone of zoneDefs) {
-      const btn = document.createElement('button');
-      btn.className = 'building-btn';
-
-      const nameSpan = document.createElement('span');
-      nameSpan.textContent = zone.label;
-      btn.appendChild(nameSpan);
-
-      const costSpan = document.createElement('span');
-      costSpan.className = 'building-cost';
-      costSpan.textContent = zone.hint;
-      btn.appendChild(costSpan);
-
-      btn.addEventListener('click', () => {
-        if (this.selectedBuildingBtn) this.selectedBuildingBtn.classList.remove('selected');
-        this.selectedBuildingBtn = btn;
-        btn.classList.add('selected');
-        this.onToolSelect('zone', undefined, zone.zone);
-      });
-
-      this.buildingPanel.appendChild(btn);
-    }
-  }
-
-  private showToolsPanel(): void {
-    const demBtn = document.createElement('button');
-    demBtn.className = 'building-btn';
     const nameSpan = document.createElement('span');
-    nameSpan.textContent = 'DEMOLISH';
-    demBtn.appendChild(nameSpan);
+    nameSpan.textContent = label;
+    btn.appendChild(nameSpan);
+
     const costSpan = document.createElement('span');
     costSpan.className = 'building-cost';
-    costSpan.textContent = '50% REFUND';
-    demBtn.appendChild(costSpan);
-    demBtn.addEventListener('click', () => {
+    costSpan.textContent = hint;
+    btn.appendChild(costSpan);
+
+    btn.addEventListener('click', () => {
       if (this.selectedBuildingBtn) this.selectedBuildingBtn.classList.remove('selected');
-      this.selectedBuildingBtn = demBtn;
-      demBtn.classList.add('selected');
-      this.onToolSelect('demolish');
+      this.selectedBuildingBtn = btn;
+      btn.classList.add('selected');
+      this.onToolSelect('zone', undefined, zone);
     });
-    this.buildingPanel.appendChild(demBtn);
 
-    const selBtn = document.createElement('button');
-    selBtn.className = 'building-btn';
-    const selName = document.createElement('span');
-    selName.textContent = 'INSPECT';
-    selBtn.appendChild(selName);
-    const selCost = document.createElement('span');
-    selCost.className = 'building-cost';
-    selCost.textContent = 'CLICK TO VIEW';
-    selBtn.appendChild(selCost);
-    selBtn.addEventListener('click', () => {
-      if (this.selectedBuildingBtn) this.selectedBuildingBtn.classList.remove('selected');
-      this.selectedBuildingBtn = selBtn;
-      selBtn.classList.add('selected');
-      this.onToolSelect('select');
-    });
-    this.buildingPanel.appendChild(selBtn);
-
-    const svcBtn = document.createElement('button');
-    svcBtn.className = 'building-btn';
-    const svcName = document.createElement('span');
-    svcName.textContent = 'SERVICE MAP';
-    svcBtn.appendChild(svcName);
-    const svcCost = document.createElement('span');
-    svcCost.className = 'building-cost';
-    svcCost.textContent = 'TOGGLE (C)';
-    svcBtn.appendChild(svcCost);
-    svcBtn.addEventListener('click', () => {
-      this.events.emit('overlay:service:toggle', {});
-    });
-    this.buildingPanel.appendChild(svcBtn);
-
-    const saveBtn = document.createElement('button');
-    saveBtn.className = 'building-btn';
-    const saveName = document.createElement('span');
-    saveName.textContent = 'SAVE GAME';
-    saveBtn.appendChild(saveName);
-    const saveHint = document.createElement('span');
-    saveHint.className = 'building-cost';
-    saveHint.textContent = 'LOCAL (CTRL+S)';
-    saveBtn.appendChild(saveHint);
-    saveBtn.addEventListener('click', () => {
-      this.events.emit('game:save:requested', {});
-    });
-    this.buildingPanel.appendChild(saveBtn);
-
-    const qualityWrap = document.createElement('div');
-    qualityWrap.className = 'graphics-quality-controls';
-
-    const qualityLabel = document.createElement('div');
-    qualityLabel.className = 'graphics-quality-label';
-    qualityLabel.textContent = 'GRAPHICS';
-    qualityWrap.appendChild(qualityLabel);
-
-    this.qualityButtons = [];
-    const qualities: { label: string; value: GraphicsQuality }[] = [
-      { label: 'LOW', value: 'low' },
-      { label: 'MED', value: 'medium' },
-      { label: 'HIGH', value: 'high' },
-    ];
-
-    for (const q of qualities) {
-      const btn = document.createElement('button');
-      btn.className = 'quality-btn';
-      btn.textContent = q.label;
-      btn.dataset.quality = q.value;
-      btn.addEventListener('click', () => {
-        this.events.emit('graphics:quality:changed', { quality: q.value });
-      });
-      this.qualityButtons.push(btn);
-      qualityWrap.appendChild(btn);
-    }
-
-    this.buildingPanel.appendChild(qualityWrap);
-    this.refreshQualityButtons();
+    return btn;
   }
 
   cycleCategory(dir: number): void {
@@ -262,13 +210,6 @@ export class Toolbar {
     }
     this.activeCategory = null;
     this.buildingPanel.classList.remove('visible');
-  }
-
-  private refreshQualityButtons(): void {
-    for (const btn of this.qualityButtons) {
-      const active = btn.dataset.quality === this.graphicsQuality;
-      btn.classList.toggle('active', active);
-    }
   }
 
   private createBuildingButton(def: BuildingDef): HTMLElement {

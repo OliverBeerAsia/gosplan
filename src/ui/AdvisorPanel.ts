@@ -11,6 +11,8 @@ export class AdvisorPanel {
   private dismissedMessage: string | null = null;
   private dismissedAt = 0;
   private refreshCooldownMs = 30000; // 30s between dismissed advice and next
+  private autoDismissTimer: ReturnType<typeof setTimeout> | null = null;
+  private autoDismissMs = 10000; // 10s auto-dismiss
 
   constructor(
     container: HTMLElement,
@@ -54,12 +56,8 @@ export class AdvisorPanel {
     const advice = this.advisorService.getAdvice();
 
     if (!advice) {
-      // Show "all good" briefly every minute or hide
-      if (this.state.totalTicks % 52 < 4) {
-        this.showMessage('Your city thrives, Comrade. Continue the great work.');
-      } else {
-        this.el.style.display = 'none';
-      }
+      // No advice — stay hidden (removed idle "all good" message)
+      this.el.style.display = 'none';
       return;
     }
 
@@ -72,13 +70,39 @@ export class AdvisorPanel {
   }
 
   private showMessage(msg: string): void {
+    // Clear any existing auto-dismiss timer
+    if (this.autoDismissTimer !== null) {
+      clearTimeout(this.autoDismissTimer);
+      this.autoDismissTimer = null;
+    }
+
+    this.el.classList.remove('advisor-fading');
     this.messageEl.textContent = msg;
     this.el.style.display = 'flex';
+
+    // Auto-dismiss after 10s with fade
+    this.autoDismissTimer = setTimeout(() => {
+      this.el.classList.add('advisor-fading');
+      // After fade animation completes, hide
+      setTimeout(() => {
+        if (this.el.classList.contains('advisor-fading')) {
+          this.el.style.display = 'none';
+          this.el.classList.remove('advisor-fading');
+        }
+      }, 500);
+    }, this.autoDismissMs);
   }
 
   private dismiss(): void {
+    // Clear auto-dismiss timer
+    if (this.autoDismissTimer !== null) {
+      clearTimeout(this.autoDismissTimer);
+      this.autoDismissTimer = null;
+    }
+
     this.dismissedMessage = this.messageEl.textContent;
     this.dismissedAt = Date.now();
+    this.el.classList.remove('advisor-fading');
     this.el.style.display = 'none';
   }
 }
