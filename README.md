@@ -10,19 +10,23 @@ Every push to `main` auto-deploys to GitHub Pages via the Actions workflow in `.
 
 ## Current Release
 
-- Version: `1.5.0`
+- Version: `1.6.0`
 - Status: playable, desktop-first, production build passing
 
-## What's New Since 1.5.0
+## What Is In 1.6.0
 
+- **Sound effects & ambient audio** — procedural SFX via Web Audio API and population-scaled ambient city hum with volume sliders.
+- **Interactive tutorial** — 6-step guided first game with spotlight overlay and skip button.
+- **Placement rejection reasons** — floating label near cursor explains why a building can't be placed.
+- **Rich building tooltips** — hover tooltips with descriptions, stats, costs, and requirements.
+- **Construction animation** — buildings scale up and fade in on placement (ease-out cubic tween).
+- **Power grid visualization** — unpowered building icons, deficit pulse on resource bar, auto-flash power overlay.
+- **Milestone celebrations** — population and budget milestones with Soviet-themed messages and gold screen flash.
+- **Pause menu** — Escape key opens menu with settings (graphics, UI scale, audio volume), save, and quit.
+- **Soviet advisor panel** — "Comrade Planner" contextual guidance with priority-ranked suggestions.
+- **Statistics panel** — canvas line charts for population, happiness, budget, and power over time (`S` key).
 - Soviet desk background on title screen, loading overlay, and game-over screen.
-- Building outline removal and multiple art refinement passes (perspective, weathering, rooftop character).
-- Visual polish fixes:
-  - Fixed white halo on well-serviced buildings (tint was washing out facade colors)
-  - Rounded happiness display to integer
-  - Slowed base game speed from 1.6s to 2.4s per week at 1x
-  - Enlarged opening splash hero image
-  - Softened unpowered building overlay (35% → 22% opacity)
+- Visual polish: building art refinement, outline removal, rounded happiness, slower base speed, softened unpowered overlay.
 
 ## What Is In 1.5.0
 
@@ -154,6 +158,9 @@ npm run preview
 - Overlays:
   - `P`: power overlay
   - `C`: service coverage overlay
+  - `S`: statistics panel (population, happiness, budget, power charts)
+- Menu:
+  - `Escape`: pause menu (settings, save, quit)
 - Events:
   - active state events appear as a modal with 2-3 policy choices
 - Campaign outcomes:
@@ -186,10 +193,11 @@ If the atlas or specific frames are missing, the game still runs via procedural 
 
 - `src/core`: game bootstrap, state, save/load, event bus
 - `src/grid`: cell/grid model, placement
-- `src/simulation`: economy, power, population, zoning growth, service coverage, commute, districts, directives, events
+- `src/simulation`: economy, power, population, zoning growth, service coverage, commute, districts, directives, events, milestones, stats
 - `src/rendering`: terrain/buildings/overlays/camera/isometric projection
 - `src/graphics`: palette, texture generators, atlas loader, texture factory
-- `src/ui`: toolbar, resource bar, info panel, minimap, notifications
+- `src/audio`: procedural sound effects and ambient audio (Web Audio API)
+- `src/ui`: toolbar, resource bar, info panel, minimap, notifications, advisor, pause menu, stats panel, tutorial
 - `public/assets/atlas`: authored sprite atlas assets
 - `docs`: release documentation and QA artifacts
 

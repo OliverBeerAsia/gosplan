@@ -2,8 +2,20 @@
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-02-16
+
 ### Added
 
+- **Sound effects & ambient audio** — procedural SFX via Web Audio API (placement, demolish, invalid, UI clicks, event alerts, achievements) and population-scaled ambient city hum. Volume sliders (master/SFX/music) persisted to localStorage.
+- **Interactive tutorial** — 6-step guided first game with spotlight overlay, step counter, and skip button. Persisted via localStorage so it never repeats.
+- **Placement rejection reasons** — floating label near cursor explains why building ghost is red ("Insufficient rubles", "No road access", "Space occupied", etc.).
+- **Rich building tooltips** — hover tooltips on toolbar buttons showing description, dimensions, cost, maintenance, capacity, power, service radius, and requirements.
+- **Construction animation** — buildings scale up (0.75→1.0) and fade in (0.3→1.0) with ease-out cubic tween over 400ms on placement.
+- **Power grid visualization** — red ⚡ icon on unpowered buildings, power deficit pulse animation on resource bar, auto-flash power overlay when placing power infrastructure.
+- **Milestone celebrations** — population milestones (100, 500, 1K, 2K, 5K, 10K) and budget milestones (10K, 50K, 100K₽) with Soviet-themed messages and gold screen flash. Persisted in game state across save/load.
+- **Pause menu** — Escape key opens pause menu with Resume, Save, Settings (graphics quality, UI scale, audio volume sliders), and Quit to Title.
+- **Soviet advisor panel** — "Comrade Planner" shows priority-ranked contextual guidance (power deficit, housing demand, low happiness, etc.) with 30s dismissal cooldown.
+- **Statistics panel** — canvas-based line charts for population, happiness, budget, and power (capacity vs demand dual-line). Toggle with `S` key. Data sampled every 4 ticks, circular buffer of 200 points persisted in saves.
 - Soviet desk background image on title screen, loading overlay, and game-over screen.
 - Session recap for 2026-02-16 (`docs/SESSION_RECAP_2026-02-16.md`).
 
@@ -19,6 +31,18 @@
 - Enlarged opening splash hero image (80vh max-height, 1400px panel width).
 - Rounded happiness display to integer (no more fractional percentages).
 - Slowed base game speed: `BASE_TICK_MS` 1600 → 2400 (2.4s/week at 1x).
+- Tutorial system fully rewritten from 5 conditional hints to step-based guided flow.
+- Escape key now opens pause menu (or deselects tool if active).
+- Simulation tick order expanded with MilestoneService and StatsCollector.
+- Game state expanded with `milestonesTriggered` and `statsHistory` fields.
+
+### Fixed
+
+- Power overlay flash showing empty container (updatePowerOverlay early-return when showPowerOverlay was false).
+- Stale sprite reference in construction tweens after building demolish (operated on destroyed PixiJS sprite).
+- Building ghost showing green (valid) for unaffordable buildings (budget check asymmetry between canPlace and getPlacementRejection).
+- Tutorial last step auto-completing instantly instead of displaying for 6 seconds.
+- Double sound on achievement unlock (both milestone and achievement SFX played simultaneously).
 
 ## [1.5.0] - 2026-02-16
 
