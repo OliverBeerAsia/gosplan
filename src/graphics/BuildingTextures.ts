@@ -282,6 +282,10 @@ function drawKhrushchyovka(renderer: Renderer): Texture {
   g.lineTo(ox - 4, topY - 11);
   g.stroke({ width: 0.8, color: PALETTE.IRON });
 
+  // Weathering: water stain streaks below parapet.
+  drawWeatherStreak(g, ox - bw + 12, topY + roofDepth + 4, ox - bw + 13, topY + roofDepth + 22, PALETTE.STAIN_DARK, 0.1);
+  drawWeatherStreak(g, ox - bw + 28, topY + roofDepth + 12, ox - bw + 29, topY + roofDepth + 28, PALETTE.DAMP_STREAK, 0.1);
+
   const texture = renderer.generateTexture(g);
   g.destroy();
   return texture;
@@ -306,7 +310,7 @@ function drawStalinka(renderer: Renderer): Texture {
   for (let i = 0; i < 4; i++) {
     const x = ox - bw + 7 + i * 11;
     const y = topY + roofDepth + 6 + i * 5;
-    g.rect(x, y, 2.5, bh - 16);
+    isoRect(g, x, y, 2.5, bh - 16, 1);
     g.fill({ color: 0xD7C294, alpha: 0.55 });
   }
 
@@ -369,6 +373,7 @@ function drawKommunalka(renderer: Renderer): Texture {
   drawFacadeBands(g, ox, topY, bw, roofDepth, 3, 11, 0x593628, 0.34);
   drawLeftWindowGrid(g, ox, topY, bw, roofDepth, 3, 2, 9, 11, 5, 7, 2);
   drawRightWindowGrid(g, ox, topY, bw, roofDepth, 3, 1, 9, 11, 5, 7, 1);
+  drawCornice(g, ox, topY, bw, roofDepth, 0x8B6B55, 0.4);
   drawBaseBand(g, ox, oy, bw, roofDepth);
 
   // Entry and rooftop chimney.
@@ -389,6 +394,18 @@ function drawKommunalka(renderer: Renderer): Texture {
   g.fill(0x9E3A3A);
   g.rect(ox - bw + 14, oy - 15, 3, 2);
   g.fill(0x657A8F);
+
+  // Drain pipe on right face.
+  g.moveTo(ox + bw * 0.6, topY + roofDepth * 0.5);
+  g.lineTo(ox + bw * 0.6, oy + bw * 0.5 - 4);
+  g.stroke({ width: 1.2, color: 0x5A4A3A, alpha: 0.55 });
+
+  // Window box flowers.
+  isoRect(g, ox - bw + 8, topY + roofDepth + 19, 4, 2, 1);
+  g.fill({ color: PALETTE.GREEN, alpha: 0.65 });
+
+  // Weathering: soot mark near chimney.
+  drawWeatherStreak(g, ox + bw * 0.28, topY + 2, ox + bw * 0.3, topY + 14, PALETTE.SOOT, 0.14, 2);
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -469,14 +486,18 @@ function drawFactory(renderer: Renderer): Texture {
   for (let i = 0; i < 3; i++) {
     const dx = ox - bw + 8 + i * 16;
     const dy = oy - 18 + i * 8;
-    g.rect(dx, dy, 12, 14);
+    isoRect(g, dx, dy, 12, 14, 1);
     g.fill(0x32383D);
-    g.rect(dx, dy + 11, 12, 2);
+    isoRect(g, dx, dy + 11, 12, 2, 1);
     g.fill(0xB36A2B);
   }
 
   drawLeftWindowGrid(g, ox, topY, bw, roofDepth, 2, 4, 12, 13, 7, 10, 3);
   drawRightWindowGrid(g, ox, topY, bw, roofDepth, 2, 4, 12, 13, 7, 10, 0);
+
+  // Weathering: heavy soot streaks near chimneys.
+  drawWeatherStreak(g, ox - bw * 0.32, topY + 4, ox - bw * 0.3, topY + 28, PALETTE.SOOT, 0.16, 2.5);
+  drawWeatherStreak(g, ox + bw * 0.14, topY + 2, ox + bw * 0.16, topY + 24, PALETTE.SOOT, 0.14, 2);
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -528,6 +549,11 @@ function drawCoalPowerPlant(renderer: Renderer): Texture {
   g.lineTo(ox + bw * 0.43, oy - 8);
   g.stroke({ width: 2, color: PALETTE.GOLD });
 
+  // Weathering: soot streaks on turbine hall.
+  drawWeatherStreak(g, ox - bw * 0.5, topY + roofDepth * 0.6, ox - bw * 0.48, topY + roofDepth * 0.6 + 20, PALETTE.SOOT, 0.18, 2.5);
+  drawWeatherStreak(g, ox - bw * 0.2, topY + roofDepth * 0.5, ox - bw * 0.18, topY + roofDepth * 0.5 + 18, PALETTE.SOOT, 0.15, 2);
+  drawWeatherStreak(g, ox + bw * 0.1, topY + roofDepth * 0.4, ox + bw * 0.12, topY + roofDepth * 0.4 + 16, PALETTE.SOOT, 0.13, 1.5);
+
   const texture = renderer.generateTexture(g);
   g.destroy();
   return texture;
@@ -571,6 +597,7 @@ function drawPartyHQ(renderer: Renderer): Texture {
   drawRightWindowGrid(g, ox, topY, bw, roofDepth, 4, 3, 10, 13, 6, 8, 0);
   drawCornice(g, ox, topY, bw, roofDepth);
   drawBaseBand(g, ox, oy, bw, roofDepth);
+  drawRoofDetail(g, ox, topY, bw, 3, 0x000000, 0.07);
 
   // Red banners and crest.
   g.poly([
@@ -617,8 +644,10 @@ function drawHospital(renderer: Renderer): Texture {
   drawFacadeBands(g, ox, topY, bw, roofDepth, 4, 13, 0x8A8F94, 0.22);
   drawLeftWindowGrid(g, ox, topY, bw, roofDepth, 4, 3, 11, 13, 6, 8, 1);
   drawRightWindowGrid(g, ox, topY, bw, roofDepth, 4, 2, 11, 13, 6, 8, 0);
+  drawCornice(g, ox, topY, bw, roofDepth);
+  drawBaseBand(g, ox, oy, bw, roofDepth);
 
-  // Emergency entrance.
+  // Emergency entrance with canopy overhang.
   g.poly([
     { x: ox - bw + 8, y: oy - 16 },
     { x: ox - 6, y: oy - 9 },
@@ -628,6 +657,31 @@ function drawHospital(renderer: Renderer): Texture {
   g.fill(0x7B828A);
   g.rect(ox - bw + 7, oy - 18, 17, 2);
   g.fill(PALETTE.RED);
+  // Emergency canopy.
+  g.poly([
+    { x: ox - bw + 5, y: oy - 20 },
+    { x: ox - 3, y: oy - 12 },
+    { x: ox - 3, y: oy - 10 },
+    { x: ox - bw + 5, y: oy - 18 },
+  ]);
+  g.fill({ color: 0x8A9098, alpha: 0.7 });
+
+  // Ambulance bay striping.
+  g.moveTo(ox - bw + 4, oy + bw / 2 - 2);
+  g.lineTo(ox - 2, oy + bw - 2);
+  g.stroke({ width: 1.5, color: PALETTE.RED, alpha: 0.45 });
+
+  // Right-face vertical recesses (bay windows).
+  for (let i = 0; i < 3; i++) {
+    const rx = ox + 4 + i * 10;
+    const ry = topY + roofDepth + 10 - i * 5;
+    isoRect(g, rx, ry, 2, bh - 22, -1);
+    g.fill({ color: 0x9DA3A6, alpha: 0.4 });
+  }
+
+  // Roof treatments.
+  drawRoofDetail(g, ox, topY, bw);
+  drawRoofParapet(g, ox, topY, bw, roofDepth, 0xD0D0CD, 0xB0B2B2, 0x9A9C9C);
 
   // Roof HVAC and med emblems.
   g.rect(ox - 10, topY + 7, 8, 4);
@@ -635,12 +689,23 @@ function drawHospital(renderer: Renderer): Texture {
   g.rect(ox + 2, topY + 10, 10, 4);
   g.fill(0x9BA1A3);
 
+  // Vent stack on roof.
+  isoBox(g, ox + 14, topY - 3, 3, 2, 8, 0x7A7E80, 0x606468, 0x4E5256, false);
+
   const crossX = ox - bw * 0.48;
   const crossY = topY + roofDepth + 14;
-  g.rect(crossX - 2, crossY - 6, 5, 13);
+  isoRect(g, crossX - 2, crossY - 6, 5, 13, 1);
   g.fill(PALETTE.RED);
-  g.rect(crossX - 6, crossY - 2, 13, 5);
+  isoRect(g, crossX - 6, crossY - 2, 13, 5, 1);
   g.fill(PALETTE.RED);
+  // Cross outline for prominence.
+  isoRect(g, crossX - 3, crossY - 7, 7, 15, 1);
+  g.stroke({ width: 0.8, color: PALETTE.RED, alpha: 0.5 });
+  isoRect(g, crossX - 7, crossY - 3, 15, 7, 1);
+  g.stroke({ width: 0.8, color: PALETTE.RED, alpha: 0.5 });
+
+  // Weathering: mild stain on right face.
+  drawWeatherStreak(g, ox + 18, topY + roofDepth + 6, ox + 19, topY + roofDepth + 22, PALETTE.STAIN_DARK, 0.08);
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -665,8 +730,10 @@ function drawSchool(renderer: Renderer): Texture {
   drawFacadeBands(g, ox, topY, bw, roofDepth, 3, 12, 0x7E5D28, 0.25);
   drawLeftWindowGrid(g, ox, topY, bw, roofDepth, 3, 3, 8, 12, 5, 7, 2);
   drawRightWindowGrid(g, ox, topY, bw, roofDepth, 3, 2, 8, 12, 5, 7, 0);
+  drawCornice(g, ox, topY, bw, roofDepth, PALETTE.GOLD, 0.35);
+  drawBaseBand(g, ox, oy, bw, roofDepth);
 
-  // Main entry and mural panel.
+  // Main entry with canopy overhang and mural panel.
   g.poly([
     { x: ox - bw + 11, y: oy - 13 },
     { x: ox - 1, y: oy - 7 },
@@ -674,8 +741,27 @@ function drawSchool(renderer: Renderer): Texture {
     { x: ox - bw + 11, y: oy - 4 },
   ]);
   g.fill(0x6C4A1F);
-  g.rect(ox + 6, oy - 23, 10, 6);
+  // Entry canopy.
+  g.poly([
+    { x: ox - bw + 9, y: oy - 16 },
+    { x: ox + 1, y: oy - 9 },
+    { x: ox + 1, y: oy - 7 },
+    { x: ox - bw + 9, y: oy - 14 },
+  ]);
+  g.fill({ color: 0x8A7030, alpha: 0.6 });
+
+  isoRect(g, ox + 6, oy - 23, 10, 6, -1);
   g.fill(0xC5463E);
+  // Gold star in mural.
+  drawStar(g, ox + 11, oy - 20, 3, PALETTE.GOLD);
+
+  drawRoofDetail(g, ox, topY, bw, 2, 0x000000, 0.06);
+
+  // Clock/bell detail on roof.
+  g.circle(ox - 3, topY + 4, 4);
+  g.fill({ color: 0x8A7E60, alpha: 0.5 });
+  g.circle(ox - 3, topY + 4, 2.5);
+  g.fill({ color: 0x4A4438, alpha: 0.45 });
 
   g.moveTo(ox + bw * 0.32, topY - 2);
   g.lineTo(ox + bw * 0.32, topY - 22);
@@ -954,6 +1040,10 @@ function drawPanelak(renderer: Renderer): Texture {
   g.lineTo(ox + 10, topY - 14);
   g.stroke({ width: 0.8, color: PALETTE.IRON });
 
+  // Weathering: damp streaks at panel joints.
+  drawWeatherStreak(g, ox - bw + 14, topY + roofDepth + 16, ox - bw + 15, topY + roofDepth + 38, PALETTE.DAMP_STREAK, 0.11);
+  drawWeatherStreak(g, ox - bw + 32, topY + roofDepth + 24, ox - bw + 33, topY + roofDepth + 44, PALETTE.DAMP_STREAK, 0.1);
+
   const texture = renderer.generateTexture(g);
   g.destroy();
   return texture;
@@ -990,11 +1080,11 @@ function drawWarehouse(renderer: Renderer): Texture {
   for (let i = 0; i < 2; i++) {
     const dx = ox - bw + 9 + i * 15;
     const dy = oy - 30 + i * 7;
-    g.rect(dx, dy, 12, 24);
+    isoRect(g, dx, dy, 12, 24, 1);
     g.fill(0x3A434A);
     for (let s = 1; s <= 3; s++) {
       g.moveTo(dx, dy + s * 6);
-      g.lineTo(dx + 12, dy + s * 6);
+      g.lineTo(dx + 12, dy + s * 6 + 6);
       g.stroke({ width: 0.6, color: 0x5B6870, alpha: 0.65 });
     }
   }
@@ -1024,6 +1114,8 @@ function drawCinema(renderer: Renderer): Texture {
   isoBox(g, ox, topY, bw, roofDepth, bh, 0xA8AAA9, 0x8A8D8C, 0x6F7271);
   isoBox(g, ox + bw * 0.2, topY - 6, bw * 0.62, roofDepth * 0.6, 11, 0xB3B5B4, 0x949796, 0x7D807F, false);
   isoBox(g, ox + bw * 0.24, topY - 14, bw * 0.34, roofDepth * 0.32, 8, 0xBCBEBC, 0x9B9D9B, 0x848684, false);
+  drawCornice(g, ox, topY, bw, roofDepth);
+  drawBaseBand(g, ox, oy, bw, roofDepth);
 
   // Marquee and title lights.
   g.poly([
@@ -1044,13 +1136,38 @@ function drawCinema(renderer: Renderer): Texture {
     g.fill({ color: PALETTE.WINDOW_LIT, alpha: 0.9 });
   }
 
+  drawRoofParapet(g, ox, topY, bw, roofDepth, 0x8A8C8B, 0x707271, 0x5F6160);
+
   // Entry arch and poster niches.
-  g.rect(ox - bw + 10, oy - 18, 12, 18);
+  isoRect(g, ox - bw + 10, oy - 18, 12, 18, 1);
   g.fill(0x4D4D4D);
   g.arc(ox - bw + 16, oy - 18, 6, Math.PI, 0);
   g.fill(0x4D4D4D);
-  g.rect(ox + 5, oy - 26, 7, 10);
+  isoRect(g, ox + 5, oy - 26, 7, 10, -1);
   g.fill(0x8E2323);
+
+  // Signage board on right face.
+  isoRect(g, ox + 4, topY + roofDepth + 6, 14, 8, -1);
+  g.fill({ color: 0x2A2A2A, alpha: 0.7 });
+  for (let i = 0; i < 3; i++) {
+    const ly = topY + roofDepth + 8 + i * 2.5;
+    g.moveTo(ox + 6, ly - i * 1);
+    g.lineTo(ox + 14, ly - i * 1 - 4);
+    g.stroke({ width: 1, color: PALETTE.GOLD, alpha: 0.5 });
+  }
+
+  // Second poster niche (blue-toned).
+  isoRect(g, ox + 14, oy - 20, 7, 10, -1);
+  g.fill({ color: 0x2E4A6B, alpha: 0.7 });
+
+  // Extended canopy on left face.
+  g.poly([
+    { x: ox - bw + 3, y: oy - 20 },
+    { x: ox - 2, y: oy - 12 },
+    { x: ox - 2, y: oy - 10 },
+    { x: ox - bw + 3, y: oy - 18 },
+  ]);
+  g.fill({ color: 0x6A6C6B, alpha: 0.65 });
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -1136,18 +1253,21 @@ function drawMetroStation(renderer: Renderer): Texture {
 
   isoBox(g, ox, topY, bw, roofDepth, bh, 0xB0B0AD, 0x91918E, 0x767673);
   isoBox(g, ox - bw * 0.33, topY + 8, bw * 0.44, roofDepth * 0.38, 22, 0xBEBDBA, 0x9D9C99, 0x848380, false);
+  drawCornice(g, ox, topY, bw, roofDepth, PALETTE.GOLD, 0.4);
+  drawBaseBand(g, ox, oy, bw, roofDepth);
+  drawRoofDetail(g, ox, topY, bw, 2, 0x000000, 0.07);
 
   // Portico and steps.
-  g.rect(ox - bw + 10, oy - 24, 16, 22);
+  isoRect(g, ox - bw + 10, oy - 24, 16, 22, 1);
   g.fill(0x5B5B58);
   g.arc(ox - bw + 18, oy - 24, 8, Math.PI, 0);
   g.fill(0x5B5B58);
-  g.rect(ox - bw + 8, oy - 28, 3, 26);
+  isoRect(g, ox - bw + 8, oy - 28, 3, 26, 1);
   g.fill(0xD9D8D2);
-  g.rect(ox - bw + 25, oy - 19, 3, 17);
+  isoRect(g, ox - bw + 25, oy - 19, 3, 17, 1);
   g.fill(0xD9D8D2);
   for (let i = 0; i < 4; i++) {
-    g.rect(ox + 2 + i * 5, oy - 8 + i * 2, 5, 2);
+    isoRect(g, ox + 2 + i * 5, oy - 8 + i * 2, 5, 2, -1);
     g.fill(0x72726F);
   }
 
@@ -1164,10 +1284,33 @@ function drawMetroStation(renderer: Renderer): Texture {
   g.stroke({ width: 1.5, color: PALETTE.WHITE });
 
   // Ticket windows.
-  g.rect(ox + 5, oy - 18, 7, 5);
+  isoRect(g, ox + 5, oy - 18, 7, 5, -1);
   g.fill(PALETTE.WINDOW);
-  g.rect(ox + 13, oy - 22, 7, 5);
+  isoRect(g, ox + 13, oy - 22, 7, 5, -1);
   g.fill(PALETTE.WINDOW_DARK);
+
+  // Arched windows on left face.
+  for (let i = 0; i < 3; i++) {
+    const awx = ox - bw + 7 + i * 10;
+    const awy = topY + roofDepth + 8 + i * 5;
+    isoRect(g, awx, awy, 6, 10, 1);
+    g.fill(PALETTE.WINDOW);
+    g.arc(awx + 3, awy + 1, 3, Math.PI, 0);
+    g.fill({ color: PALETTE.WINDOW, alpha: 0.7 });
+  }
+
+  // Gold decorative band (mosaic frieze) below cornice.
+  const bandY = topY + roofDepth + 2;
+  for (let i = 0; i < 8; i++) {
+    const bx = ox - bw + 5 + i * 4;
+    const by = bandY + i * 2;
+    g.moveTo(bx, by);
+    g.lineTo(bx + 3, by + 1.5);
+    g.stroke({ width: 1.5, color: PALETTE.GOLD, alpha: 0.35 });
+  }
+
+  // Gold star above portico.
+  drawStar(g, ox - bw + 18, topY + roofDepth - 2, 4, PALETTE.GOLD);
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -1287,6 +1430,8 @@ function drawSportsComplex(renderer: Renderer): Texture {
 
   isoBox(g, ox, topY, bw, roofDepth, bh, 0xB6B6B1, 0x969892, 0x797B75);
   isoBox(g, ox - bw * 0.24, topY + 10, bw * 0.38, roofDepth * 0.35, 28, 0xC0BFB8, 0x9F9D96, 0x84827C);
+  drawCornice(g, ox, topY, bw, roofDepth);
+  drawBaseBand(g, ox, oy, bw, roofDepth);
 
   const roofY = topY + roofDepth * 0.34;
   g.ellipse(ox, roofY, bw * 0.68, bw * 0.28);
@@ -1304,6 +1449,8 @@ function drawSportsComplex(renderer: Renderer): Texture {
     g.stroke({ width: 2, color: 0xD2D2CD, alpha: 0.52 });
   }
   drawLeftWindowGrid(g, ox, topY, bw, roofDepth, 2, 4, 11, 12, 6, 8, 2);
+  drawRightWindowGrid(g, ox, topY, bw, roofDepth, 2, 4, 11, 12, 6, 8, 0);
+  drawRoofDetail(g, ox, topY, bw, 4, 0x000000, 0.06);
 
   const lightPositions = [
     { x: ox - bw * 0.62, y: topY - 4 },
@@ -1325,6 +1472,16 @@ function drawSportsComplex(renderer: Renderer): Texture {
 }
 
 // ===== HELPER DRAWING FUNCTIONS =====
+
+// Weathering streak: subtle vertical stain to suggest water/soot damage
+function drawWeatherStreak(
+  g: Graphics, x1: number, y1: number, x2: number, y2: number,
+  color = 0x3A3A38, alpha = 0.12, width = 1.5
+) {
+  g.moveTo(x1, y1);
+  g.lineTo(x2, y2);
+  g.stroke({ width, color, alpha });
+}
 
 // Cornice: thin protruding highlight ledge where roof meets wall
 function drawCornice(

@@ -75,6 +75,12 @@ export const PALETTE = {
 
   // Dirt
   DIRT_BROWN: 0x8B7D5A,
+
+  // Weathering / patina
+  STAIN_DARK: 0x3A3A38,
+  STAIN_RUST: 0x6B4A32,
+  SOOT: 0x2E2E2C,
+  DAMP_STREAK: 0x5A6058,
 };
 
 // CSS color versions for UI
