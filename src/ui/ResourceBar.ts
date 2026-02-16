@@ -190,7 +190,7 @@ export class ResourceBar {
   }
 
   private formatHappiness(): string {
-    const score = this.state.happiness;
+    const score = Math.round(this.state.happiness);
     if (score >= 70) return `${score}% HIGH`;
     if (score >= 55) return `${score}% GOOD`;
     if (score >= 40) return `${score}% FAIR`;

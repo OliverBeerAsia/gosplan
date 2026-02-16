@@ -16,7 +16,7 @@ export const MAX_ZOOM = 2.0;
 export const ZOOM_SPEED = 0.1;
 
 // Simulation
-export const BASE_TICK_MS = 1600; // slower week pacing at 1x speed
+export const BASE_TICK_MS = 2400; // slower week pacing at 1x speed
 export const TICKS_PER_YEAR = 52; // 52 weeks per year
 export const FIVE_YEAR_PLAN_TICKS = 5 * TICKS_PER_YEAR;
 

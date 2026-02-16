@@ -609,7 +609,7 @@
 }
 
 .opening-splash-panel {
-  width: min(1080px, calc(100vw - 24px));
+  width: min(1400px, calc(100vw - 24px));
   padding: var(--space-4);
   border: var(--panel-border-gold);
   background:
@@ -623,7 +623,7 @@
 
 .opening-splash-hero {
   width: 100%;
-  max-height: min(62vh, 620px);
+  max-height: 80vh;
   object-fit: contain;
   border: 1px solid rgba(255, 215, 107, 0.45);
   box-shadow:

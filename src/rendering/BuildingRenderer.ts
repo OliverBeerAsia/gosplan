@@ -328,8 +328,6 @@ export class BuildingRenderer {
     } else if (def.category === 'residential' || def.category === 'government') {
       if (coverage < 20) {
         tint = 0xC9B596;
-      } else if (coverage > 70) {
-        tint = 0xE4F0D8;
       }
     } else if (def.category === 'industrial' && coverage < 18) {
       tint = 0xBAAE99;
