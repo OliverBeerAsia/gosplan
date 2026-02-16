@@ -8,7 +8,7 @@ function isoBox(
   ox: number, oy: number,
   w: number, h: number, depth: number,
   topColor: number, leftColor: number, rightColor: number,
-  outline = true
+  outline = false
 ) {
   // Top face
   g.poly([

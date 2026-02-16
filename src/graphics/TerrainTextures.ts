@@ -65,14 +65,9 @@ function generateGroundTile(renderer: Renderer, variant: number): Texture {
   drawTileDiamond(g);
   g.fill(PALETTE.GROUND + variant * 0x030303);
 
-  g.moveTo(TILE_HALF_W, 0);
-  g.lineTo(TILE_HALF_W * 2, TILE_HALF_H);
-  g.stroke({ width: 1, color: PALETTE.GROUND_LIGHT, alpha: 0.5 });
-
-  g.moveTo(0, TILE_HALF_H);
-  g.lineTo(TILE_HALF_W, TILE_HALF_H * 2);
-  g.lineTo(TILE_HALF_W * 2, TILE_HALF_H);
-  g.stroke({ width: 1, color: PALETTE.GROUND_EDGE, alpha: 0.5 });
+  // Subtle tile-edge seam (no 3D height illusion)
+  drawTileDiamond(g);
+  g.stroke({ width: 0.5, color: PALETTE.GROUND_EDGE, alpha: 0.15 });
 
   // Patchy brush marks to reduce visual repetition.
   const patchAlpha = 0.12 + variant * 0.04;
@@ -82,9 +77,6 @@ function generateGroundTile(renderer: Renderer, variant: number): Texture {
     g.ellipse(px, py, 5, 2);
     g.fill({ color: PALETTE.GROUND_EDGE, alpha: patchAlpha });
   }
-
-  drawTileDiamond(g);
-  g.stroke({ width: 0.5, color: PALETTE.GROUND_EDGE, alpha: 0.25 });
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -173,16 +165,13 @@ function generateHillTile(renderer: Renderer, variant: number): Texture {
   ]);
   g.fill(PALETTE.HILL_ROCK);
 
-  for (let i = 0; i < 4; i++) {
-    const y0 = TILE_HALF_H - 5 + i * 4;
-    g.moveTo(TILE_HALF_W - 11 + i * 3, y0);
-    g.lineTo(TILE_HALF_W - 5 + i * 3, y0 + 3);
-    g.stroke({ width: 0.5, color: PALETTE.CONCRETE_DARK, alpha: 0.45 });
+  // Subtle rock striations
+  for (let i = 0; i < 3; i++) {
+    const y0 = TILE_HALF_H - 4 + i * 5;
+    g.moveTo(TILE_HALF_W - 8 + i * 3, y0);
+    g.lineTo(TILE_HALF_W - 3 + i * 3, y0 + 2);
+    g.stroke({ width: 0.5, color: PALETTE.CONCRETE_DARK, alpha: 0.25 });
   }
-
-  g.moveTo(TILE_HALF_W, 0);
-  g.lineTo(TILE_HALF_W * 2, TILE_HALF_H);
-  g.stroke({ width: 1, color: PALETTE.HILL_ROCK, alpha: 0.5 });
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -321,7 +310,7 @@ function generateTerrainEdgeMask(renderer: Renderer, mask: number): Texture {
   const drawEdge = (x1: number, y1: number, x2: number, y2: number, nx: number, ny: number) => {
     g.moveTo(x1, y1);
     g.lineTo(x2, y2);
-    g.stroke({ width: 2, color: 0x1B1B1B, alpha: 0.25 });
+    g.stroke({ width: 1, color: 0x1B1B1B, alpha: 0.15 });
 
     g.poly([
       { x: x1, y: y1 },
@@ -329,7 +318,7 @@ function generateTerrainEdgeMask(renderer: Renderer, mask: number): Texture {
       { x: x2 + nx, y: y2 + ny },
       { x: x1 + nx, y: y1 + ny },
     ]);
-    g.fill({ color: 0x000000, alpha: 0.08 });
+    g.fill({ color: 0x000000, alpha: 0.05 });
   };
 
   if (mask & 1) drawEdge(TILE_HALF_W, 0, TILE_HALF_W * 2, TILE_HALF_H, -4, 4); // N
