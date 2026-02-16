@@ -3,7 +3,6 @@ import { BuildingDef, BuildingCategory } from '../buildings/BuildingTypes';
 import { EventBus } from '../core/EventBus';
 import { ToolType } from '../input/ToolController';
 import { ZoneType } from '../grid/Cell';
-import { GraphicsQuality } from '../core/GameState';
 import { audioManager } from '../audio/AudioManager';
 
 type ToolCallback = (tool: ToolType, buildingId?: string, zone?: ZoneType) => void;
@@ -46,7 +45,6 @@ export class Toolbar {
   private buildingPanel: HTMLDivElement;
   private activeCategory: string | null = null;
   private selectedBuildingBtn: HTMLElement | null = null;
-  private graphicsQuality: GraphicsQuality = 'high';
   private quickToolBar: HTMLDivElement;
 
   constructor(
@@ -106,10 +104,6 @@ export class Toolbar {
     this.el.appendChild(this.quickToolBar);
 
     container.appendChild(this.el);
-
-    this.events.on('graphics:quality:changed', ({ quality }) => {
-      this.graphicsQuality = quality;
-    });
   }
 
   private selectCategory(catId: string, catBar: HTMLElement): void {

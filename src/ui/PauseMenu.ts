@@ -1,6 +1,6 @@
 import { EventBus } from '../core/EventBus';
 import { GameStateData, GraphicsQuality, UiScalePreset } from '../core/GameState';
-import { audioManager, AudioSettings } from '../audio/AudioManager';
+import { audioManager } from '../audio/AudioManager';
 import { AchievementPanel } from './AchievementPanel';
 
 export class PauseMenu {
@@ -83,12 +83,7 @@ export class PauseMenu {
       this.events.emit('game:save:requested', {});
     }));
 
-    // Achievement section
-    const honorsLabel = document.createElement('div');
-    honorsLabel.className = 'pause-menu-section';
-    honorsLabel.textContent = 'STATE HONORS';
-    body.appendChild(honorsLabel);
-
+    // Achievement section (header is inside AchievementPanel)
     this.achievementPanel.update();
     body.appendChild(this.achievementPanel.el);
 

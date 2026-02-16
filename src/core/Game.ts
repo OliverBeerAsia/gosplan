@@ -451,7 +451,7 @@ export class Game {
 
     if (Game.STREAMLINED_UI) {
       this.events.emit('notification', {
-        message: 'Streamlined UI active. Press I to toggle advanced intel panels.',
+        message: 'Streamlined UI active. Press I to toggle district panel.',
         type: 'info',
       });
     }
@@ -547,8 +547,8 @@ export class Game {
           this.setAdvancedPanelsVisible(!this.advancedPanelsVisible);
           this.events.emit('notification', {
             message: this.advancedPanelsVisible
-              ? 'Advanced intel panels enabled.'
-              : 'Advanced intel panels hidden.',
+              ? 'District panel shown.'
+              : 'District panel hidden.',
             type: 'info',
           });
           break;
