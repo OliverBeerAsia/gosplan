@@ -49,9 +49,11 @@ export class TextureFactory {
     for (const [k, v] of terrain) this.textures.set(k, v);
     for (const [k, v] of buildings) this.textures.set(k, v);
 
-    // Optional authored atlas overrides procedural textures when available.
+    // Optional authored atlas overrides terrain/overlay textures.
+    // Building sprites are kept procedural so district variants and detail packs stay coherent.
     const atlas = await loadSpriteAtlasTextures(assetPath('assets/atlas/pixel-city.json'));
     for (const [k, v] of atlas) {
+      if (!isNonBuildingTextureKey(k)) continue;
       this.textures.set(k, v);
     }
 
@@ -204,6 +206,7 @@ export class TextureFactory {
       accents.fill({ color: 0xD8B96D, alpha: 0.32 });
     }
     container.addChild(accents);
+    addDistrictArchitectureDesign(accents, style, source.width, source.height);
 
     const tex = renderer.generateTexture(container);
     container.destroy();
@@ -243,5 +246,69 @@ export class TextureFactory {
 
   has(key: string): boolean {
     return this.textures.has(key);
+  }
+}
+
+function addDistrictArchitectureDesign(
+  accents: Graphics,
+  style: DistrictStyle,
+  width: number,
+  height: number
+) {
+  if (style === 'worker_housing') {
+    for (let i = 0; i < 3; i++) {
+      const y = height - 12 - i * 10;
+      accents.moveTo(4, y);
+      accents.lineTo(width - 6, y - 2);
+      accents.stroke({ width: 0.8, color: 0x3A2F29, alpha: 0.45 });
+      accents.circle(6 + i * 7, y - 2, 1.2);
+      accents.fill({ color: 0xC5483A, alpha: 0.65 });
+      accents.circle(width - 8 - i * 6, y - 2, 1.2);
+      accents.fill({ color: 0x5B93B9, alpha: 0.55 });
+    }
+  } else if (style === 'heavy_industry') {
+    for (let i = 0; i < 4; i++) {
+      const y = height - 6 - i * 8;
+      const stripeWidth = width - 8;
+      accents.rect(4, y - 2, stripeWidth, 3);
+      accents.fill({ color: 0xC65032, alpha: 0.45 });
+      accents.rect(4, y, stripeWidth * 0.6, 2);
+      accents.fill({ color: 0x1A1A1A, alpha: 0.5 });
+    }
+    accents.moveTo(width - 22, height - 24);
+    accents.lineTo(width - 10, height - 34);
+    accents.stroke({ width: 2, color: 0x5B5B59, alpha: 0.65 });
+    accents.moveTo(width - 22, height - 24);
+    accents.lineTo(width - 22, height - 38);
+    accents.stroke({ width: 2, color: 0x5B5B59, alpha: 0.65 });
+  } else if (style === 'scientific_city') {
+    for (let i = 0; i < 3; i++) {
+      const x = width * 0.3 + i * (width * 0.15);
+      const y = height * 0.35 - i * 4;
+      accents.moveTo(x, y);
+      accents.lineTo(x + 10, y - 6);
+      accents.lineTo(x + 16, y + 4);
+      accents.stroke({ width: 1.2, color: 0x70C0D7, alpha: 0.7 });
+      accents.circle(x + 4, y - 3, 1.5);
+      accents.fill({ color: 0x70C0D7, alpha: 0.6 });
+    }
+    for (let i = 0; i < 2; i++) {
+      const x = width - 12 - i * 8;
+      accents.moveTo(x, 10 + i * 12);
+      accents.lineTo(x, height - 6);
+      accents.stroke({ width: 0.8, color: 0xC3E4F3, alpha: 0.5 });
+    }
+  } else if (style === 'historic_core') {
+    for (let i = 0; i < 2; i++) {
+      const x = 6 + i * 10;
+      const y = height - 18 - i * 8;
+      accents.moveTo(x, y);
+      accents.lineTo(x + 4, y - 10);
+      accents.lineTo(x + 8, y);
+      accents.stroke({ width: 1.4, color: 0xAA1F23, alpha: 0.7 });
+      accents.fill({ color: 0xAA1F23, alpha: 0.65 });
+    }
+    accents.rect(width * 0.3, height - 8, width * 0.4, 5);
+    accents.fill({ color: 0xCDBA6A, alpha: 0.45 });
   }
 }
