@@ -8,6 +8,19 @@
 - Removed 90-second legacy builder wait from deploy workflow (deploy ~30s instead of ~2m30s).
 - Added deployment documentation to README and RELEASE_RUNBOOK.
 
+## [1.5.0] - 2026-02-16
+
+### Added
+
+- Richer building facades (Khrushchyovka, Stalinka, Panelák, civic services, industrial complexes) with depth, rooftop props, and factory gantries inspired by classic city-builders.
+- District glyph accents layered in `TextureFactory` so each style (`worker_housing`, `heavy_industry`, `scientific_city`, `historic_core`) gets unique architectural flourishes before tint variants are created.
+- Release documentation sets for v1.5.0 (`docs/IMPLEMENTATION_NOTES_v1.5.0.md`, `docs/MULTI_AGENT_REVIEW_v1.5.0.md`, `docs/TEST_REPORT_v1.5.0.md`, `docs/BUG_CHECK_v1.5.0.md`, and `docs/RELEASE_NOTES_v1.5.0.md`).
+
+### Changed
+
+- Updated `package.json`, `package-lock.json`, and `README.md` to reference v1.5.0.
+- Building texture rendering now layers district glyphs in `src/graphics/TextureFactory.ts` before applying style tints.
+
 ## [1.4.1] - 2026-02-12
 
 ### Added

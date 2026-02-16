@@ -10,16 +10,19 @@ Every push to `main` auto-deploys to GitHub Pages via the Actions workflow in `.
 
 ## Current Release
 
-- Version: `1.4.1`
+- Version: `1.5.0`
 - Status: playable, desktop-first, production build passing
 
-## What Is In 1.4.1
+## What Is In 1.5.0
 
-- Full development-day recap document:
-  - `docs/SESSION_RECAP_2026-02-12.md`
-- Project best-practices playbook:
-  - `docs/PROJECT_BEST_PRACTICES.md`
-- Release documentation index refresh for continuity and onboarding.
+- Richer building facades for core residential, civic, and industrial buildings with factory gantries, rooftop props, and high-contrast detailing inspired by SimCity/Transport Tycoon.
+- District-style glyphs in the texture pipeline ensure each style (`worker_housing`, `heavy_industry`, `scientific_city`, `historic_core`) adds unique architectural flourishes before tinting.
+- Release documentation set for traceability:
+  - `docs/IMPLEMENTATION_NOTES_v1.5.0.md`
+  - `docs/MULTI_AGENT_REVIEW_v1.5.0.md`
+  - `docs/TEST_REPORT_v1.5.0.md`
+  - `docs/BUG_CHECK_v1.5.0.md`
+  - `docs/RELEASE_NOTES_v1.5.0.md`
 
 ## What Is In 1.4.0
 
@@ -194,6 +197,11 @@ No manual steps are needed — merging to `main` is a production deploy.
 ## Release Docs
 
 - `CHANGELOG.md`
+- `docs/IMPLEMENTATION_NOTES_v1.5.0.md`
+- `docs/MULTI_AGENT_REVIEW_v1.5.0.md`
+- `docs/TEST_REPORT_v1.5.0.md`
+- `docs/BUG_CHECK_v1.5.0.md`
+- `docs/RELEASE_NOTES_v1.5.0.md`
 - `docs/SESSION_RECAP_2026-02-12.md`
 - `docs/PROJECT_BEST_PRACTICES.md`
 - `docs/IMPLEMENTATION_NOTES_v1.4.1.md`
