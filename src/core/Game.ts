@@ -110,7 +110,8 @@ export class Game {
     await this.app.init({
       resizeTo: window,
       background: 0x2A3A2A,
-      antialias: true,
+      antialias: false,
+      roundPixels: true,
       resolution: window.devicePixelRatio || 1,
       autoDensity: true,
     });
@@ -626,8 +627,8 @@ export class Game {
     }
 
     // Update camera transform
-    this.worldContainer.x = this.camera.x;
-    this.worldContainer.y = this.camera.y;
+    this.worldContainer.x = Math.round(this.camera.x);
+    this.worldContainer.y = Math.round(this.camera.y);
     this.worldContainer.scale.set(this.camera.zoom);
   }
 }

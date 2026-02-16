@@ -7,7 +7,8 @@ function isoBox(
   g: Graphics,
   ox: number, oy: number,
   w: number, h: number, depth: number,
-  topColor: number, leftColor: number, rightColor: number
+  topColor: number, leftColor: number, rightColor: number,
+  outline = true
 ) {
   // Top face
   g.poly([
@@ -35,6 +36,49 @@ function isoBox(
     { x: ox, y: oy + w + depth },
   ]);
   g.fill(rightColor);
+
+  // Edge outlines for definition
+  if (outline) {
+    const edgeStyle = { width: 0.8, color: 0x000000, alpha: 0.18 };
+    // Top diamond
+    g.poly([
+      { x: ox, y: oy },
+      { x: ox + w, y: oy + w / 2 },
+      { x: ox, y: oy + w },
+      { x: ox - w, y: oy + w / 2 },
+    ]);
+    g.stroke(edgeStyle);
+    // Front vertical edge
+    g.moveTo(ox, oy + w);
+    g.lineTo(ox, oy + w + depth);
+    g.stroke(edgeStyle);
+    // Left vertical edge
+    g.moveTo(ox - w, oy + w / 2);
+    g.lineTo(ox - w, oy + w / 2 + depth);
+    g.stroke(edgeStyle);
+    // Right vertical edge
+    g.moveTo(ox + w, oy + w / 2);
+    g.lineTo(ox + w, oy + w / 2 + depth);
+    g.stroke(edgeStyle);
+    // Bottom edges
+    g.moveTo(ox - w, oy + w / 2 + depth);
+    g.lineTo(ox, oy + w + depth);
+    g.stroke(edgeStyle);
+    g.moveTo(ox, oy + w + depth);
+    g.lineTo(ox + w, oy + w / 2 + depth);
+    g.stroke(edgeStyle);
+  }
+}
+
+// Helper: draw an isometric parallelogram matching face perspective
+function isoRect(g: Graphics, x: number, y: number, w: number, h: number, skewDir: 1 | -1) {
+  const skew = w * 0.5 * skewDir;
+  g.poly([
+    { x: x, y: y },
+    { x: x + w, y: y + skew },
+    { x: x + w, y: y + skew + h },
+    { x: x, y: y + h },
+  ]);
 }
 
 function drawGroundShadow(
@@ -96,11 +140,14 @@ function drawLeftWindowGrid(
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const wx = baseX + c * stepX;
-      const wy = baseY + r * stepY + c * (stepX * 0.42);
-      g.rect(wx, wy, winW, winH);
+      const wy = baseY + r * stepY + c * (stepX * 0.5);
+      isoRect(g, wx, wy, winW, winH, 1);
       g.fill(((r + c + phase) % 4) === 0 ? PALETTE.WINDOW_LIT : PALETTE.WINDOW);
-      g.rect(wx + 1, wy + 1, Math.max(1, winW - 2), Math.max(1, winH - 2));
+      isoRect(g, wx + 1, wy + 0.5, Math.max(1, winW - 2), Math.max(1, winH - 2), 1);
       g.fill(((r + c + phase) % 3) === 0 ? PALETTE.WINDOW_DARK : PALETTE.WINDOW);
+      // Window sill
+      isoRect(g, wx - 0.5, wy + winH, winW + 1, 1.5, 1);
+      g.fill({ color: PALETTE.WINDOW_SILL, alpha: 0.6 });
     }
   }
 }
@@ -124,11 +171,14 @@ function drawRightWindowGrid(
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const wx = baseX + c * stepX;
-      const wy = baseY + r * stepY - c * (stepX * 0.42);
-      g.rect(wx, wy, winW, winH);
+      const wy = baseY + r * stepY - c * (stepX * 0.5);
+      isoRect(g, wx, wy, winW, winH, -1);
       g.fill(((r + c + phase) % 4) === 0 ? PALETTE.WINDOW_LIT : PALETTE.WINDOW);
-      g.rect(wx + 1, wy + 1, Math.max(1, winW - 2), Math.max(1, winH - 2));
+      isoRect(g, wx + 1, wy + 0.5, Math.max(1, winW - 2), Math.max(1, winH - 2), -1);
       g.fill(((r + c + phase) % 3) === 0 ? PALETTE.WINDOW_DARK : PALETTE.WINDOW);
+      // Window sill
+      isoRect(g, wx - 0.5, wy + winH, winW + 1, 1.5, -1);
+      g.fill({ color: PALETTE.WINDOW_SILL, alpha: 0.6 });
     }
   }
 }
@@ -205,6 +255,8 @@ function drawKhrushchyovka(renderer: Renderer): Texture {
 
   drawLeftWindowGrid(g, ox, topY, bw, roofDepth, 6, 4, 8, 11, 5, 7, 1);
   drawRightWindowGrid(g, ox, topY, bw, roofDepth, 6, 3, 8, 11, 5, 7, 2);
+  drawCornice(g, ox, topY, bw, roofDepth);
+  drawBaseBand(g, ox, oy, bw, roofDepth);
 
   // Stairwell strip.
   g.poly([
@@ -215,8 +267,12 @@ function drawKhrushchyovka(renderer: Renderer): Texture {
   ]);
   g.fill({ color: 0x5C5E61, alpha: 0.45 });
 
+  // Roof detail and parapet.
+  drawRoofDetail(g, ox, topY, bw);
+  drawRoofParapet(g, ox, topY, bw, roofDepth);
+
   // Roof machinery and TV antenna.
-  isoBox(g, ox + 7, topY - 7, bw * 0.32, bw * 0.22, 11, 0x7F817F, 0x666866, 0x555755);
+  isoBox(g, ox + 7, topY - 7, bw * 0.32, bw * 0.22, 11, 0x7F817F, 0x666866, 0x555755, false);
   g.rect(ox - 11, topY + 8, 10, 3);
   g.fill(0x6B6D6B);
   g.moveTo(ox - 8, topY - 1);
@@ -244,7 +300,7 @@ function drawStalinka(renderer: Renderer): Texture {
   drawGroundShadow(g, ox, oy + roofDepth + 5, bw * 0.96, 9, 0.22);
 
   isoBox(g, ox, topY, bw, roofDepth, bh, 0xBDAE8B, 0xA89066, 0x927850);
-  isoBox(g, ox, topY - 4, bw + 3, roofDepth + 2, 7, 0xD0BE94, 0xB69763, 0x9D7F4F);
+  isoBox(g, ox, topY - 4, bw + 3, roofDepth + 2, 7, 0xD0BE94, 0xB69763, 0x9D7F4F, false);
 
   // Vertical pilasters.
   for (let i = 0; i < 4; i++) {
@@ -257,6 +313,8 @@ function drawStalinka(renderer: Renderer): Texture {
   drawFacadeBands(g, ox, topY, bw, roofDepth, 6, 13, 0x7C6643, 0.26);
   drawLeftWindowGrid(g, ox, topY, bw, roofDepth, 7, 4, 10, 11, 5, 8, 0);
   drawRightWindowGrid(g, ox, topY, bw, roofDepth, 7, 4, 10, 11, 5, 8, 1);
+  drawCornice(g, ox, topY, bw, roofDepth, PALETTE.GOLD, 0.45);
+  drawBaseBand(g, ox, oy, bw, roofDepth);
 
   // Decorative frieze and parade flag.
   g.rect(ox - bw + 5, topY + roofDepth + 8, bw - 10, 3);
@@ -284,7 +342,7 @@ function drawStalinka(renderer: Renderer): Texture {
   g.fill(0x6A5538);
 
   // Setback tower and star crest.
-  isoBox(g, ox, topY - 15, bw * 0.28, bw * 0.2, 18, 0xC8B489, 0xA48A5F, 0x8E744D);
+  isoBox(g, ox, topY - 15, bw * 0.28, bw * 0.2, 18, 0xC8B489, 0xA48A5F, 0x8E744D, false);
   drawStar(g, ox, topY - 18, 5, PALETTE.RED);
 
   const texture = renderer.generateTexture(g);
@@ -305,12 +363,13 @@ function drawKommunalka(renderer: Renderer): Texture {
   drawGroundShadow(g, ox, oy + roofDepth + 2, bw * 0.9, 7, 0.2);
 
   isoBox(g, ox, topY, bw, roofDepth, bh, 0xA26A4E, 0x91543B, 0x6F3F2B);
-  isoBox(g, ox, topY - 2, bw + 1, roofDepth + 1, 4, 0x7B4A35, 0x6A3D2B, 0x553123);
+  isoBox(g, ox, topY - 2, bw + 1, roofDepth + 1, 4, 0x7B4A35, 0x6A3D2B, 0x553123, false);
 
   // Brick courses and windows.
   drawFacadeBands(g, ox, topY, bw, roofDepth, 3, 11, 0x593628, 0.34);
   drawLeftWindowGrid(g, ox, topY, bw, roofDepth, 3, 2, 9, 11, 5, 7, 2);
   drawRightWindowGrid(g, ox, topY, bw, roofDepth, 3, 1, 9, 11, 5, 7, 1);
+  drawBaseBand(g, ox, oy, bw, roofDepth);
 
   // Entry and rooftop chimney.
   g.poly([
@@ -510,6 +569,8 @@ function drawPartyHQ(renderer: Renderer): Texture {
 
   drawLeftWindowGrid(g, ox, topY, bw, roofDepth, 4, 3, 10, 13, 6, 8, 1);
   drawRightWindowGrid(g, ox, topY, bw, roofDepth, 4, 3, 10, 13, 6, 8, 0);
+  drawCornice(g, ox, topY, bw, roofDepth);
+  drawBaseBand(g, ox, oy, bw, roofDepth);
 
   // Red banners and crest.
   g.poly([
@@ -801,7 +862,7 @@ function drawMonument(renderer: Renderer): Texture {
   const px = TILE_HALF_W;
   const py = TILE_HALF_H;
   isoBox(g, px, py - 4, 12, 8, 6,
-    PALETTE.PEDESTAL, PALETTE.CONCRETE_MID, PALETTE.CONCRETE_DARK);
+    PALETTE.PEDESTAL, PALETTE.CONCRETE_MID, PALETTE.CONCRETE_DARK, false);
 
   // Obelisk
   g.poly([
@@ -856,6 +917,8 @@ function drawPanelak(renderer: Renderer): Texture {
 
   drawLeftWindowGrid(g, ox, topY, bw, roofDepth, 9, 5, 8.5, 10.5, 4.6, 6.5, 1);
   drawRightWindowGrid(g, ox, topY, bw, roofDepth, 9, 4, 8.5, 10.5, 4.6, 6.5, 0);
+  drawCornice(g, ox, topY, bw, roofDepth);
+  drawBaseBand(g, ox, oy, bw, roofDepth);
 
   // Stair core stripe.
   g.poly([
@@ -866,8 +929,12 @@ function drawPanelak(renderer: Renderer): Texture {
   ]);
   g.fill({ color: 0x5C6065, alpha: 0.52 });
 
+  // Roof detail and parapet.
+  drawRoofDetail(g, ox, topY, bw);
+  drawRoofParapet(g, ox, topY, bw, roofDepth);
+
   // Roof technical floor.
-  isoBox(g, ox + 6, topY - 8, bw * 0.28, roofDepth * 0.22, 14, 0x808588, 0x696D71, 0x585C60);
+  isoBox(g, ox + 6, topY - 8, bw * 0.28, roofDepth * 0.22, 14, 0x808588, 0x696D71, 0x585C60, false);
   g.rect(ox - 14, topY + 10, 9, 4);
   g.fill(0x70757A);
   g.rect(ox - 2, topY + 14, 11, 4);
@@ -906,6 +973,7 @@ function drawWarehouse(renderer: Renderer): Texture {
 
   isoBox(g, ox, topY, bw, roofDepth, bh, 0x778996, 0x5A6873, 0x465059);
   isoBox(g, ox + bw * 0.36, topY + 10, bw * 0.36, roofDepth * 0.36, 24, 0x7E8F9B, 0x63727D, 0x4A545C);
+  drawRoofDetail(g, ox, topY, bw, 2);
 
   // Corrugation and skylight strip.
   for (let i = 0; i < 6; i++) {
@@ -954,8 +1022,8 @@ function drawCinema(renderer: Renderer): Texture {
   drawGroundShadow(g, ox, oy + roofDepth + 2, bw * 0.9, 8, 0.2);
 
   isoBox(g, ox, topY, bw, roofDepth, bh, 0xA8AAA9, 0x8A8D8C, 0x6F7271);
-  isoBox(g, ox + bw * 0.2, topY - 6, bw * 0.62, roofDepth * 0.6, 11, 0xB3B5B4, 0x949796, 0x7D807F);
-  isoBox(g, ox + bw * 0.24, topY - 14, bw * 0.34, roofDepth * 0.32, 8, 0xBCBEBC, 0x9B9D9B, 0x848684);
+  isoBox(g, ox + bw * 0.2, topY - 6, bw * 0.62, roofDepth * 0.6, 11, 0xB3B5B4, 0x949796, 0x7D807F, false);
+  isoBox(g, ox + bw * 0.24, topY - 14, bw * 0.34, roofDepth * 0.32, 8, 0xBCBEBC, 0x9B9D9B, 0x848684, false);
 
   // Marquee and title lights.
   g.poly([
@@ -1006,7 +1074,7 @@ function drawRadioTower(renderer: Renderer): Texture {
 
   // Base platform
   isoBox(g, px, py - 4, 10, 7, 5,
-    PALETTE.CONCRETE_LIGHT, PALETTE.CONCRETE_MID, PALETTE.CONCRETE_DARK);
+    PALETTE.CONCRETE_LIGHT, PALETTE.CONCRETE_MID, PALETTE.CONCRETE_DARK, false);
 
   // Lattice tower - main vertical
   g.moveTo(px, py - 4);
@@ -1067,7 +1135,7 @@ function drawMetroStation(renderer: Renderer): Texture {
   drawGroundShadow(g, ox, oy + roofDepth + 2, bw * 0.88, 8, 0.2);
 
   isoBox(g, ox, topY, bw, roofDepth, bh, 0xB0B0AD, 0x91918E, 0x767673);
-  isoBox(g, ox - bw * 0.33, topY + 8, bw * 0.44, roofDepth * 0.38, 22, 0xBEBDBA, 0x9D9C99, 0x848380);
+  isoBox(g, ox - bw * 0.33, topY + 8, bw * 0.44, roofDepth * 0.38, 22, 0xBEBDBA, 0x9D9C99, 0x848380, false);
 
   // Portico and steps.
   g.rect(ox - bw + 10, oy - 24, 16, 22);
@@ -1257,6 +1325,98 @@ function drawSportsComplex(renderer: Renderer): Texture {
 }
 
 // ===== HELPER DRAWING FUNCTIONS =====
+
+// Cornice: thin protruding highlight ledge where roof meets wall
+function drawCornice(
+  g: Graphics,
+  ox: number, topY: number,
+  bw: number, roofDepth: number,
+  color = PALETTE.CORNICE_LIGHT,
+  alpha = 0.55
+) {
+  const y = topY + roofDepth;
+  // Left face cornice
+  g.poly([
+    { x: ox - bw + 2, y: y + 1 },
+    { x: ox, y: y + bw / 2 - 1 },
+    { x: ox, y: y + bw / 2 + 1.5 },
+    { x: ox - bw + 2, y: y + 3.5 },
+  ]);
+  g.fill({ color, alpha });
+  // Right face cornice
+  g.poly([
+    { x: ox + 2, y: y + bw / 2 - 1 },
+    { x: ox + bw - 2, y: y + 1 },
+    { x: ox + bw - 2, y: y + 3.5 },
+    { x: ox + 2, y: y + bw / 2 + 1.5 },
+  ]);
+  g.fill({ color, alpha });
+}
+
+// Base band: darker plinth at ground level for grounding
+// Note: isoBox uses `bw` for the top-diamond width (the `h` param is unused),
+// so wall bottoms are at (ox-bw, oy+bw/2) and (ox, oy+bw).
+function drawBaseBand(
+  g: Graphics,
+  ox: number, oy: number,
+  bw: number, _roofDepth: number,
+  color = PALETTE.CORNICE_DARK,
+  alpha = 0.4
+) {
+  const bandH = 4;
+  // Left face base — wall bottom runs from (ox-bw, oy+bw/2) to (ox, oy+bw)
+  g.poly([
+    { x: ox - bw + 1, y: oy + bw / 2 - bandH },
+    { x: ox, y: oy + bw - bandH },
+    { x: ox, y: oy + bw },
+    { x: ox - bw + 1, y: oy + bw / 2 },
+  ]);
+  g.fill({ color, alpha });
+  // Right face base — wall bottom runs from (ox, oy+bw) to (ox+bw, oy+bw/2)
+  g.poly([
+    { x: ox + 1, y: oy + bw - bandH },
+    { x: ox + bw - 1, y: oy + bw / 2 - bandH },
+    { x: ox + bw - 1, y: oy + bw / 2 },
+    { x: ox + 1, y: oy + bw },
+  ]);
+  g.fill({ color, alpha });
+}
+
+// Roof detail: faint parallel lines across the top diamond to suggest material
+function drawRoofDetail(
+  g: Graphics,
+  ox: number, topY: number,
+  bw: number,
+  lines = 3,
+  color = 0x000000,
+  alpha = 0.08
+) {
+  for (let i = 1; i <= lines; i++) {
+    const t = i / (lines + 1);
+    // Lines run parallel to the NE-SW axis of the diamond
+    const startX = ox - bw + bw * 2 * t;
+    const startY = topY + bw * t;
+    const endX = ox + bw * (1 - t);
+    const endY = topY + bw / 2 * (1 - t) + bw * t;
+    g.moveTo(startX, startY);
+    g.lineTo(endX, endY);
+    g.stroke({ width: 0.7, color, alpha });
+  }
+}
+
+// Roof parapet: thin isoBox border on top edge for brutalist flat roofs
+function drawRoofParapet(
+  g: Graphics,
+  ox: number, topY: number,
+  bw: number, roofDepth: number,
+  topColor = 0x7A7D80,
+  leftColor = 0x606366,
+  rightColor = 0x505356
+) {
+  isoBox(g, ox, topY - 1.5, bw + 1, roofDepth + 1, 2,
+    topColor, leftColor, rightColor, false
+  );
+}
 
 function drawChimney(g: Graphics, x: number, y: number, radius: number, height: number) {
   // Industrial stack with side shading and hazard stripe.

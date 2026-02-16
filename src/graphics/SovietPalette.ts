@@ -54,6 +54,13 @@ export const PALETTE = {
   WINDOW_DARK: 0x3A5F6F,
   WINDOW_LIT: 0xFFF8DC,
 
+  // Window detail
+  WINDOW_SILL: 0x6A6E72,
+
+  // Cornice / facade bands
+  CORNICE_LIGHT: 0xCCCCC4,
+  CORNICE_DARK: 0x5A5A55,
+
   // Star / monument
   STAR_RED: 0xCC0000,
   PEDESTAL: 0x999999,
