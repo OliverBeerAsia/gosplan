@@ -126,6 +126,7 @@ export class Game {
     this.uiContainer.className = 'soviet-ui';
     this.uiContainer.style.cssText = 'position:absolute;inset:0;pointer-events:none;';
     this.uiContainer.style.setProperty('--ui-grain-image', `url('${assetPath('assets/ui/title-grain.svg')}')`);
+    this.uiContainer.style.setProperty('--ui-desk-bg', `url('${assetPath('assets/ui/desk-bg.webp')}')`);
     container.appendChild(this.uiContainer);
 
     this.applyUiSettings({
