@@ -17,6 +17,7 @@ export class OverlayRenderer {
   private showPowerOverlay = false;
   private showServiceOverlay = false;
   private quality: GraphicsQuality = 'high';
+  private autoHidePowerTimer: number | null = null;
 
   constructor(
     private grid: Grid,
@@ -218,5 +219,22 @@ export class OverlayRenderer {
     this.quality = quality;
     if (this.showPowerOverlay) this.updatePowerOverlay();
     if (this.showServiceOverlay) this.updateServiceOverlay();
+  }
+
+  flashPowerOverlay(durationMs: number = 3000): void {
+    if (this.showPowerOverlay) return; // already visible via manual toggle
+    this.showPowerOverlay = true;
+    this.powerOverlayContainer.visible = true;
+    this.updatePowerOverlay();
+    this.showPowerOverlay = false;
+    if (this.autoHidePowerTimer !== null) {
+      window.clearTimeout(this.autoHidePowerTimer);
+    }
+    this.autoHidePowerTimer = window.setTimeout(() => {
+      if (!this.showPowerOverlay) {
+        this.powerOverlayContainer.visible = false;
+      }
+      this.autoHidePowerTimer = null;
+    }, durationMs);
   }
 }

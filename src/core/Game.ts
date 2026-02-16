@@ -37,7 +37,10 @@ import { BulletinPanel } from '../ui/BulletinPanel';
 import { EventChoiceModal } from '../ui/EventChoiceModal';
 import { AmbienceOverlay } from '../ui/AmbienceOverlay';
 import { AchievementPanel } from '../ui/AchievementPanel';
+import { AdvisorPanel } from '../ui/AdvisorPanel';
+import { StatsPanel } from '../ui/StatsPanel';
 import { CampaignEndingModal } from '../ui/CampaignEndingModal';
+import { PauseMenu } from '../ui/PauseMenu';
 import { hasSave, saveGame, loadGame, exportSaveArchive } from './SaveLoad';
 import { gridToWorld } from '../rendering/IsometricRenderer';
 import { MAP_SIZE, TILE_HALF_H, TILE_HALF_W } from '../constants';
@@ -50,6 +53,7 @@ import { OpeningSplash } from '../ui/OpeningSplash';
 import { createRuntimeSeed, deriveSeed } from './Rng';
 import { pushBulletinEntry } from './Bulletin';
 import { assetPath } from '../utils/assetPath';
+import { audioManager } from '../audio/AudioManager';
 
 export class Game {
   private static readonly STREAMLINED_UI = true;
@@ -89,7 +93,10 @@ export class Game {
   private eventModal!: EventChoiceModal;
   private ambienceOverlay!: AmbienceOverlay;
   private achievementPanel?: AchievementPanel;
+  private advisorPanel!: AdvisorPanel;
+  private statsPanel!: StatsPanel;
   private campaignEndingModal!: CampaignEndingModal;
+  private pauseMenu!: PauseMenu;
   private loadingInterstitial!: LoadingInterstitial;
   private titleScreen!: TitleScreen;
   private openingSplash!: OpeningSplash;
@@ -348,6 +355,15 @@ export class Game {
     // Sync UI controls with current graphics quality (including loaded saves).
     this.events.emit('graphics:quality:changed', { quality: this.state.graphicsQuality });
 
+    // Initialize audio (user has already interacted via splash/title)
+    audioManager.init();
+    audioManager.connectEvents(this.events);
+
+    // Milestone screen flash (achievement sound already handled in AudioManager.connectEvents)
+    this.events.on('achievement:unlocked', () => {
+      this.flashMilestone();
+    });
+
     // Start simulation
     this.simulation.start();
 
@@ -409,7 +425,12 @@ export class Game {
     this.bulletinPanel = new BulletinPanel(this.uiContainer, this.state, this.events);
     this.eventModal = new EventChoiceModal(this.uiContainer, this.state, this.events);
     this.achievementPanel = new AchievementPanel(this.uiContainer, this.state, this.events);
+    this.advisorPanel = new AdvisorPanel(this.uiContainer, this.state, this.grid, this.registry, this.events);
+    this.statsPanel = new StatsPanel(this.uiContainer, this.state, this.events);
     this.campaignEndingModal = new CampaignEndingModal(this.uiContainer, this.state, this.events);
+    this.pauseMenu = new PauseMenu(this.uiContainer, this.state, this.events, () => {
+      window.location.reload();
+    });
     this.setAdvancedPanelsVisible(!Game.STREAMLINED_UI);
 
     // Update resource bar initially
@@ -468,8 +489,14 @@ export class Game {
 
       switch (e.key) {
         case 'Escape':
-          this.toolController.setTool('select');
-          this.infoPanel.hide();
+          if (this.pauseMenu.isVisible()) {
+            this.pauseMenu.hide();
+          } else if (this.toolController.currentTool !== 'select') {
+            this.toolController.setTool('select');
+            this.infoPanel.hide();
+          } else {
+            this.pauseMenu.show();
+          }
           break;
         case '1':
           this.events.emit('speed:changed', { speed: 0 });
@@ -531,6 +558,10 @@ export class Game {
               : 'Advanced intel panels hidden.',
             type: 'info',
           });
+          break;
+        case 's':
+        case 'S':
+          this.statsPanel.toggle();
           break;
         case '+':
         case '=':
@@ -596,6 +627,13 @@ export class Game {
     pushBulletinEntry(this.state, this.events, text, level, 'boot');
   }
 
+  private flashMilestone(): void {
+    const flash = document.createElement('div');
+    flash.className = 'milestone-flash';
+    this.uiContainer.appendChild(flash);
+    window.setTimeout(() => flash.remove(), 1300);
+  }
+
   private lastFrameTime = 0;
 
   private update(): void {
@@ -608,6 +646,12 @@ export class Game {
 
     // Update simulation
     this.simulation.update(now);
+
+    // Update ambient audio based on population
+    audioManager.updateAmbience(this.state.population);
+
+    // Update construction animations
+    this.buildingRenderer.updateConstructionTweens(dt);
 
     // Update smoke particles
     if (this.state.speed > 0) {

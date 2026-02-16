@@ -15,6 +15,8 @@ import { CampaignDirectorService } from './CampaignDirectorService';
 import { EventDirectorService } from './EventDirectorService';
 import { AchievementService } from './AchievementService';
 import { CampaignOutcomeService } from './CampaignOutcomeService';
+import { MilestoneService } from './MilestoneService';
+import { StatsCollector } from './StatsCollector';
 import {
   BASE_TICK_MS, TICKS_PER_YEAR, BASE_HAPPINESS,
   PARK_BONUS, SERVICE_BONUS, MONUMENT_BONUS,
@@ -34,6 +36,8 @@ export class SimulationManager {
   private eventDirector: EventDirectorService;
   private achievement: AchievementService;
   private campaignOutcome: CampaignOutcomeService;
+  private milestone: MilestoneService;
+  private statsCollector: StatsCollector;
   private accumulator = 0;
   private lastTime = 0;
   private running = false;
@@ -57,6 +61,8 @@ export class SimulationManager {
     this.eventDirector = new EventDirectorService(state, events);
     this.achievement = new AchievementService(state, events);
     this.campaignOutcome = new CampaignOutcomeService(state, events);
+    this.milestone = new MilestoneService(state, events);
+    this.statsCollector = new StatsCollector(state, events);
 
     events.on('speed:changed', ({ speed }) => {
       this.state.speed = speed;
@@ -114,6 +120,8 @@ export class SimulationManager {
     this.eventDirector.tick();
     this.campaignOutcome.tick();
     this.achievement.tick();
+    this.milestone.tick();
+    this.statsCollector.tick();
 
     this.events.emit('tick', { week: this.state.week, year: this.state.year });
   }

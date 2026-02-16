@@ -73,15 +73,24 @@ export class Grid {
   }
 
   canPlace(gx: number, gy: number, width: number, height: number): boolean {
+    return this.getPlacementRejection(gx, gy, width, height) === null;
+  }
+
+  getPlacementRejection(gx: number, gy: number, width: number, height: number): string | null {
     for (let dx = 0; dx < width; dx++) {
       for (let dy = 0; dy < height; dy++) {
         const cell = this.getCell(gx + dx, gy + dy);
-        if (!cell) return false;
-        if (!this.isBuildable(cell.terrain)) return false;
-        if (cell.building) return false;
+        if (!cell) return 'Out of bounds';
+        if (cell.building) return 'Space occupied';
+        if (!this.isBuildable(cell.terrain)) {
+          if (cell.terrain === 'water') return 'Cannot build on water';
+          if (cell.terrain === 'hill') return 'Cannot build on hills';
+          if (cell.terrain === 'forest') return 'Clear forest first (demolish)';
+          return 'Terrain not buildable';
+        }
       }
     }
-    return true;
+    return null;
   }
 
   isBuildable(terrain: TerrainType): boolean {

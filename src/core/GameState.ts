@@ -131,7 +131,9 @@ export interface GameStateData {
   activeEvent: ActiveCityEvent | null;
   bulletin: BulletinEntry[];
   achievementsUnlocked: string[];
+  milestonesTriggered: string[];
   uiSettings: UiSettings;
+  statsHistory: import('../simulation/StatsCollector').StatsSnapshot[];
 }
 
 export function createInitialState(): GameStateData {
@@ -180,6 +182,8 @@ export function createInitialState(): GameStateData {
     activeEvent: null,
     bulletin: [],
     achievementsUnlocked: [],
+    milestonesTriggered: [],
     uiSettings: { ...DEFAULT_UI_SETTINGS },
+    statsHistory: [],
   };
 }

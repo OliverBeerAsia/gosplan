@@ -138,7 +138,8 @@ export class ResourceBar {
       : `(${this.state.lastTickNet}/wk)`;
     this.budgetEl.textContent = `${budgetStr} ${netStr}`;
 
-    this.powerEl.textContent = `${this.state.powerDemand}/${this.state.powerCapacity} MW`;
+    const powerDeficit = this.state.powerDemand > this.state.powerCapacity;
+    this.powerEl.textContent = `${this.state.powerDemand}/${this.state.powerCapacity} MW${powerDeficit ? ' \u26A0' : ''}`;
     this.happyEl.textContent = this.formatHappiness();
     const demandSummary = this.summarizeDemand();
     this.demandEl.textContent = demandSummary.text;
@@ -153,7 +154,9 @@ export class ResourceBar {
     this.dateEl.textContent = `${weekStr} ${this.state.year}`;
 
     this.budgetEl.style.color = this.state.budget < 0 ? '#EF5350' : '#FFD700';
-    this.powerEl.style.color = this.state.powerDemand > this.state.powerCapacity ? '#EF5350' : '#FFD700';
+    const powerItem = this.powerEl.closest('.resource-item') as HTMLElement | null;
+    if (powerItem) powerItem.classList.toggle('power-deficit', powerDeficit);
+    this.powerEl.style.color = powerDeficit ? '#EF5350' : '#FFD700';
     this.happyEl.style.color = this.state.happiness < 30 ? '#EF5350' : this.state.happiness < 50 ? '#FFC107' : '#FFD700';
     this.demandEl.style.color = demandSummary.color;
     if (this.orderEl) {

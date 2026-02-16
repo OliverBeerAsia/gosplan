@@ -4,6 +4,7 @@ import { EventBus } from '../core/EventBus';
 import { ToolType } from '../input/ToolController';
 import { ZoneType } from '../grid/Cell';
 import { GraphicsQuality } from '../core/GameState';
+import { audioManager } from '../audio/AudioManager';
 
 type ToolCallback = (tool: ToolType, buildingId?: string, zone?: ZoneType) => void;
 
@@ -42,7 +43,10 @@ export class Toolbar {
       btn.className = 'category-btn';
       btn.textContent = cat.label;
       btn.dataset.cat = cat.id;
-      btn.addEventListener('click', () => this.selectCategory(cat.id, catBar));
+      btn.addEventListener('click', () => {
+        audioManager.playSfx('ui_click');
+        this.selectCategory(cat.id, catBar);
+      });
       catBar.appendChild(btn);
     }
 
@@ -280,6 +284,12 @@ export class Toolbar {
     costSpan.textContent = def.cost.toLocaleString() + '\u20BD';
     btn.appendChild(costSpan);
 
+    // Rich tooltip on hover
+    const tooltip = this.createRichTooltip(def);
+    btn.appendChild(tooltip);
+    btn.addEventListener('mouseenter', () => { tooltip.style.display = 'block'; });
+    btn.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+
     btn.addEventListener('click', () => {
       if (this.selectedBuildingBtn) this.selectedBuildingBtn.classList.remove('selected');
       this.selectedBuildingBtn = btn;
@@ -288,5 +298,63 @@ export class Toolbar {
     });
 
     return btn;
+  }
+
+  private createRichTooltip(def: BuildingDef): HTMLDivElement {
+    const tip = document.createElement('div');
+    tip.className = 'building-rich-tooltip';
+    tip.style.display = 'none';
+
+    const title = document.createElement('div');
+    title.className = 'brt-title';
+    title.textContent = `${def.name} (${def.width}x${def.height})`;
+    tip.appendChild(title);
+
+    const desc = document.createElement('div');
+    desc.className = 'brt-desc';
+    desc.textContent = def.description;
+    tip.appendChild(desc);
+
+    const stats = document.createElement('div');
+    stats.className = 'brt-stats';
+
+    const addStat = (label: string, value: string): void => {
+      const row = document.createElement('div');
+      row.className = 'brt-stat-row';
+      const labelEl = document.createElement('span');
+      labelEl.className = 'brt-stat-label';
+      labelEl.textContent = label;
+      const valueEl = document.createElement('span');
+      valueEl.className = 'brt-stat-value';
+      valueEl.textContent = value;
+      row.appendChild(labelEl);
+      row.appendChild(valueEl);
+      stats.appendChild(row);
+    };
+
+    addStat('Cost', `${def.cost.toLocaleString()}\u20BD`);
+    addStat('Upkeep', `${def.maintenance}\u20BD/wk`);
+
+    if (def.housingCapacity) addStat('Housing', `${def.housingCapacity} citizens`);
+    if (def.powerGeneration) addStat('Power', `+${def.powerGeneration} MW`);
+    if (def.powerConsumption) addStat('Power', `-${def.powerConsumption} MW`);
+    if (def.industrialOutput) addStat('Output', `${def.industrialOutput}\u20BD/wk`);
+    if (def.happinessBonus) addStat('Happiness', `+${def.happinessBonus}`);
+    if (def.serviceRadius) addStat('Radius', `${def.serviceRadius} tiles`);
+
+    tip.appendChild(stats);
+
+    // Requirements line
+    const reqs: string[] = [];
+    if (def.powerConsumption) reqs.push('Power');
+    if (def.roadAccessRequired !== false && !def.isRoad && !def.conductsPower) reqs.push('Road');
+    if (reqs.length > 0) {
+      const reqLine = document.createElement('div');
+      reqLine.className = 'brt-reqs';
+      reqLine.textContent = `Needs: ${reqs.join(', ')}`;
+      tip.appendChild(reqLine);
+    }
+
+    return tip;
   }
 }

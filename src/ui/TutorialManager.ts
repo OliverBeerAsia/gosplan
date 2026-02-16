@@ -3,144 +3,174 @@ import { Grid } from '../grid/Grid';
 import { BuildingRegistry } from '../buildings/BuildingRegistry';
 import { EventBus } from '../core/EventBus';
 
-interface TutorialHint {
+interface TutorialStep {
   id: string;
   message: string;
-  condition: () => boolean;
+  /** Return true when the step goal is achieved */
+  completed: () => boolean;
 }
 
-const DISMISSED_KEY = 'gosplan_tutorial_dismissed';
+const TUTORIAL_COMPLETE_KEY = 'gosplan_tutorial_complete';
 
 export class TutorialManager {
   private el: HTMLDivElement;
   private messageEl: HTMLSpanElement;
-  private dismissBtn: HTMLButtonElement;
-  private dismissed: Set<string>;
-  private currentHintId: string | null = null;
-  private hints: TutorialHint[];
+  private stepEl: HTMLSpanElement;
+  private skipBtn: HTMLButtonElement;
+  private overlay: HTMLDivElement;
+  private currentStep = 0;
+  private tutorialComplete: boolean;
+  private tutorialActive = false;
+  private steps: TutorialStep[];
 
   constructor(
-    container: HTMLElement,
+    private container: HTMLElement,
     private state: GameStateData,
     private grid: Grid,
     private registry: BuildingRegistry,
     private events: EventBus
   ) {
-    // Load dismissed state
-    try {
-      const saved = localStorage.getItem(DISMISSED_KEY);
-      this.dismissed = saved ? new Set(JSON.parse(saved)) : new Set();
-    } catch {
-      this.dismissed = new Set();
-    }
+    // Check if tutorial was already completed
+    this.tutorialComplete = localStorage.getItem(TUTORIAL_COMPLETE_KEY) === 'true';
 
+    // Spotlight overlay
+    this.overlay = document.createElement('div');
+    this.overlay.id = 'tutorial-overlay';
+    this.overlay.style.display = 'none';
+    container.appendChild(this.overlay);
+
+    // Tutorial bar
     this.el = document.createElement('div');
     this.el.id = 'tutorial-hint';
     this.el.style.display = 'none';
+
+    this.stepEl = document.createElement('span');
+    this.stepEl.className = 'tutorial-step-counter';
+    this.el.appendChild(this.stepEl);
 
     this.messageEl = document.createElement('span');
     this.messageEl.className = 'tutorial-message';
     this.el.appendChild(this.messageEl);
 
-    this.dismissBtn = document.createElement('button');
-    this.dismissBtn.className = 'tutorial-dismiss';
-    this.dismissBtn.textContent = '\u2715';
-    this.dismissBtn.addEventListener('click', () => this.dismissCurrent());
-    this.el.appendChild(this.dismissBtn);
+    this.skipBtn = document.createElement('button');
+    this.skipBtn.className = 'tutorial-dismiss';
+    this.skipBtn.textContent = 'SKIP';
+    this.skipBtn.addEventListener('click', () => this.completeTutorial());
+    this.el.appendChild(this.skipBtn);
 
     container.appendChild(this.el);
 
-    this.hints = [
+    this.steps = [
       {
-        id: 'build_power',
-        message: 'Build a Coal Power Plant first to provide electricity!',
-        condition: () => {
-          const buildings = this.grid.getAllBuildings();
-          return buildings.length === 0;
-        },
-      },
-      {
-        id: 'build_housing',
-        message: 'Paint Housing Zones and connect districts with Roads!',
-        condition: () => {
-          const buildings = this.grid.getAllBuildings();
-          const hasPower = buildings.some(b => {
+        id: 'place_power',
+        message: 'Step 1: Open INDUSTRY and place a Coal Power Plant to electrify the city.',
+        completed: () => {
+          return this.grid.getAllBuildings().some(b => {
             const def = this.registry.get(b.defId);
-            return def?.powerGeneration;
-          });
-          const hasHousing = buildings.some(b => {
-            const def = this.registry.get(b.defId);
-            return def?.housingCapacity;
-          });
-          return hasPower && !hasHousing;
-        },
-      },
-      {
-        id: 'connect_power',
-        message: 'Housing needs power! Build Roads between buildings.',
-        condition: () => {
-          const buildings = this.grid.getAllBuildings();
-          const unpoweredHousing = buildings.some(b => {
-            const def = this.registry.get(b.defId);
-            return def?.housingCapacity && !b.powered;
-          });
-          return unpoweredHousing;
-        },
-      },
-      {
-        id: 'build_factory',
-        message: 'Paint Industry Zones to expand state production!',
-        condition: () => {
-          if (this.state.population < 200) return false;
-          const buildings = this.grid.getAllBuildings();
-          return !buildings.some(b => {
-            const def = this.registry.get(b.defId);
-            return def?.industrialOutput;
+            return !!def?.powerGeneration;
           });
         },
       },
       {
-        id: 'low_happiness',
-        message: 'Happiness is low! Build Parks or services.',
-        condition: () => this.state.happiness < 45 && this.state.population > 100,
+        id: 'build_road',
+        message: 'Step 2: Open INFRA and build Roads connecting your power plant outward.',
+        completed: () => {
+          return this.grid.getAllBuildings().filter(b => b.defId === 'road').length >= 3;
+        },
+      },
+      {
+        id: 'paint_housing',
+        message: 'Step 3: Open ZONING and paint Housing Zones near roads. Workers will move in!',
+        completed: () => {
+          return this.state.population > 60;
+        },
+      },
+      {
+        id: 'watch_growth',
+        message: 'Step 4: Workers are arriving! Watch your population grow in the top bar.',
+        completed: () => {
+          return this.state.population > 100;
+        },
+      },
+      {
+        id: 'build_service',
+        message: 'Step 5: Open SERVICES and build a School or Hospital to boost happiness.',
+        completed: () => {
+          return this.grid.getAllBuildings().some(b => {
+            const def = this.registry.get(b.defId);
+            return def?.category === 'government' && !!def.serviceRadius;
+          });
+        },
+      },
+      {
+        id: 'open_plan',
+        message: 'Well done, Comrade! You are ready to plan your Soviet city. Check the Plan Panel on the left for your Five-Year goals.',
+        completed: () => false, // Timer-based: auto-completes after 6s in showStep()
       },
     ];
 
+    // Start tutorial for new players
+    if (!this.tutorialComplete && this.grid.getAllBuildings().length === 0) {
+      this.startTutorial();
+    }
+
     events.on('tick', () => this.check());
+    events.on('building:placed', () => this.check());
+    events.on('zone:changed', () => this.check());
+    events.on('population:changed', () => this.check());
+  }
+
+  private startTutorial(): void {
+    this.tutorialActive = true;
+    this.currentStep = 0;
+    this.showStep();
+  }
+
+  private showStep(): void {
+    if (!this.tutorialActive || this.currentStep >= this.steps.length) {
+      this.completeTutorial();
+      return;
+    }
+
+    const step = this.steps[this.currentStep];
+    this.stepEl.textContent = `[${this.currentStep + 1}/${this.steps.length}]`;
+    this.messageEl.textContent = step.message;
+    this.el.style.display = 'flex';
+    this.overlay.style.display = 'block';
+
+    // If last step, auto-advance after a delay
+    if (step.id === 'open_plan') {
+      window.setTimeout(() => {
+        if (this.currentStep === this.steps.length - 1) {
+          this.completeTutorial();
+        }
+      }, 6000);
+    }
   }
 
   private check(): void {
-    for (const hint of this.hints) {
-      if (this.dismissed.has(hint.id)) continue;
-      if (hint.condition()) {
-        if (this.currentHintId !== hint.id) {
-          this.show(hint);
-        }
-        return;
-      }
+    if (!this.tutorialActive) return;
+    if (this.currentStep >= this.steps.length) return;
+
+    const step = this.steps[this.currentStep];
+    if (step.completed()) {
+      this.currentStep++;
+      this.showStep();
     }
-    // No hint to show
-    this.hide();
   }
 
-  private show(hint: TutorialHint): void {
-    this.currentHintId = hint.id;
-    this.messageEl.textContent = hint.message;
-    this.el.style.display = 'flex';
-  }
-
-  private hide(): void {
+  private completeTutorial(): void {
+    this.tutorialActive = false;
     this.el.style.display = 'none';
-    this.currentHintId = null;
-  }
+    this.overlay.style.display = 'none';
+    this.tutorialComplete = true;
+    try {
+      localStorage.setItem(TUTORIAL_COMPLETE_KEY, 'true');
+    } catch { /* ignore */ }
 
-  private dismissCurrent(): void {
-    if (this.currentHintId) {
-      this.dismissed.add(this.currentHintId);
-      try {
-        localStorage.setItem(DISMISSED_KEY, JSON.stringify([...this.dismissed]));
-      } catch { /* ignore */ }
-    }
-    this.hide();
+    this.events.emit('notification', {
+      message: 'Tutorial complete! Good luck, Comrade Planner.',
+      type: 'success',
+    });
   }
 }

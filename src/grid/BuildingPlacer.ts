@@ -18,6 +18,13 @@ export class BuildingPlacer {
     return this.grid.canPlace(gx, gy, def.width, def.height);
   }
 
+  getPlacementRejection(buildingId: string, gx: number, gy: number, budget: number): string | null {
+    const def = this.registry.get(buildingId);
+    if (!def) return 'Unknown building';
+    if (budget < def.cost) return 'Insufficient rubles';
+    return this.grid.getPlacementRejection(gx, gy, def.width, def.height);
+  }
+
   place(buildingId: string, gx: number, gy: number): PlacedBuilding | null {
     const def = this.registry.get(buildingId);
     if (!def) return null;

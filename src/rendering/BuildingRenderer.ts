@@ -1,4 +1,4 @@
-import { Container, Sprite } from 'pixi.js';
+import { Container, Sprite, Text, TextStyle } from 'pixi.js';
 import { Grid } from '../grid/Grid';
 import { BuildingRegistry } from '../buildings/BuildingRegistry';
 import { TextureFactory } from '../graphics/TextureFactory';
@@ -12,10 +12,18 @@ import { computeQueuePressure, queueCountFromPressure } from '../simulation/Queu
 
 type DistrictStyle = 'worker_housing' | 'heavy_industry' | 'scientific_city' | 'historic_core';
 
+interface ConstructionTween {
+  sprite: Sprite;
+  elapsed: number;
+  duration: number;
+}
+
 export class BuildingRenderer {
   readonly container: Container;
   private spriteMap: Map<number, Sprite> = new Map();
   private queueMap: Map<number, Sprite[]> = new Map();
+  private unpoweredIconMap: Map<number, Text> = new Map();
+  private constructionTweens: ConstructionTween[] = [];
   private quality: GraphicsQuality = 'high';
   private queueRefreshTick = 0;
 
@@ -71,6 +79,12 @@ export class BuildingRenderer {
     }
     this.queueMap.clear();
 
+    for (const icon of this.unpoweredIconMap.values()) {
+      this.container.removeChild(icon);
+      icon.destroy();
+    }
+    this.unpoweredIconMap.clear();
+
     const buildings = this.grid.getAllBuildings();
 
     // Sort by depth (diagonal sweep: gx + gy ascending)
@@ -82,7 +96,7 @@ export class BuildingRenderer {
     });
 
     for (const building of buildings) {
-      this.addBuildingSprite(building);
+      this.addBuildingSprite(building, false);
     }
 
     // Ensure network variants are up to date after all sprites exist.
@@ -108,7 +122,7 @@ export class BuildingRenderer {
     return Math.abs(v);
   }
 
-  private addBuildingSprite(building: PlacedBuilding): void {
+  private addBuildingSprite(building: PlacedBuilding, animate = true): void {
     this.removeBuildingSprite(building.id);
 
     const def = this.registry.get(building.defId);
@@ -132,16 +146,55 @@ export class BuildingRenderer {
     this.container.addChild(sprite);
     this.applySpriteLook(building, sprite);
     this.refreshQueueForBuilding(building);
+
+    // Construction animation (scale up + fade in)
+    if (animate && this.quality !== 'low') {
+      sprite.scale.set(0.75);
+      sprite.alpha = 0.3;
+      this.constructionTweens.push({
+        sprite,
+        elapsed: 0,
+        duration: 400, // ms
+      });
+    }
+  }
+
+  /** Call from the main game loop ticker to advance construction tweens */
+  updateConstructionTweens(dtMs: number): void {
+    for (let i = this.constructionTweens.length - 1; i >= 0; i--) {
+      const tw = this.constructionTweens[i];
+      tw.elapsed += dtMs;
+      const t = Math.min(tw.elapsed / tw.duration, 1);
+      // Ease-out cubic
+      const ease = 1 - (1 - t) * (1 - t) * (1 - t);
+      tw.sprite.scale.set(0.75 + 0.25 * ease);
+      tw.sprite.alpha = 0.3 + 0.7 * ease;
+
+      if (t >= 1) {
+        tw.sprite.scale.set(1);
+        tw.sprite.alpha = 1;
+        // Re-apply the actual sprite look (might have tint changes)
+        this.constructionTweens.splice(i, 1);
+      }
+    }
   }
 
   private removeBuildingSprite(buildingId: number): void {
     const sprite = this.spriteMap.get(buildingId);
     if (sprite) {
+      // Clean up any in-progress construction tween referencing this sprite
+      this.constructionTweens = this.constructionTweens.filter(tw => tw.sprite !== sprite);
       this.container.removeChild(sprite);
       sprite.destroy();
       this.spriteMap.delete(buildingId);
     }
     this.clearQueueForBuilding(buildingId);
+    const icon = this.unpoweredIconMap.get(buildingId);
+    if (icon) {
+      this.container.removeChild(icon);
+      icon.destroy();
+      this.unpoweredIconMap.delete(buildingId);
+    }
   }
 
   private clearQueueForBuilding(buildingId: number): void {
@@ -299,7 +352,50 @@ export class BuildingRenderer {
     const buildings = this.grid.getAllBuildings();
     for (const building of buildings) {
       this.refreshSingleBuildingTexture(building);
+      this.refreshUnpoweredIcon(building);
     }
+  }
+
+  private refreshUnpoweredIcon(building: PlacedBuilding): void {
+    const existing = this.unpoweredIconMap.get(building.id);
+    const def = this.registry.get(building.defId);
+    if (!def) return;
+
+    const needsIcon = def.powerConsumption && !building.powered && this.quality !== 'low';
+
+    if (!needsIcon) {
+      if (existing) {
+        this.container.removeChild(existing);
+        existing.destroy();
+        this.unpoweredIconMap.delete(building.id);
+      }
+      return;
+    }
+
+    if (existing) return; // already shown
+
+    const icon = new Text({
+      text: '\u26A1',
+      style: new TextStyle({
+        fontSize: 14,
+        fill: '#ff4444',
+        fontWeight: 'bold',
+        dropShadow: { color: '#000000', blur: 2, distance: 1, angle: Math.PI / 4 },
+      }),
+    });
+
+    const centerGx = building.gx + def.width / 2;
+    const centerGy = building.gy + def.height / 2;
+    const pos = gridToWorld(centerGx, centerGy, 0);
+
+    icon.anchor.set(0.5, 1);
+    icon.x = pos.x + TILE_HALF_W * 0.3;
+    icon.y = pos.y - TILE_HALF_H * 0.5;
+    icon.zIndex = depthKey(building.gx + def.width, building.gy + def.height) + 2;
+    icon.alpha = 0.85;
+
+    this.unpoweredIconMap.set(building.id, icon);
+    this.container.addChild(icon);
   }
 
   private refreshBuildingLooksAndQueues(): void {

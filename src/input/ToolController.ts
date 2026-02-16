@@ -9,6 +9,7 @@ import { GameStateData } from '../core/GameState';
 import { CameraController } from './CameraController';
 import { UndoManager } from '../core/UndoManager';
 import { ZoneType } from '../grid/Cell';
+import { audioManager } from '../audio/AudioManager';
 
 export type ToolType = 'select' | 'build' | 'demolish' | 'zone';
 
@@ -23,6 +24,11 @@ export class ToolController {
   // Drag-to-build state
   private isDragging = false;
   private dragPlacedCells = new Set<string>();
+
+  // Rejection reason label
+  private rejectionLabel: HTMLDivElement | null = null;
+  private lastMouseX = 0;
+  private lastMouseY = 0;
 
   undoManager: UndoManager;
 
@@ -53,6 +59,7 @@ export class ToolController {
     this.overlay.clearGhost();
     this.overlay.clearZoneGhost();
     this.overlay.clearSelection();
+    this.hideRejectionLabel();
     this.events.emit('tool:selected', { tool, buildingId, zone });
   }
 
@@ -65,6 +72,8 @@ export class ToolController {
 
   private setupEvents(): void {
     this.canvas.addEventListener('mousemove', (e) => {
+      this.lastMouseX = e.clientX;
+      this.lastMouseY = e.clientY;
       const { gx, gy } = this.getGridPos(e);
       if (gx !== this.hoverGx || gy !== this.hoverGy) {
         this.hoverGx = gx;
@@ -74,6 +83,9 @@ export class ToolController {
         if (this.isDragging) {
           this.onDragMove(gx, gy);
         }
+      } else if (this.rejectionLabel && this.rejectionLabel.style.display !== 'none') {
+        this.rejectionLabel.style.left = `${e.clientX + 16}px`;
+        this.rejectionLabel.style.top = `${e.clientY - 8}px`;
       }
     });
 
@@ -143,10 +155,20 @@ export class ToolController {
 
   private onHover(gx: number, gy: number): void {
     if (this.currentTool === 'build' && this.currentBuildingId) {
-      const valid = this.placer.canPlace(this.currentBuildingId, gx, gy);
+      const reason = this.placer.getPlacementRejection(
+        this.currentBuildingId, gx, gy, this.state.budget
+      );
+      const valid = !reason;
       this.overlay.showGhost(this.currentBuildingId, gx, gy, valid);
+      if (reason) {
+        this.showRejectionLabel(reason);
+      } else {
+        this.hideRejectionLabel();
+      }
       return;
     }
+
+    this.hideRejectionLabel();
 
     if (this.currentTool === 'demolish') {
       const cell = this.grid.getCell(gx, gy);
@@ -168,6 +190,24 @@ export class ToolController {
     this.overlay.clearZoneGhost();
   }
 
+  private showRejectionLabel(reason: string): void {
+    if (!this.rejectionLabel) {
+      this.rejectionLabel = document.createElement('div');
+      this.rejectionLabel.className = 'placement-rejection';
+      this.canvas.parentElement?.appendChild(this.rejectionLabel);
+    }
+    this.rejectionLabel.textContent = reason;
+    this.rejectionLabel.style.display = 'block';
+    this.rejectionLabel.style.left = `${this.lastMouseX + 16}px`;
+    this.rejectionLabel.style.top = `${this.lastMouseY - 8}px`;
+  }
+
+  private hideRejectionLabel(): void {
+    if (this.rejectionLabel) {
+      this.rejectionLabel.style.display = 'none';
+    }
+  }
+
   private tryPlace(gx: number, gy: number): boolean {
     if (!this.grid.inBounds(gx, gy)) return false;
     if (!this.currentBuildingId) return false;
@@ -180,6 +220,7 @@ export class ToolController {
         message: 'Insufficient rubles, Comrade!',
         type: 'error'
       });
+      audioManager.playSfx('invalid');
       return false;
     }
 
@@ -188,6 +229,10 @@ export class ToolController {
       this.state.budget -= def.cost;
       this.events.emit('budget:changed', { budget: this.state.budget });
       this.overlay.clearGhost();
+      // Auto-flash power overlay for power-related buildings
+      if (def.powerGeneration || def.conductsPower || def.powerConsumption) {
+        this.overlay.flashPowerOverlay(3000);
+      }
       this.onHover(gx, gy);
 
       this.undoManager.pushAction({
