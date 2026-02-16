@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-02-16
+
+### Changed
+
+- **Achievement panel moved to pause menu** — removed always-visible 300×220px panel from gameplay; achievements now appear in a scrollable "STATE HONORS" section inside the ESC pause menu.
+- **District panel collapses by default** — starts as a one-line summary header (`DISTRICTS — AVG LOYALTY 62% | UNREST 28%`); click to expand full detail view with chevron indicator.
+- **Bulletin panel merged into Event Log** — removed standalone bulletin panel; notification history button (☰) now opens a unified reverse-chronological Event Log combining bulletin entries and notification toasts, with active directive pinned at top and color-coded source tags.
+- **Toolbar reduced from 7 tabs to 5** — removed ZONING and TOOLS categories; zone buttons inlined into matching building panels (Housing Zone → HOUSING, Industry Zone → INDUSTRY, etc.); added persistent DEMOLISH and INSPECT quick-access buttons always visible below the toolbar.
+- **Resource bar metrics simplified** — renamed "Order" → "Stability" (composite `loyalty - unrest×0.5`, e.g. "65% STABLE") and "Mobility" → "Access" (average of commute + service access, e.g. "42% FAIR"); breakdowns still available in district panel.
+- **Advisor auto-dismisses after 10 seconds** — new fade-out animation instead of persisting for 30+ seconds; removed idle "Your city thrives, Comrade" message; silence when nothing is wrong.
+- Updated `I` keyboard shortcut messaging to reference district panel specifically.
+
+### Removed
+
+- `BulletinPanel` component and all associated CSS (~65 lines of orphaned styles).
+- `ZONING` and `TOOLS` toolbar categories (functionality redistributed).
+- Graphics quality controls from toolbar (already available in pause menu).
+- Idle advisor "all good" message.
+- ~100 lines of dead CSS (bulletin panel, quality buttons).
+
 ## [1.6.0] - 2026-02-16
 
 ### Added

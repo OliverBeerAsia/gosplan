@@ -10,8 +10,18 @@ Every push to `main` auto-deploys to GitHub Pages via the Actions workflow in `.
 
 ## Current Release
 
-- Version: `1.6.0`
+- Version: `1.7.0`
 - Status: playable, desktop-first, production build passing
+
+## What Is In 1.7.0
+
+- **UI clutter reduced ~20%** — 3 always-visible panels removed from the gameplay screen (achievement, bulletin, and expanded district panels).
+- **Achievement panel in pause menu** — "STATE HONORS" section accessible via ESC; no longer permanently on-screen.
+- **Collapsible district panel** — starts as a one-line summary; click header to expand full detail view.
+- **Unified Event Log** — ☰ button now shows combined bulletin + notification history with directive header, timestamps, and source tags.
+- **5-tab toolbar** (was 7) — zones inlined into building categories; persistent DEMOLISH/INSPECT quick-access buttons.
+- **Readable resource metrics** — "Stability" and "Access" show single composite percentages instead of cryptic abbreviations.
+- **Advisor auto-dismiss** — fades out after 10 seconds; no more idle "all good" clutter.
 
 ## What Is In 1.6.0
 
@@ -153,7 +163,7 @@ npm run preview
   - `X`: demolish
   - `Q`: repeat last building
   - `G`: cycle graphics quality (`LOW -> MED -> HIGH`)
-  - `I`: toggle advanced intel panels (Districts + Honors)
+  - `I`: toggle district panel
   - `Tab`: cycle toolbar categories
 - Overlays:
   - `P`: power overlay
@@ -197,7 +207,7 @@ If the atlas or specific frames are missing, the game still runs via procedural 
 - `src/rendering`: terrain/buildings/overlays/camera/isometric projection
 - `src/graphics`: palette, texture generators, atlas loader, texture factory
 - `src/audio`: procedural sound effects and ambient audio (Web Audio API)
-- `src/ui`: toolbar, resource bar, info panel, minimap, notifications, advisor, pause menu, stats panel, tutorial
+- `src/ui`: toolbar (5-tab), resource bar, info panel, minimap, notifications/event log, advisor, pause menu (with achievements), stats panel, tutorial
 - `public/assets/atlas`: authored sprite atlas assets
 - `docs`: release documentation and QA artifacts
 
