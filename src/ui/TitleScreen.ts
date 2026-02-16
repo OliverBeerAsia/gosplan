@@ -72,15 +72,15 @@ export class TitleScreen {
     seal.className = 'title-briefing-seal';
     desk.appendChild(seal);
 
-    const pixelBanner = document.createElement('pre');
-    pixelBanner.className = 'title-pixel-banner';
-    pixelBanner.textContent = [
-      '[]==[]==[]==[]==[]==[]==[]==[]==[]==[]',
-      '||  RED BANNER TRANSMISSION ONLINE   ||',
-      '||  CITIZEN DIRECTIVES AWAIT INPUT   ||',
-      '[]==[]==[]==[]==[]==[]==[]==[]==[]==[]',
-    ].join('\n');
-    frame.appendChild(pixelBanner);
+    const masthead = document.createElement('div');
+    masthead.className = 'title-newspaper-masthead';
+    const mastheadLine1 = document.createElement('div');
+    mastheadLine1.textContent = 'RED BANNER TRANSMISSION ONLINE';
+    const mastheadLine2 = document.createElement('div');
+    mastheadLine2.textContent = 'CITIZEN DIRECTIVES AWAIT INPUT';
+    masthead.appendChild(mastheadLine1);
+    masthead.appendChild(mastheadLine2);
+    frame.appendChild(masthead);
 
     this.mainMenuEl = document.createElement('div');
     this.mainMenuEl.className = 'title-menu is-visible';
