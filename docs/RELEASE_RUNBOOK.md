@@ -43,6 +43,19 @@ git push origin v<version>
 1. Confirm tag and release are visible on GitHub.
 2. Confirm release notes render correctly.
 3. Confirm clone + `npm install && npm run build` works from clean environment.
+4. Confirm GitHub Pages deploy succeeds (check Actions tab for the `Deploy to GitHub Pages` workflow).
+5. Verify the live site loads at https://oliverbeerasia.github.io/gosplan/.
+
+## GitHub Pages Deployment
+
+The game auto-deploys to GitHub Pages on every push to `main`.
+
+- **Workflow:** `.github/workflows/deploy-pages.yml`
+- **Build type:** GitHub Actions workflow (configured via Pages settings)
+- **Output:** Vite builds to `./dist` with base path `/gosplan/`
+- **URL:** https://oliverbeerasia.github.io/gosplan/
+
+No manual deploy step is required. If the deploy fails, check the Actions tab for logs.
 
 ## Rollback Plan
 

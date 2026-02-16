@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- Switched GitHub Pages source from legacy branch deploy to workflow-based deploy.
+- Removed 90-second legacy builder wait from deploy workflow (deploy ~30s instead of ~2m30s).
+- Added deployment documentation to README and RELEASE_RUNBOOK.
+
 ## [1.4.1] - 2026-02-12
 
 ### Added

@@ -2,6 +2,12 @@
 
 Soviet city builder inspired by SimCity 2000-style planning, layouts, and progression loops, built with TypeScript + PixiJS.
 
+## Play Online
+
+https://oliverbeerasia.github.io/gosplan/
+
+Every push to `main` auto-deploys to GitHub Pages via the Actions workflow in `.github/workflows/deploy-pages.yml`.
+
 ## Current Release
 
 - Version: `1.4.1`
@@ -172,6 +178,18 @@ If the atlas or specific frames are missing, the game still runs via procedural 
 - `src/ui`: toolbar, resource bar, info panel, minimap, notifications
 - `public/assets/atlas`: authored sprite atlas assets
 - `docs`: release documentation and QA artifacts
+
+## Deployment
+
+The game is hosted on GitHub Pages at `https://oliverbeerasia.github.io/gosplan/`.
+
+- **Build tool:** Vite (base path `/gosplan/`)
+- **Trigger:** every push to `main`, or manual `workflow_dispatch`
+- **Workflow:** `.github/workflows/deploy-pages.yml`
+- **Process:** checkout, `npm ci`, `npm run build`, upload `./dist` artifact, deploy via `actions/deploy-pages@v4`
+- **Pages source:** GitHub Actions workflow (not legacy branch deploy)
+
+No manual steps are needed — merging to `main` is a production deploy.
 
 ## Release Docs
 
