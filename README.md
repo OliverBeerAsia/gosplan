@@ -13,6 +13,17 @@ Every push to `main` auto-deploys to GitHub Pages via the Actions workflow in `.
 - Version: `1.5.0`
 - Status: playable, desktop-first, production build passing
 
+## What's New Since 1.5.0
+
+- Soviet desk background on title screen, loading overlay, and game-over screen.
+- Building outline removal and multiple art refinement passes (perspective, weathering, rooftop character).
+- Visual polish fixes:
+  - Fixed white halo on well-serviced buildings (tint was washing out facade colors)
+  - Rounded happiness display to integer
+  - Slowed base game speed from 1.6s to 2.4s per week at 1x
+  - Enlarged opening splash hero image
+  - Softened unpowered building overlay (35% → 22% opacity)
+
 ## What Is In 1.5.0
 
 - Richer building facades for core residential, civic, and industrial buildings with factory gantries, rooftop props, and high-contrast detailing inspired by SimCity/Transport Tycoon.
@@ -202,6 +213,7 @@ No manual steps are needed — merging to `main` is a production deploy.
 - `docs/TEST_REPORT_v1.5.0.md`
 - `docs/BUG_CHECK_v1.5.0.md`
 - `docs/RELEASE_NOTES_v1.5.0.md`
+- `docs/SESSION_RECAP_2026-02-16.md`
 - `docs/SESSION_RECAP_2026-02-12.md`
 - `docs/PROJECT_BEST_PRACTICES.md`
 - `docs/IMPLEMENTATION_NOTES_v1.4.1.md`

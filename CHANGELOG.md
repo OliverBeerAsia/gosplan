@@ -2,11 +2,23 @@
 
 ## [Unreleased]
 
+### Added
+
+- Soviet desk background image on title screen, loading overlay, and game-over screen.
+- Session recap for 2026-02-16 (`docs/SESSION_RECAP_2026-02-16.md`).
+
 ### Changed
 
 - Switched GitHub Pages source from legacy branch deploy to workflow-based deploy.
 - Removed 90-second legacy builder wait from deploy workflow (deploy ~30s instead of ~2m30s).
 - Added deployment documentation to README and RELEASE_RUNBOOK.
+- Removed heavy building outlines; disabled `isoBox` outline default and cleaned terrain tile edge rendering.
+- Multiple building art improvement passes: perspective windows, facade details, weathering, rooftop character.
+- Removed white tint on well-serviced residential/government buildings (was washing out colors).
+- Reduced unpowered building overlay darkness from 35% to 22% opacity.
+- Enlarged opening splash hero image (80vh max-height, 1400px panel width).
+- Rounded happiness display to integer (no more fractional percentages).
+- Slowed base game speed: `BASE_TICK_MS` 1600 → 2400 (2.4s/week at 1x).
 
 ## [1.5.0] - 2026-02-16
 
