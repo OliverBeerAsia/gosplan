@@ -417,15 +417,16 @@ export class BuildingRenderer {
     if (!def) return;
 
     let tint = 0xFFFFFF;
+    const unpowered = Boolean(def.powerConsumption && !building.powered);
     const coverage = this.getBuildingCoverage(building.id);
 
-    if (def.powerConsumption && !building.powered) {
-      tint = 0x7A7684;
-    } else if (def.category === 'residential' || def.category === 'government') {
+    // Unpowered textures already include a dedicated darkening pass.
+    // Skip extra tinting here to avoid over-dark industrial silhouettes.
+    if (!unpowered && (def.category === 'residential' || def.category === 'government')) {
       if (coverage < 20) {
         tint = 0xC9B596;
       }
-    } else if (def.category === 'industrial' && coverage < 18) {
+    } else if (!unpowered && def.category === 'industrial' && coverage < 18) {
       tint = 0xBAAE99;
     }
 

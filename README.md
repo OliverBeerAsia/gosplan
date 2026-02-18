@@ -10,8 +10,14 @@ Every push to `main` auto-deploys to GitHub Pages via the Actions workflow in `.
 
 ## Current Release
 
-- Version: `1.7.2`
+- Version: `1.7.3`
 - Status: playable, desktop-first, production build passing
+
+## What Is In 1.7.3
+
+- **Industrial building readability fix** — factory and coal power plant sprites now avoid stacked unpowered darkening, keeping silhouettes and facade details visible during power deficits.
+- **Invalid placement ghost clarity improved** — invalid ghost previews are brighter and lightly red-tinted so footprint shape remains legible while still signaling a blocked placement.
+- **Unpowered variant tuning** — procedural unpowered overlay intensity was reduced for clearer midtone contrast.
 
 ## What Is In 1.7.2
 
@@ -239,6 +245,11 @@ No manual steps are needed — merging to `main` is a production deploy.
 ## Release Docs
 
 - `CHANGELOG.md`
+- `docs/IMPLEMENTATION_NOTES_v1.7.3.md`
+- `docs/MULTI_AGENT_REVIEW_v1.7.3.md`
+- `docs/TEST_REPORT_v1.7.3.md`
+- `docs/BUG_CHECK_v1.7.3.md`
+- `docs/RELEASE_NOTES_v1.7.3.md`
 - `docs/IMPLEMENTATION_NOTES_v1.7.2.md`
 - `docs/MULTI_AGENT_REVIEW_v1.7.2.md`
 - `docs/TEST_REPORT_v1.7.2.md`

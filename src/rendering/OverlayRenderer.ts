@@ -79,7 +79,8 @@ export class OverlayRenderer {
       ghostBuilding.anchor.set(0.5, 1);
       ghostBuilding.x = pos.x;
       ghostBuilding.y = pos.y + TILE_HALF_H;
-      ghostBuilding.alpha = valid ? 0.6 : 0.3;
+      ghostBuilding.alpha = valid ? 0.62 : 0.46;
+      ghostBuilding.tint = valid ? 0xFFFFFF : 0xF4A8A8;
       this.container.addChild(ghostBuilding);
       this.ghostSprites.push(ghostBuilding);
     }

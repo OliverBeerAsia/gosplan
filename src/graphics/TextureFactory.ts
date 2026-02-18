@@ -254,7 +254,7 @@ export class TextureFactory {
 
       const overlay = new Graphics();
       overlay.rect(0, 0, tex.width, tex.height);
-      overlay.fill({ color: 0x000000, alpha: 0.22 });
+      overlay.fill({ color: 0x000000, alpha: 0.15 });
       container.addChild(overlay);
 
       const unpoweredTex = renderer.generateTexture(container);

@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [1.7.3] - 2026-02-18
+
+### Fixed
+
+- **Industrial sprites appearing too dark** — removed double unpowered darkening (texture + tint stacking) so factory and coal power plant remain readable during deficits.
+- **Invalid placement ghost readability** — increased invalid ghost visibility and added subtle red tinting so blocked footprints are easier to read without losing warning semantics.
+
+### Changed
+
+- **Unpowered variant intensity reduced** — lowered procedural unpowered overlay opacity to preserve facade contrast.
+
 ## [1.7.2] - 2026-02-18
 
 ### Changed
