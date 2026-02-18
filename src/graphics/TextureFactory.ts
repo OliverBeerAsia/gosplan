@@ -13,6 +13,10 @@ const DISTRICT_STYLES: DistrictStyle[] = [
   'historic_core',
 ];
 
+const RESIDENTIAL_BUILDINGS = new Set(['khrushchyovka', 'stalinka', 'kommunalka', 'panelak']);
+const INDUSTRIAL_BUILDINGS = new Set(['factory', 'coal_power_plant', 'warehouse']);
+const CIVIC_BUILDINGS = new Set(['party_hq', 'hospital', 'school', 'cinema', 'radio_tower', 'metro_station', 'sports_complex']);
+
 const NON_BUILDING_KEYS = new Set([
   'ground', 'water', 'forest', 'hill', 'dirt',
   'ground_highlight', 'ground_invalid',
@@ -77,12 +81,12 @@ export class TextureFactory {
 
       const warmKey = `${key}_var1`;
       if (!this.textures.has(warmKey)) {
-        this.textures.set(warmKey, this.createVariantTexture(renderer, tex, 'warm'));
+        this.textures.set(warmKey, this.createVariantTexture(renderer, tex, key, 'warm'));
       }
 
       const coolKey = `${key}_var2`;
       if (!this.textures.has(coolKey)) {
-        this.textures.set(coolKey, this.createVariantTexture(renderer, tex, 'cool'));
+        this.textures.set(coolKey, this.createVariantTexture(renderer, tex, key, 'cool'));
       }
     }
   }
@@ -90,6 +94,7 @@ export class TextureFactory {
   private createVariantTexture(
     renderer: Renderer,
     source: Texture,
+    buildingKey: string,
     mood: 'warm' | 'cool'
   ): Texture {
     const container = new Container();
@@ -99,12 +104,18 @@ export class TextureFactory {
     const tone = new Graphics();
     tone.rect(0, 0, source.width, source.height);
     tone.fill({
-      color: mood === 'warm' ? 0x6A5644 : 0x6E7C8E,
-      alpha: mood === 'warm' ? 0.12 : 0.1,
+      color: mood === 'warm' ? 0x7A634A : 0x7A8FA1,
+      alpha: mood === 'warm' ? 0.09 : 0.08,
     });
     container.addChild(tone);
 
+    const lift = new Graphics();
+    lift.rect(0, 0, source.width, Math.max(8, source.height * 0.46));
+    lift.fill({ color: 0xFFFFFF, alpha: 0.055 });
+    container.addChild(lift);
+
     const accents = new Graphics();
+    const accentColor = this.getBuildingAccentColor(buildingKey);
     if (mood === 'warm') {
       for (let i = 0; i < 8; i++) {
         const x = 4 + (i * 11) % Math.max(8, source.width - 8);
@@ -112,9 +123,11 @@ export class TextureFactory {
         accents.circle(x, y, 1.1);
         accents.fill({ color: 0x3B2F25, alpha: 0.18 });
       }
+      accents.rect(3, source.height > 16 ? source.height - 8 : source.height - 5, Math.max(4, source.width - 6), 2);
+      accents.fill({ color: accentColor, alpha: 0.24 });
     } else {
       accents.rect(2, 6, Math.max(4, source.width - 4), 2);
-      accents.fill({ color: 0xB71C1C, alpha: 0.25 });
+      accents.fill({ color: accentColor, alpha: 0.26 });
       accents.rect(2, 12, Math.max(4, source.width - 10), 1);
       accents.fill({ color: 0xD9C87A, alpha: 0.22 });
     }
@@ -158,21 +171,26 @@ export class TextureFactory {
     let color = 0x000000;
     let alpha = 0.08;
     if (style === 'worker_housing') {
-      color = 0x726453;
-      alpha = 0.12;
-    } else if (style === 'heavy_industry') {
-      color = 0x4A473F;
-      alpha = 0.18;
-    } else if (style === 'scientific_city') {
-      color = 0x748EA2;
+      color = 0x8A755D;
       alpha = 0.1;
+    } else if (style === 'heavy_industry') {
+      color = 0x5A5146;
+      alpha = 0.16;
+    } else if (style === 'scientific_city') {
+      color = 0x7EA9C8;
+      alpha = 0.11;
     } else if (style === 'historic_core') {
-      color = 0x8A6F4D;
-      alpha = 0.12;
+      color = 0xA67950;
+      alpha = 0.1;
     }
 
     tone.fill({ color, alpha });
     container.addChild(tone);
+
+    const lift = new Graphics();
+    lift.rect(0, 0, source.width, Math.max(8, source.height * 0.42));
+    lift.fill({ color: 0xFFFFFF, alpha: 0.045 });
+    container.addChild(lift);
 
     const accents = new Graphics();
     if (style === 'worker_housing') {
@@ -211,6 +229,13 @@ export class TextureFactory {
     const tex = renderer.generateTexture(container);
     container.destroy();
     return tex;
+  }
+
+  private getBuildingAccentColor(buildingKey: string): number {
+    if (RESIDENTIAL_BUILDINGS.has(buildingKey)) return 0x7ED2FF;
+    if (INDUSTRIAL_BUILDINGS.has(buildingKey)) return 0xF0A441;
+    if (CIVIC_BUILDINGS.has(buildingKey)) return 0xD9C678;
+    return 0xC7C7C7;
   }
 
   private generateUnpoweredVariants(renderer: Renderer): void {

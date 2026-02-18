@@ -10,8 +10,15 @@ Every push to `main` auto-deploys to GitHub Pages via the Actions workflow in `.
 
 ## Current Release
 
-- Version: `1.7.1`
+- Version: `1.7.2`
 - Status: playable, desktop-first, production build passing
+
+## What Is In 1.7.2
+
+- **Gameplay HUD polish pass** — top resource chips, panel headers, toolbar buttons, and quick tools now use tighter pixel-style spacing and hierarchy for improved desktop readability.
+- **Building visuals refined** — residential/industrial/civic palettes and variant overlays were rebalanced for cleaner contrast and stronger isometric definition.
+- **Placement/tooling clarity improvements** — building cards now have explicit name labels, DEMOLISH has destructive styling, and compact info toasts truncate long copy to reduce clutter.
+- **Top-lane overlap fix** — tutorial hint and notification lanes were separated during onboarding to prevent directive/info text collisions.
 
 ## What Is In 1.7.1
 
@@ -232,6 +239,11 @@ No manual steps are needed — merging to `main` is a production deploy.
 ## Release Docs
 
 - `CHANGELOG.md`
+- `docs/IMPLEMENTATION_NOTES_v1.7.2.md`
+- `docs/MULTI_AGENT_REVIEW_v1.7.2.md`
+- `docs/TEST_REPORT_v1.7.2.md`
+- `docs/BUG_CHECK_v1.7.2.md`
+- `docs/RELEASE_NOTES_v1.7.2.md`
 - `docs/IMPLEMENTATION_NOTES_v1.7.1.md`
 - `docs/MULTI_AGENT_REVIEW_v1.7.1.md`
 - `docs/TEST_REPORT_v1.7.1.md`

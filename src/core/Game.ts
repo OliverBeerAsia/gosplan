@@ -451,7 +451,7 @@ export class Game {
 
     if (Game.STREAMLINED_UI) {
       this.events.emit('notification', {
-        message: 'Streamlined UI active. Press I to toggle district panel.',
+        message: 'UI streamlined. Press I to toggle district panel.',
         type: 'info',
       });
     }
@@ -547,7 +547,7 @@ export class Game {
           this.setAdvancedPanelsVisible(!this.advancedPanelsVisible);
           this.events.emit('notification', {
             message: this.advancedPanelsVisible
-              ? 'District panel shown.'
+              ? 'District panel visible.'
               : 'District panel hidden.',
             type: 'info',
           });

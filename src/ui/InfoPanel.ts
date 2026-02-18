@@ -78,7 +78,7 @@ export class InfoPanel {
     const serviceCoverage = this.grid.getCell(building.gx, building.gy)?.serviceCoverage ?? 0;
     const queuePressure = this.estimateQueuePressure(building, serviceCoverage);
 
-    const rows: [string, string, boolean?][] = [
+    const rows: [string, string, boolean?, boolean?][] = [
       ['Size', `${def.width}x${def.height}`],
       ['Cost', `${def.cost.toLocaleString()}\u20BD`],
       ['Maintenance', `${def.maintenance}\u20BD/wk`],
@@ -87,7 +87,7 @@ export class InfoPanel {
 
     if (queuePressure > 0) {
       const band = queuePressureBand(queuePressure).toUpperCase();
-      rows.push(['Queue Press.', `${queuePressure}% (${band})`, queuePressure >= 70]);
+      rows.push(['Queue Press.', `${queuePressure}% (${band})`, queuePressure >= 45, queuePressure >= 70]);
     }
 
     if (def.housingCapacity) {
@@ -106,10 +106,10 @@ export class InfoPanel {
 
     if (def.happinessBonus) rows.push(['Happiness', `+${def.happinessBonus}`]);
     if (def.serviceRadius) rows.push(['Radius', `${def.serviceRadius} tiles`]);
-    rows.push(['Powered', building.powered ? 'YES' : 'NO', def.powerConsumption ? !building.powered : false]);
+    rows.push(['Powered', building.powered ? 'YES' : 'NO', def.powerConsumption ? !building.powered : false, def.powerConsumption ? !building.powered : false]);
 
-    for (const [label, value, warning] of rows) {
-      this.appendRow(label, value, Boolean(warning));
+    for (const [label, value, warning, critical] of rows) {
+      this.appendRow(label, value, Boolean(warning), Boolean(critical));
     }
 
     this.el.classList.add('visible');
@@ -136,9 +136,14 @@ export class InfoPanel {
     this.appendRow('District', district ? district.label.toUpperCase() : 'UNASSIGNED');
     this.appendRow('Service Cover', `${Math.round(cell.serviceCoverage)}%`, cell.serviceCoverage < 20);
     this.appendRow('Activity', `${Math.round(cell.activityLevel)}%`, cell.activityLevel < 35);
-    this.appendRow('Unrest Flag', cell.unrestMarker ? 'YES' : 'NO', cell.unrestMarker);
-    this.appendRow('Road Access', roadAccess ? 'YES' : 'NO', !roadAccess);
-    this.appendRow('Power Grid', this.state.powerDemand <= this.state.powerCapacity ? 'STABLE' : 'DEFICIT', this.state.powerDemand > this.state.powerCapacity);
+    this.appendRow('Unrest Flag', cell.unrestMarker ? 'YES' : 'NO', cell.unrestMarker, cell.unrestMarker);
+    this.appendRow('Road Access', roadAccess ? 'YES' : 'NO', !roadAccess, !roadAccess);
+    this.appendRow(
+      'Power Grid',
+      this.state.powerDemand <= this.state.powerCapacity ? 'STABLE' : 'DEFICIT',
+      this.state.powerDemand > this.state.powerCapacity,
+      this.state.powerDemand > this.state.powerCapacity
+    );
 
     if (cell.zone !== 'none') {
       this.appendRow('Demand', demandLabel.label, demandLabel.warning);
@@ -193,7 +198,12 @@ export class InfoPanel {
     this.bodyEl.appendChild(p);
   }
 
-  private appendRow(label: string, value: string, warning: boolean = false): void {
+  private appendRow(
+    label: string,
+    value: string,
+    warning: boolean = false,
+    critical: boolean = false
+  ): void {
     const row = document.createElement('div');
     row.className = 'info-row';
 
@@ -206,6 +216,9 @@ export class InfoPanel {
     valueEl.textContent = value;
     if (warning) {
       valueEl.classList.add('warning');
+    }
+    if (critical) {
+      valueEl.classList.add('critical');
     }
 
     row.appendChild(labelEl);

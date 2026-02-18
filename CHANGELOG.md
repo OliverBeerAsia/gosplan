@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [1.7.2] - 2026-02-18
+
+### Changed
+
+- **Gameplay UI density and hierarchy tuned for desktop** — refined resource chips, tool/category bars, panel sizing, and typography for cleaner scanning during active play.
+- **Building card readability improved** — consistent `building-name` labeling in the bottom build panel and stronger cost/name contrast.
+- **Notification behavior refined** — info toasts now use compact/truncated formatting for long text while keeping full text in tooltip/title.
+- **Info panel severity signaling improved** — added warning/critical styling split for queue pressure, power, road access, and unrest indicators.
+- **Building art palette pass** — industrial/residential textures and tint variants were recalibrated for stronger silhouette clarity and less muddy tones.
+
+### Fixed
+
+- **Tutorial + notification overlap at top HUD** — tutorial bar and toast lane now use separated vertical tracks during onboarding to avoid collision.
+- **District toggle messaging polish** — streamlined wording in initial/toggle notifications for clearer status feedback.
+
 ## [1.7.1] - 2026-02-18
 
 ### Changed

@@ -11,8 +11,15 @@ function createEl(tag: string, attrs: Record<string, string> = {}, text = ''): H
   return el;
 }
 
-function resourceItem(icon: string, label: string, dataRes: string, initValue: string, tooltip: string): HTMLElement {
-  const item = createEl('div', { className: 'resource-item' });
+function resourceItem(
+  icon: string,
+  label: string,
+  dataRes: string,
+  initValue: string,
+  tooltip: string,
+  priority: 'primary' | 'secondary'
+): HTMLElement {
+  const item = createEl('div', { className: `resource-item ${priority}` });
   item.title = tooltip;
   const iconEl = createEl('span', { className: 'resource-icon' }, icon);
   const wrap = createEl('div');
@@ -60,24 +67,25 @@ export class ResourceBar {
     this.el = document.createElement('div');
     this.el.id = 'resource-bar';
 
-    this.el.appendChild(resourceItem('\u2606', 'Population', 'pop', '50', 'Current population of your city'));
-    this.el.appendChild(resourceItem('\u20BD', 'Budget', 'budget', '50,000', 'City treasury - income from industry and central planning'));
-    this.el.appendChild(resourceItem('\u26A1', 'Power', 'power', '0/0 MW', 'Power demand / capacity in megawatts'));
-    this.el.appendChild(resourceItem('\u263A', 'Happiness', 'happy', '50%', 'City-wide happiness affects population growth'));
+    this.el.appendChild(resourceItem('\u2606', 'Population', 'pop', '50', 'Current population of your city', 'primary'));
+    this.el.appendChild(resourceItem('\u20BD', 'Budget', 'budget', '50,000', 'City treasury - income from industry and central planning', 'primary'));
+    this.el.appendChild(resourceItem('\u26A1', 'Power', 'power', '0/0 MW', 'Power demand / capacity in megawatts', 'primary'));
+    this.el.appendChild(resourceItem('\u263A', 'Happiness', 'happy', '50%', 'City-wide happiness affects population growth', 'primary'));
     this.el.appendChild(
       resourceItem(
         '\u2690',
         'Demand',
         'demand',
         'Steady',
-        'Main growth signal. Positive means expand that zone; negative means hold.'
+        'Main growth signal. Positive means expand that zone; negative means hold.',
+        'secondary'
       )
     );
     if (!this.simplified) {
-      this.el.appendChild(resourceItem('\u262D', 'Stability', 'order', '50% STABLE', 'Composite stability score (loyalty minus unrest). Breakdown in district panel.'));
-      this.el.appendChild(resourceItem('\u21C4', 'Access', 'mobility', '50% FAIR', 'Average of commute and service access. Breakdown in district panel.'));
+      this.el.appendChild(resourceItem('\u262D', 'Stability', 'order', '50% STABLE', 'Composite stability score (loyalty minus unrest). Breakdown in district panel.', 'secondary'));
+      this.el.appendChild(resourceItem('\u21C4', 'Access', 'mobility', '50% FAIR', 'Average of commute and service access. Breakdown in district panel.', 'secondary'));
     }
-    this.el.appendChild(resourceItem('\u2630', 'Date', 'date', 'W1 1980', 'Current week and year'));
+    this.el.appendChild(resourceItem('\u2630', 'Date', 'date', 'W1 1980', 'Current week and year', 'secondary'));
 
     // Speed controls
     this.speedControlEl = createEl('div', { id: 'speed-controls' }) as HTMLDivElement;

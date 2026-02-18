@@ -239,9 +239,10 @@ function drawKhrushchyovka(renderer: Renderer): Texture {
     bw,
     roofDepth,
     bh,
-    0x9A9A97,
-    0x7D7E7D,
-    0x676A69
+    0xB0B4AF,
+    0x909792,
+    0x798078,
+    true
   );
 
   // Panel seams and floor bands for a prefab look.
@@ -426,8 +427,8 @@ function drawFactory(renderer: Renderer): Texture {
 
   drawGroundShadow(g, ox, oy + roofDepth + 8, bw * 0.98, 10, 0.24);
 
-  isoBox(g, ox, topY, bw, roofDepth, bh, 0x667481, 0x54606A, 0x3D474F);
-  isoBox(g, ox - bw * 0.36, topY + 10, bw * 0.46, roofDepth * 0.45, 34, 0x747E86, 0x596169, 0x464D55);
+  isoBox(g, ox, topY, bw, roofDepth, bh, 0x7F95A8, 0x677C8E, 0x4E6373, true);
+  isoBox(g, ox - bw * 0.36, topY + 10, bw * 0.46, roofDepth * 0.45, 34, 0x8EA0AE, 0x738593, 0x5D6E79, true);
 
   // Saw-tooth roof with skylight highlights.
   for (let i = 0; i < 4; i++) {
@@ -439,14 +440,14 @@ function drawFactory(renderer: Renderer): Texture {
       { x: rx + bw * 0.34, y: ry - 1 },
       { x: rx + bw * 0.2, y: ry + 2 },
     ]);
-    g.fill(0x2F363D);
+    g.fill(0x3D4750);
     g.poly([
       { x: rx + bw * 0.16, y: ry - 12 },
       { x: rx + bw * 0.28, y: ry - 5 },
       { x: rx + bw * 0.34, y: ry - 1 },
       { x: rx + bw * 0.22, y: ry - 8 },
     ]);
-    g.fill(0x8CA6B7);
+    g.fill(0xB6D4E8);
   }
 
   drawChimney(g, ox - bw * 0.37, topY - 2, 7, 36);
@@ -489,7 +490,7 @@ function drawFactory(renderer: Renderer): Texture {
     isoRect(g, dx, dy, 12, 14, 1);
     g.fill(0x32383D);
     isoRect(g, dx, dy + 11, 12, 2, 1);
-    g.fill(0xB36A2B);
+    g.fill(0xE19B38);
   }
 
   drawLeftWindowGrid(g, ox, topY, bw, roofDepth, 2, 4, 12, 13, 7, 10, 3);
@@ -516,8 +517,8 @@ function drawCoalPowerPlant(renderer: Renderer): Texture {
 
   drawGroundShadow(g, ox, oy + roofDepth + 8, bw, 12, 0.26);
 
-  isoBox(g, ox, topY, bw, roofDepth, bh, 0x888883, 0x6E6E67, 0x575752);
-  isoBox(g, ox - bw * 0.42, topY + 14, bw * 0.52, roofDepth * 0.5, 34, 0x74756F, 0x64645E, 0x4D4D49);
+  isoBox(g, ox, topY, bw, roofDepth, bh, 0x9C9F95, 0x7F8377, 0x65695E, true);
+  isoBox(g, ox - bw * 0.42, topY + 14, bw * 0.52, roofDepth * 0.5, 34, 0x8A8C85, 0x70736B, 0x5C5F57, true);
 
   drawCoolingTower(g, ox - bw * 0.43, topY + 2, 20, 48);
   drawCoolingTower(g, ox + bw * 0.02, topY, 18, 44);
@@ -990,7 +991,7 @@ function drawPanelak(renderer: Renderer): Texture {
 
   drawGroundShadow(g, ox, oy + roofDepth + 4, bw * 0.94, 10, 0.22);
 
-  isoBox(g, ox, topY, bw, roofDepth, bh, 0xA4A7A8, 0x84888B, 0x6A6F72);
+  isoBox(g, ox, topY, bw, roofDepth, bh, 0xBBC1BF, 0x9BA49F, 0x7F8782, true);
   drawFacadeBands(g, ox, topY, bw, roofDepth, 8, 11, 0x505356, 0.3);
 
   // Vertical panel joints.
@@ -1061,8 +1062,8 @@ function drawWarehouse(renderer: Renderer): Texture {
 
   drawGroundShadow(g, ox, oy + roofDepth + 3, bw * 0.9, 9, 0.22);
 
-  isoBox(g, ox, topY, bw, roofDepth, bh, 0x778996, 0x5A6873, 0x465059);
-  isoBox(g, ox + bw * 0.36, topY + 10, bw * 0.36, roofDepth * 0.36, 24, 0x7E8F9B, 0x63727D, 0x4A545C);
+  isoBox(g, ox, topY, bw, roofDepth, bh, 0x8FA8B8, 0x738D9E, 0x5A7282, true);
+  isoBox(g, ox + bw * 0.36, topY + 10, bw * 0.36, roofDepth * 0.36, 24, 0x9DB3C1, 0x8196A4, 0x667A88, true);
   drawRoofDetail(g, ox, topY, bw, 2);
 
   // Corrugation and skylight strip.

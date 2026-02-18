@@ -256,7 +256,11 @@ export class NotificationManager {
 
     const el = document.createElement('div');
     el.className = `notification ${notification.type}`;
-    el.textContent = notification.message;
+    if (notification.type === 'info') {
+      el.classList.add('compact');
+    }
+    el.textContent = this.formatToastMessage(notification.message, notification.type);
+    el.title = notification.message;
     el.style.pointerEvents = 'auto';
     el.style.cursor = 'pointer';
 
@@ -270,6 +274,13 @@ export class NotificationManager {
     el.addEventListener('click', dismiss);
     this.container.appendChild(el);
     window.setTimeout(dismiss, this.toastDurationMs);
+  }
+
+  private formatToastMessage(message: string, type: NotificationType): string {
+    const normalized = message.trim();
+    if (type !== 'info') return normalized;
+    if (normalized.length <= 92) return normalized;
+    return `${normalized.slice(0, 89).trimEnd()}...`;
   }
 
   private messageKey(message: string, type: NotificationType): string {

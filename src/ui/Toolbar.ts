@@ -82,7 +82,7 @@ export class Toolbar {
     this.quickToolBar.id = 'quick-tool-bar';
 
     const demBtn = document.createElement('button');
-    demBtn.className = 'quick-tool-btn';
+    demBtn.className = 'quick-tool-btn destructive';
     demBtn.textContent = '\u2716 DEMOLISH';
     demBtn.title = 'Demolish (X)';
     demBtn.addEventListener('click', () => {
@@ -152,6 +152,7 @@ export class Toolbar {
     btn.className = 'building-btn zone-btn';
 
     const nameSpan = document.createElement('span');
+    nameSpan.className = 'building-name';
     nameSpan.textContent = label;
     btn.appendChild(nameSpan);
 
@@ -211,6 +212,7 @@ export class Toolbar {
     btn.className = 'building-btn';
 
     const nameSpan = document.createElement('span');
+    nameSpan.className = 'building-name';
     nameSpan.textContent = def.name.toUpperCase();
     btn.appendChild(nameSpan);
 

@@ -63,7 +63,7 @@ export class TutorialManager {
     this.steps = [
       {
         id: 'place_power',
-        message: 'Step 1: Open INDUSTRY and place a Coal Power Plant to electrify the city.',
+        message: 'Step 1: Open INDUSTRY and place a Coal Power Plant.',
         completed: () => {
           return this.grid.getAllBuildings().some(b => {
             const def = this.registry.get(b.defId);
@@ -73,28 +73,28 @@ export class TutorialManager {
       },
       {
         id: 'build_road',
-        message: 'Step 2: Open INFRA and build Roads connecting your power plant outward.',
+        message: 'Step 2: Open INFRA and place Roads to connect power.',
         completed: () => {
           return this.grid.getAllBuildings().filter(b => b.defId === 'road').length >= 3;
         },
       },
       {
         id: 'paint_housing',
-        message: 'Step 3: Open ZONING and paint Housing Zones near roads. Workers will move in!',
+        message: 'Step 3: Open ZONING and paint Housing near roads.',
         completed: () => {
           return this.state.population > 60;
         },
       },
       {
         id: 'watch_growth',
-        message: 'Step 4: Workers are arriving! Watch your population grow in the top bar.',
+        message: 'Step 4: Let the city grow past 100 population.',
         completed: () => {
           return this.state.population > 100;
         },
       },
       {
         id: 'build_service',
-        message: 'Step 5: Open SERVICES and build a School or Hospital to boost happiness.',
+        message: 'Step 5: Open SERVICES and place a School or Hospital.',
         completed: () => {
           return this.grid.getAllBuildings().some(b => {
             const def = this.registry.get(b.defId);
@@ -104,7 +104,7 @@ export class TutorialManager {
       },
       {
         id: 'open_plan',
-        message: 'Well done, Comrade! You are ready to plan your Soviet city. Check the Plan Panel on the left for your Five-Year goals.',
+        message: 'Well done, Comrade! Check the Plan Panel for Five-Year goals.',
         completed: () => false, // Timer-based: auto-completes after 6s in showStep()
       },
     ];
@@ -122,6 +122,7 @@ export class TutorialManager {
 
   private startTutorial(): void {
     this.tutorialActive = true;
+    this.container.classList.add('tutorial-active');
     this.currentStep = 0;
     this.showStep();
   }
@@ -161,6 +162,7 @@ export class TutorialManager {
 
   private completeTutorial(): void {
     this.tutorialActive = false;
+    this.container.classList.remove('tutorial-active');
     this.el.style.display = 'none';
     this.overlay.style.display = 'none';
     this.tutorialComplete = true;
