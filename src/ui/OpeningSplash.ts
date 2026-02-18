@@ -32,19 +32,31 @@ export class OpeningSplash {
     hero.alt = 'Gosplan opening home screen artwork';
     panel.appendChild(hero);
 
+    const commandDeck = document.createElement('div');
+    commandDeck.className = 'opening-splash-command-deck';
+    panel.appendChild(commandDeck);
+
+    const heading = document.createElement('div');
+    heading.className = 'opening-splash-heading';
+    commandDeck.appendChild(heading);
+
     const title = document.createElement('div');
     title.className = 'opening-splash-title';
     title.textContent = 'GOSPLAN CENTRAL DIRECTIVE';
-    panel.appendChild(title);
+    heading.appendChild(title);
 
     const line = document.createElement('div');
     line.className = 'opening-splash-line';
     line.textContent = 'AUTHENTICATING DISTRICT TELEMETRY RELAY';
-    panel.appendChild(line);
+    heading.appendChild(line);
+
+    const controls = document.createElement('div');
+    controls.className = 'opening-splash-controls';
+    commandDeck.appendChild(controls);
 
     const progressTrack = document.createElement('div');
     progressTrack.className = 'opening-splash-progress-track';
-    panel.appendChild(progressTrack);
+    controls.appendChild(progressTrack);
 
     this.progressEl = document.createElement('div');
     this.progressEl.className = 'opening-splash-progress-fill';
@@ -52,14 +64,14 @@ export class OpeningSplash {
 
     this.statusEl = document.createElement('div');
     this.statusEl.className = 'opening-splash-status';
-    panel.appendChild(this.statusEl);
+    controls.appendChild(this.statusEl);
 
     this.startButtonEl = document.createElement('button');
     this.startButtonEl.className = 'opening-splash-start-btn';
     this.startButtonEl.type = 'button';
     this.startButtonEl.textContent = 'SYNCING...';
     this.startButtonEl.disabled = true;
-    panel.appendChild(this.startButtonEl);
+    controls.appendChild(this.startButtonEl);
 
     container.appendChild(this.el);
   }

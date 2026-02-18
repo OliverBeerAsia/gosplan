@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-02-18
+
+### Changed
+
+- **Opening splash desktop layout refined** — added a structured command-deck section under the hero image for cleaner spacing, clearer hierarchy, and better desktop readability.
+- **Launch UI typography shifted to pixel-style treatment** — title/start/menu text on front-door screens now uses a sharper retro pixel face to better match the core GOSPLAN emblem style.
+- **Scenario selection slide simplified** — removed decorative masthead copy, shortened status text, and tightened launch prompts to reduce visual noise.
+- **Scenario cards simplified** — removed card art strip icons and subtitle blocks, keeping only scenario name and target year for faster selection scanning.
+
 ## [1.7.0] - 2026-02-16
 
 ### Changed

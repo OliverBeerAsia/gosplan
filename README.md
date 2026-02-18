@@ -10,8 +10,14 @@ Every push to `main` auto-deploys to GitHub Pages via the Actions workflow in `.
 
 ## Current Release
 
-- Version: `1.7.0`
+- Version: `1.7.1`
 - Status: playable, desktop-first, production build passing
+
+## What Is In 1.7.1
+
+- **Pixel-sharper launch typography** — opening and title-screen command text now uses a stronger retro pixel font treatment that better matches the central GOSPLAN visual identity.
+- **Improved opening splash desktop UI** — status line, progress, and start action now sit in a cleaner command-deck layout under the hero artwork.
+- **Simplified scenario selection slide** — decorative top copy and card icon strips removed; scenario cards now focus on name and target year for faster reading.
 
 ## What Is In 1.7.0
 
@@ -226,6 +232,11 @@ No manual steps are needed — merging to `main` is a production deploy.
 ## Release Docs
 
 - `CHANGELOG.md`
+- `docs/IMPLEMENTATION_NOTES_v1.7.1.md`
+- `docs/MULTI_AGENT_REVIEW_v1.7.1.md`
+- `docs/TEST_REPORT_v1.7.1.md`
+- `docs/BUG_CHECK_v1.7.1.md`
+- `docs/RELEASE_NOTES_v1.7.1.md`
 - `docs/IMPLEMENTATION_NOTES_v1.5.0.md`
 - `docs/MULTI_AGENT_REVIEW_v1.5.0.md`
 - `docs/TEST_REPORT_v1.5.0.md`

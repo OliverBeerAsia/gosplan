@@ -39,17 +39,12 @@ export class TitleScreen {
     frame.className = 'title-command-frame';
     this.el.appendChild(frame);
 
-    const topLabel = document.createElement('div');
-    topLabel.className = 'title-command-headline';
-    topLabel.textContent = 'Central Committee Planning Terminal';
-    frame.appendChild(topLabel);
-
     const h1 = document.createElement('h1');
     h1.textContent = 'GOSPLAN';
     frame.appendChild(h1);
 
     const h2 = document.createElement('h2');
-    h2.textContent = 'Soviet City Builder Directive Console';
+    h2.textContent = 'CITY BUILDER';
     frame.appendChild(h2);
 
     const desk = document.createElement('div');
@@ -71,16 +66,6 @@ export class TitleScreen {
     const seal = document.createElement('div');
     seal.className = 'title-briefing-seal';
     desk.appendChild(seal);
-
-    const masthead = document.createElement('div');
-    masthead.className = 'title-newspaper-masthead';
-    const mastheadLine1 = document.createElement('div');
-    mastheadLine1.textContent = 'RED BANNER TRANSMISSION ONLINE';
-    const mastheadLine2 = document.createElement('div');
-    mastheadLine2.textContent = 'CITIZEN DIRECTIVES AWAIT INPUT';
-    masthead.appendChild(mastheadLine1);
-    masthead.appendChild(mastheadLine2);
-    frame.appendChild(masthead);
 
     this.mainMenuEl = document.createElement('div');
     this.mainMenuEl.className = 'title-menu is-visible';
@@ -128,7 +113,7 @@ export class TitleScreen {
 
     const startLead = document.createElement('div');
     startLead.className = 'title-menu-lead';
-    startLead.textContent = 'Select a campaign scenario or launch sandbox autonomy.';
+    startLead.textContent = 'Choose a scenario or launch sandbox mode.';
     this.startMenuEl.appendChild(startLead);
 
     const scenarioWrap = document.createElement('div');
@@ -137,24 +122,12 @@ export class TitleScreen {
     for (const scenario of CAMPAIGN_SCENARIOS) {
       const btn = document.createElement('button');
       btn.className = 'title-btn title-scenario-btn';
-      btn.title = scenario.subtitle;
-
-      if (scenario.cardArt) {
-        const art = document.createElement('div');
-        art.className = 'title-scenario-art';
-        art.style.backgroundImage = `url("${scenario.cardArt}")`;
-        btn.appendChild(art);
-      }
+      btn.title = scenario.label;
 
       const label = document.createElement('div');
       label.className = 'title-scenario-label';
       label.textContent = scenario.label.toUpperCase();
       btn.appendChild(label);
-
-      const sub = document.createElement('div');
-      sub.className = 'title-scenario-subtitle';
-      sub.textContent = scenario.subtitle;
-      btn.appendChild(sub);
 
       const target = document.createElement('div');
       target.className = 'title-scenario-target';
@@ -186,7 +159,7 @@ export class TitleScreen {
     this.statusEl = document.createElement('div');
     this.statusEl.className = 'title-status';
     frame.appendChild(this.statusEl);
-    this.setStatus('Awaiting central committee directive.', 'info');
+    this.setStatus('Select START GAME to continue.', 'info');
 
     this.creditsEl = document.createElement('div');
     this.creditsEl.id = 'title-credits';
@@ -236,21 +209,21 @@ export class TitleScreen {
   private openMainMenu(): void {
     this.mainMenuEl.classList.add('is-visible');
     this.startMenuEl.classList.remove('is-visible');
-    this.setStatus('Awaiting central committee directive.', 'info');
+    this.setStatus('Select START GAME to continue.', 'info');
   }
 
   private openStartMenu(): void {
     this.mainMenuEl.classList.remove('is-visible');
     this.startMenuEl.classList.add('is-visible');
-    this.setStatus('Launch profile selected. Confirm scenario command.', 'info');
+    this.setStatus('Choose a scenario and launch.', 'info');
   }
 
   private toggleCredits(show: boolean): void {
     this.creditsEl.classList.toggle('is-visible', show);
     if (show) {
-      this.setStatus('Cultural bureau dispatching credits roll.', 'info');
+      this.setStatus('Credits open.', 'info');
     } else {
-      this.setStatus('Credits closed. Awaiting command.', 'info');
+      this.setStatus('Credits closed.', 'info');
     }
   }
 
@@ -268,7 +241,7 @@ export class TitleScreen {
     if (this.actionLocked) return;
     this.actionLocked = true;
     this.setActionAvailability(false);
-    this.setStatus('Forwarding launch order to state planners...', 'info');
+    this.setStatus('Launching...', 'info');
 
     try {
       if (this.onBeforeLaunch) {
@@ -276,7 +249,7 @@ export class TitleScreen {
       }
       await action();
     } catch {
-      this.setStatus('Operation failed. Inspect console logs and retry.', 'error');
+      this.setStatus('Launch failed. Check console logs and retry.', 'error');
     } finally {
       this.actionLocked = false;
       this.setActionAvailability(true);
