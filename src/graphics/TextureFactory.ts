@@ -101,18 +101,25 @@ export class TextureFactory {
     const base = new Sprite(source);
     container.addChild(base);
 
+    // Group overlays so they can be masked to the base sprite's silhouette,
+    // preventing tint/lift rectangles from colouring transparent bounding-box areas.
+    const overlays = new Container();
+    const maskSprite = new Sprite(source);
+    container.addChild(maskSprite);
+    overlays.mask = maskSprite;
+
     const tone = new Graphics();
     tone.rect(0, 0, source.width, source.height);
     tone.fill({
       color: mood === 'warm' ? 0x7A634A : 0x7A8FA1,
       alpha: mood === 'warm' ? 0.09 : 0.08,
     });
-    container.addChild(tone);
+    overlays.addChild(tone);
 
     const lift = new Graphics();
     lift.rect(0, 0, source.width, Math.max(8, source.height * 0.46));
     lift.fill({ color: 0xFFFFFF, alpha: 0.055 });
-    container.addChild(lift);
+    overlays.addChild(lift);
 
     const accents = new Graphics();
     const accentColor = this.getBuildingAccentColor(buildingKey);
@@ -131,7 +138,8 @@ export class TextureFactory {
       accents.rect(2, 12, Math.max(4, source.width - 10), 1);
       accents.fill({ color: 0xD9C87A, alpha: 0.22 });
     }
-    container.addChild(accents);
+    overlays.addChild(accents);
+    container.addChild(overlays);
 
     const tex = renderer.generateTexture(container);
     container.destroy();
@@ -165,6 +173,13 @@ export class TextureFactory {
     const base = new Sprite(source);
     container.addChild(base);
 
+    // Group overlays so they can be masked to the base sprite's silhouette,
+    // preventing tint/lift rectangles from colouring transparent bounding-box areas.
+    const overlays = new Container();
+    const maskSprite = new Sprite(source);
+    container.addChild(maskSprite);
+    overlays.mask = maskSprite;
+
     const tone = new Graphics();
     tone.rect(0, 0, source.width, source.height);
 
@@ -185,12 +200,12 @@ export class TextureFactory {
     }
 
     tone.fill({ color, alpha });
-    container.addChild(tone);
+    overlays.addChild(tone);
 
     const lift = new Graphics();
     lift.rect(0, 0, source.width, Math.max(8, source.height * 0.42));
     lift.fill({ color: 0xFFFFFF, alpha: 0.045 });
-    container.addChild(lift);
+    overlays.addChild(lift);
 
     const accents = new Graphics();
     if (style === 'worker_housing') {
@@ -223,8 +238,9 @@ export class TextureFactory {
       accents.rect(4, source.height > 18 ? 16 : 12, Math.max(4, source.width - 14), 1);
       accents.fill({ color: 0xD8B96D, alpha: 0.32 });
     }
-    container.addChild(accents);
+    overlays.addChild(accents);
     addDistrictArchitectureDesign(accents, style, source.width, source.height);
+    container.addChild(overlays);
 
     const tex = renderer.generateTexture(container);
     container.destroy();
@@ -252,10 +268,18 @@ export class TextureFactory {
       const baseSprite = new Sprite(tex);
       container.addChild(baseSprite);
 
+      // Mask the darkening overlay to the base sprite's silhouette so
+      // transparent bounding-box areas stay transparent.
+      const overlays = new Container();
+      const maskSprite = new Sprite(tex);
+      container.addChild(maskSprite);
+      overlays.mask = maskSprite;
+
       const overlay = new Graphics();
       overlay.rect(0, 0, tex.width, tex.height);
       overlay.fill({ color: 0x000000, alpha: 0.15 });
-      container.addChild(overlay);
+      overlays.addChild(overlay);
+      container.addChild(overlays);
 
       const unpoweredTex = renderer.generateTexture(container);
       this.textures.set(`${key}_unpowered`, unpoweredTex);
