@@ -21,7 +21,7 @@ interface ConstructionTween {
 export class BuildingRenderer {
   readonly container: Container;
   private spriteMap: Map<number, Sprite> = new Map();
-  private queueMap: Map<number, Sprite[]> = new Map();
+  private queueMap: Map<number, { sprite: Sprite; baseY: number }[]> = new Map();
   private unpoweredIconMap: Map<number, Text> = new Map();
   private constructionTweens: ConstructionTween[] = [];
   private quality: GraphicsQuality = 'high';
@@ -72,9 +72,9 @@ export class BuildingRenderer {
     this.spriteMap.clear();
 
     for (const queueSprites of this.queueMap.values()) {
-      for (const queue of queueSprites) {
-        this.container.removeChild(queue);
-        queue.destroy();
+      for (const q of queueSprites) {
+        this.container.removeChild(q.sprite);
+        q.sprite.destroy();
       }
     }
     this.queueMap.clear();
@@ -200,9 +200,9 @@ export class BuildingRenderer {
   private clearQueueForBuilding(buildingId: number): void {
     const queueSprites = this.queueMap.get(buildingId);
     if (!queueSprites) return;
-    for (const sprite of queueSprites) {
-      this.container.removeChild(sprite);
-      sprite.destroy();
+    for (const q of queueSprites) {
+      this.container.removeChild(q.sprite);
+      q.sprite.destroy();
     }
     this.queueMap.delete(buildingId);
   }
@@ -473,7 +473,7 @@ export class BuildingRenderer {
 
     const baseX = pos.x - TILE_HALF_W * 0.55;
     const baseY = pos.y + TILE_HALF_H - 4;
-    const sprites: Sprite[] = [];
+    const entries: { sprite: Sprite; baseY: number }[] = [];
 
     for (let i = 0; i < queueCount; i++) {
       // Select citizen variant based on position hash
@@ -487,15 +487,16 @@ export class BuildingRenderer {
       sprite.alpha = 0.78 + (i % 2) * 0.1;
 
       const jitter = (this.tileHash(building.id * 89 + i * 17) % 5) - 2;
+      const spriteBaseY = baseY + i * 3 + (i % 2);
       sprite.x = baseX + i * 6 + jitter * 0.35;
-      sprite.y = baseY + i * 3 + (i % 2);
+      sprite.y = spriteBaseY;
       sprite.zIndex = depthKey(building.gx + def.width, building.gy + def.height) + 1;
 
       this.container.addChild(sprite);
-      sprites.push(sprite);
+      entries.push({ sprite, baseY: spriteBaseY });
     }
 
-    this.queueMap.set(building.id, sprites);
+    this.queueMap.set(building.id, entries);
   }
 
   private computeQueueCount(building: PlacedBuilding, category: string): number {
@@ -526,9 +527,9 @@ export class BuildingRenderer {
   }
 
   updateQueues(now: number): void {
-    for (const [, sprites] of this.queueMap) {
-      for (let i = 0; i < sprites.length; i++) {
-        sprites[i].y += Math.sin(now * 0.002 + i) * 0.5;
+    for (const [, entries] of this.queueMap) {
+      for (let i = 0; i < entries.length; i++) {
+        entries[i].sprite.y = entries[i].baseY + Math.sin(now * 0.002 + i) * 0.5;
       }
     }
   }

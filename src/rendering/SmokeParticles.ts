@@ -193,9 +193,14 @@ export class SmokeParticles {
     const dtSec = dt * 0.001;
     for (const s of this.smogSprites) {
       s.sprite.x += this.windX * dtSec * 1.5;
-      // Wrap back to base when drifted too far
-      if (Math.abs(s.sprite.x - s.baseX) > 60) {
+      const drift = Math.abs(s.sprite.x - s.baseX);
+      // Fade out as smog approaches wrap distance, then reset
+      if (drift > 60) {
         s.sprite.x = s.baseX;
+        s.sprite.alpha = 0.08;
+      } else if (drift > 40) {
+        // Fade from normal alpha to 0 over the last 20px of drift
+        s.sprite.alpha = (0.08 + (s.baseX % 3) * 0.02) * (1 - (drift - 40) / 20);
       }
     }
   }

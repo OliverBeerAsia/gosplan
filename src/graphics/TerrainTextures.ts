@@ -816,33 +816,76 @@ function generateSeasonalForest(renderer: Renderer, variant: number, season: Ter
   const g = new Graphics();
   drawTileDiamond(g);
 
+  // Use variant-based tree positions for diversity (matches summer forest)
+  const treeLayouts = [
+    [
+      { x: -8, y: -5, type: 'c', h: 12 },
+      { x: 6, y: -1, type: 'c', h: 10 },
+      { x: -1, y: 5, type: 'b', h: 11 },
+      { x: -12, y: 2, type: 'c', h: 9 },
+    ],
+    [
+      { x: -10, y: -2, type: 'b', h: 11 },
+      { x: 4, y: -6, type: 'c', h: 13 },
+      { x: 7, y: 4, type: 'c', h: 10 },
+      { x: -4, y: 6, type: 'b', h: 9 },
+      { x: -7, y: -7, type: 'c', h: 8 },
+    ],
+    [
+      { x: -6, y: -6, type: 'c', h: 14 },
+      { x: 3, y: 1, type: 'b', h: 10 },
+      { x: -10, y: 3, type: 'c', h: 11 },
+      { x: 8, y: -3, type: 'c', h: 9 },
+    ],
+    [
+      { x: -3, y: -4, type: 'c', h: 16 },
+      { x: 8, y: 2, type: 'b', h: 10 },
+      { x: -9, y: 1, type: 'b', h: 12 },
+      { x: 4, y: -7, type: 'c', h: 9 },
+      { x: -5, y: 6, type: 'c', h: 8 },
+    ],
+    [
+      { x: -11, y: -3, type: 'c', h: 11 },
+      { x: 2, y: -5, type: 'b', h: 13 },
+      { x: 9, y: 1, type: 'c', h: 10 },
+      { x: -2, y: 4, type: 'c', h: 12 },
+      { x: 6, y: -1, type: 'b', h: 8 },
+    ],
+  ];
+  const trees = treeLayouts[variant];
+
   if (season === 'winter') {
     g.fill(0xDCDCDC);
     drawTileDiamond(g);
     g.stroke({ width: 0.5, color: 0xBBBBBB, alpha: 0.4 });
-    const positions = [
-      { x: -8, y: -4, type: 'c' }, { x: 6, y: -1, type: 'c' },
-      { x: -1, y: 5, type: 'b' }, { x: -10, y: 2, type: 'c' },
-    ];
-    for (const t of positions) {
+    for (const t of trees) {
       const tx = TILE_HALF_W + t.x;
       const ty = TILE_HALF_H + t.y;
       if (t.type === 'b') {
+        // Bare birch trunks in winter (no canopy, just branches)
         g.rect(tx - 1, ty - 4, 2, 6);
         g.fill(PALETTE.BIRCH_TRUNK);
         g.rect(tx - 1, ty - 3, 2, 1);
         g.fill({ color: 0x444444, alpha: 0.3 });
+        // Bare branch stubs
+        g.moveTo(tx, ty - 4);
+        g.lineTo(tx - 3, ty - 6);
+        g.moveTo(tx, ty - 3);
+        g.lineTo(tx + 2, ty - 5);
+        g.stroke({ width: 0.5, color: PALETTE.BIRCH_TRUNK, alpha: 0.6 });
       } else {
+        // Evergreen conifers stay dark green with snow caps
         g.rect(tx - 1, ty - 2, 2, 4);
         g.fill(PALETTE.TREE_TRUNK);
         g.poly([
-          { x: tx, y: ty - 12 }, { x: tx - 5, y: ty - 2 }, { x: tx + 5, y: ty - 2 },
+          { x: tx, y: ty - t.h }, { x: tx - 5, y: ty - 2 }, { x: tx + 5, y: ty - 2 },
         ]);
-        g.fill(0xE8E8E0);
+        g.fill(PALETTE.GREEN_DARK);
+        // Snow cap on top
         g.poly([
-          { x: tx, y: ty - 11 }, { x: tx - 3, y: ty - 4 }, { x: tx + 3, y: ty - 4 },
+          { x: tx, y: ty - t.h - 1 }, { x: tx - 3, y: ty - t.h + 3 }, { x: tx + 3, y: ty - t.h + 3 },
         ]);
-        g.fill({ color: PALETTE.GREEN_DARK, alpha: 0.3 });
+        g.fill({ color: 0xF0F0F0, alpha: 0.7 });
       }
     }
   } else if (season === 'autumn') {
@@ -850,21 +893,27 @@ function generateSeasonalForest(renderer: Renderer, variant: number, season: Ter
     drawTileDiamond(g);
     g.stroke({ width: 0.5, color: 0x4A3A2A, alpha: 0.4 });
     const autumnColors = [0xCC6622, 0xDD4422, 0x558B2F, 0xBB8822, 0xAA3311];
-    const positions = [
-      { x: -7, y: -5, h: 11 }, { x: 6, y: -2, h: 10 },
-      { x: -2, y: 4, h: 9 }, { x: -10, y: 1, h: 8 },
-    ];
-    for (let i = 0; i < positions.length; i++) {
-      const t = positions[i];
+    for (let i = 0; i < trees.length; i++) {
+      const t = trees[i];
       const tx = TILE_HALF_W + t.x;
       const ty = TILE_HALF_H + t.y;
       g.rect(tx - 1, ty - 2, 2, 4);
       g.fill(PALETTE.TREE_TRUNK);
-      g.poly([
-        { x: tx, y: ty - t.h }, { x: tx - 5, y: ty - 2 }, { x: tx + 5, y: ty - 2 },
-      ]);
-      g.fill(autumnColors[(i + variant) % autumnColors.length]);
+      if (t.type === 'c') {
+        // Conifers stay green in autumn
+        g.poly([
+          { x: tx, y: ty - t.h }, { x: tx - 5, y: ty - 2 }, { x: tx + 5, y: ty - 2 },
+        ]);
+        g.fill(PALETTE.GREEN_DARK);
+      } else {
+        // Deciduous trees get autumn colors
+        g.poly([
+          { x: tx, y: ty - t.h }, { x: tx - 5, y: ty - 2 }, { x: tx + 5, y: ty - 2 },
+        ]);
+        g.fill(autumnColors[(i + variant) % autumnColors.length]);
+      }
     }
+    // Fallen leaves
     for (let i = 0; i < 4; i++) {
       const h = varHash(variant * 60 + i, 33);
       const lx = TILE_HALF_W + ((h % 24) - 12);
@@ -873,16 +922,11 @@ function generateSeasonalForest(renderer: Renderer, variant: number, season: Ter
       g.fill({ color: autumnColors[(i + variant) % autumnColors.length], alpha: 0.4 });
     }
   } else {
+    // Spring
     g.fill(0x4A8A30);
     drawTileDiamond(g);
     g.stroke({ width: 0.5, color: 0x3A6A20, alpha: 0.4 });
-    const positions = [
-      { x: -8, y: -4, type: 'c', h: 10 },
-      { x: 6, y: -1, type: 'b', h: 11 },
-      { x: -1, y: 5, type: 'c', h: 9 },
-      { x: -10, y: 2, type: 'b', h: 8 },
-    ];
-    for (const t of positions) {
+    for (const t of trees) {
       const tx = TILE_HALF_W + t.x;
       const ty = TILE_HALF_H + t.y;
       g.ellipse(tx + 1, ty + 2, 4, 2);
@@ -893,6 +937,7 @@ function generateSeasonalForest(renderer: Renderer, variant: number, season: Ter
         drawConifer(g, tx, ty, t.h);
       }
     }
+    // Spring wildflowers
     for (let i = 0; i < 3; i++) {
       const h = varHash(variant * 70 + i, 44);
       const fx = TILE_HALF_W + ((h % 20) - 10);

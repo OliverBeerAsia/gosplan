@@ -77,6 +77,7 @@ export class WindowLightRenderer {
       const isResidential = RESIDENTIAL_IDS.has(def.id);
       const isCivic = CIVIC_IDS.has(def.id);
       if (!isResidential && !isCivic) continue;
+      if (def.powerConsumption && !building.powered) continue;
 
       const centerGx = building.gx + def.width / 2;
       const centerGy = building.gy + def.height / 2;
@@ -137,7 +138,7 @@ export class WindowLightRenderer {
     for (let i = 0; i < this.lights.length; i++) {
       const l = this.lights[i];
       const flicker = Math.sin(now * 0.003 + i * 1.7) * 0.08;
-      l.sprite.alpha = l.baseAlpha * nightIntensity + flicker;
+      l.sprite.alpha = Math.max(0, l.baseAlpha * nightIntensity + flicker);
       l.sprite.visible = true;
     }
   }

@@ -39,7 +39,7 @@ export class WeatherEffects {
 
   private createRainTexture(renderer: Renderer): Texture {
     const g = new Graphics();
-    g.rect(0, 0, 1, 4);
+    g.rect(0, 0, 1, 7);
     g.fill({ color: 0xFFFFFF, alpha: 0.8 });
     const tex = renderer.generateTexture(g);
     g.destroy();
@@ -87,10 +87,18 @@ export class WeatherEffects {
       sprite.alpha = isRain ? 0.4 + Math.random() * 0.3 : 0.5 + Math.random() * 0.3;
       sprite.scale.set(isRain ? 0.8 + Math.random() * 0.5 : 0.5 + Math.random() * 1.0);
 
+      const vx = (Math.random() - 0.5) * 20 + this.windX * 0.5;
+      const vy = isRain ? 150 + Math.random() * 100 : 30 + Math.random() * 40;
+
+      // Tilt rain streaks to match wind direction
+      if (isRain) {
+        sprite.rotation = Math.atan2(vy, vx + this.windX * 0.5);
+      }
+
       const particle: SnowParticle = {
         sprite,
-        vx: (Math.random() - 0.5) * 20 + this.windX * 0.5,
-        vy: isRain ? 150 + Math.random() * 100 : 30 + Math.random() * 40,
+        vx,
+        vy,
         life: isRain ? 3000 + Math.random() * 2000 : 8000 + Math.random() * 4000,
       };
 

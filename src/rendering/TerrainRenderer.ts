@@ -196,14 +196,26 @@ export class TerrainRenderer {
   updateWaterShimmer(now: number): void {
     if (this.quality === 'low') return;
 
-    // Water base color components (PALETTE.WATER = 0x4A6B7C)
-    const baseR = 0x4A;
-    const baseG = 0x6B;
-    const baseB = 0x7C;
-    // Light color (PALETTE.WATER_LIGHT = 0x5D8A9C)
-    const lightR = 0x5D;
-    const lightG = 0x8A;
-    const lightB = 0x9C;
+    // Season-aware water colors
+    let baseR: number, baseG: number, baseB: number;
+    let lightR: number, lightG: number, lightB: number;
+    if (this.currentSeason === 'winter') {
+      // Icy blue-gray
+      baseR = 0x6A; baseG = 0x7A; baseB = 0x8A;
+      lightR = 0x7A; lightG = 0x8E; lightB = 0x9E;
+    } else if (this.currentSeason === 'autumn') {
+      // Darker, muted water
+      baseR = 0x3E; baseG = 0x5A; baseB = 0x6A;
+      lightR = 0x50; lightG = 0x70; lightB = 0x80;
+    } else if (this.currentSeason === 'spring') {
+      // Slightly brighter
+      baseR = 0x4A; baseG = 0x7A; baseB = 0x90;
+      lightR = 0x5A; lightG = 0x8E; lightB = 0xA4;
+    } else {
+      // Summer default (PALETTE.WATER / PALETTE.WATER_LIGHT)
+      baseR = 0x4A; baseG = 0x6B; baseB = 0x7C;
+      lightR = 0x5D; lightG = 0x8A; lightB = 0x9C;
+    }
 
     for (const wt of this.waterTiles) {
       const sprite = this.baseSprites[wt.gx]?.[wt.gy];

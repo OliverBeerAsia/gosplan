@@ -280,8 +280,8 @@ export class Game {
     this.worldContainer.addChild(this.terrainRenderer.container);
     this.worldContainer.addChild(this.propRenderer.container);
     this.worldContainer.addChild(this.zoneRenderer.container);
-    this.worldContainer.addChild(this.trafficRenderer.container);
     this.worldContainer.addChild(this.buildingRenderer.container);
+    this.worldContainer.addChild(this.trafficRenderer.container);
     this.worldContainer.addChild(this.windowLights.container);
     this.worldContainer.addChild(this.smokeParticles.container);
     this.worldContainer.addChild(this.overlayRenderer.container);

@@ -138,7 +138,7 @@ export class TrafficRenderer {
           dot.prevGy = dot.currentGy;
           dot.currentGx = nextRoad.gx;
           dot.currentGy = nextRoad.gy;
-          dot.progress = 0;
+          dot.progress -= 1;
         } else {
           // Remove dot
           this.container.removeChild(dot.sprite);
@@ -152,6 +152,7 @@ export class TrafficRenderer {
       const t = dot.progress;
       dot.sprite.x = dot.fromX + (dot.toX - dot.fromX) * t;
       dot.sprite.y = dot.fromY + (dot.toY - dot.fromY) * t;
+      dot.sprite.zIndex = depthKey(dot.currentGx, dot.currentGy) + 0.5;
     }
   }
 
