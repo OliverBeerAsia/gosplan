@@ -164,7 +164,7 @@
 .resource-label {
   font-size: 10px;
   color: rgba(255, 255, 255, 0.76);
-  font-family: var(--font-pixel);
+  font-family: var(--font-display);
   line-height: 1.2;
   letter-spacing: 0.8px;
 }
@@ -2378,7 +2378,7 @@
 /* ===== ADVISOR PANEL ===== */
 #advisor-panel {
   position: absolute;
-  bottom: 130px;
+  bottom: 142px;
   left: var(--hud-side);
   width: 300px;
   max-height: calc(100vh - 300px);
