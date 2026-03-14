@@ -48,6 +48,7 @@ export class SmokeParticles {
     this.events.on('building:placed', () => { this.rebuildSmog(); this.rebuildSmokePositions(); });
     this.events.on('building:demolished', () => { this.rebuildSmog(); this.rebuildSmokePositions(); });
     this.events.on('game:loaded', () => { this.rebuildSmog(); this.rebuildSmokePositions(); });
+    this.events.on('power:updated', () => this.rebuildSmokePositions());
   }
 
   private createSmokeTexture(renderer: Renderer): Texture {

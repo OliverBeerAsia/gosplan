@@ -36,6 +36,7 @@ export class WindowLightRenderer {
     events.on('building:placed', () => this.rebuild());
     events.on('building:demolished', () => this.rebuild());
     events.on('game:loaded', () => this.rebuild());
+    events.on('power:updated', () => this.rebuild());
     events.on('graphics:quality:changed', ({ quality }) => this.setQuality(quality));
   }
 

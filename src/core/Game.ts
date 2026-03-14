@@ -80,7 +80,7 @@ export class Game {
   private weatherEffects!: WeatherEffects;
   private windowLights!: WindowLightRenderer;
   private trafficRenderer!: TrafficRenderer;
-  private currentSeason: Season = 'winter';
+  private currentSeason: Season | null = null; // null forces season sync on first update
 
   // UI
   private resourceBar!: ResourceBar;
