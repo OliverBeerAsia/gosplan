@@ -81,68 +81,26 @@ export class TextureFactory {
 
       const warmKey = `${key}_var1`;
       if (!this.textures.has(warmKey)) {
-        this.textures.set(warmKey, this.createVariantTexture(renderer, tex, key, 'warm'));
+        this.textures.set(warmKey, this.createVariantTexture(renderer, tex, 'warm'));
       }
 
       const coolKey = `${key}_var2`;
       if (!this.textures.has(coolKey)) {
-        this.textures.set(coolKey, this.createVariantTexture(renderer, tex, key, 'cool'));
+        this.textures.set(coolKey, this.createVariantTexture(renderer, tex, 'cool'));
       }
     }
   }
 
+  /** Create a tinted copy — no overlay rectangles, so no background bleed. */
   private createVariantTexture(
     renderer: Renderer,
     source: Texture,
-    buildingKey: string,
     mood: 'warm' | 'cool'
   ): Texture {
-    const container = new Container();
-    const base = new Sprite(source);
-    container.addChild(base);
-
-    // Group overlays so they can be masked to the base sprite's silhouette,
-    // preventing tint/lift rectangles from colouring transparent bounding-box areas.
-    const overlays = new Container();
-    const maskSprite = new Sprite(source);
-    container.addChild(maskSprite);
-    overlays.mask = maskSprite;
-
-    const tone = new Graphics();
-    tone.rect(0, 0, source.width, source.height);
-    tone.fill({
-      color: mood === 'warm' ? 0x7A634A : 0x7A8FA1,
-      alpha: mood === 'warm' ? 0.09 : 0.08,
-    });
-    overlays.addChild(tone);
-
-    const lift = new Graphics();
-    lift.rect(0, 0, source.width, Math.max(8, source.height * 0.46));
-    lift.fill({ color: 0xFFFFFF, alpha: 0.055 });
-    overlays.addChild(lift);
-
-    const accents = new Graphics();
-    const accentColor = this.getBuildingAccentColor(buildingKey);
-    if (mood === 'warm') {
-      for (let i = 0; i < 8; i++) {
-        const x = 4 + (i * 11) % Math.max(8, source.width - 8);
-        const y = 6 + (i * 7) % Math.max(8, source.height - 8);
-        accents.circle(x, y, 1.1);
-        accents.fill({ color: 0x3B2F25, alpha: 0.18 });
-      }
-      accents.rect(3, source.height > 16 ? source.height - 8 : source.height - 5, Math.max(4, source.width - 6), 2);
-      accents.fill({ color: accentColor, alpha: 0.24 });
-    } else {
-      accents.rect(2, 6, Math.max(4, source.width - 4), 2);
-      accents.fill({ color: accentColor, alpha: 0.26 });
-      accents.rect(2, 12, Math.max(4, source.width - 10), 1);
-      accents.fill({ color: 0xD9C87A, alpha: 0.22 });
-    }
-    overlays.addChild(accents);
-    container.addChild(overlays);
-
-    const tex = renderer.generateTexture(container);
-    container.destroy();
+    const sprite = new Sprite(source);
+    sprite.tint = mood === 'warm' ? 0xF2E8DC : 0xDCE4F0;
+    const tex = renderer.generateTexture(sprite);
+    sprite.destroy();
     return tex;
   }
 
@@ -164,86 +122,26 @@ export class TextureFactory {
     }
   }
 
+  /** Create a district-tinted copy — tint only, no overlay rectangles. */
   private createDistrictVariantTexture(
     renderer: Renderer,
     source: Texture,
     style: DistrictStyle
   ): Texture {
-    const container = new Container();
-    const base = new Sprite(source);
-    container.addChild(base);
+    const sprite = new Sprite(source);
 
-    // Group overlays so they can be masked to the base sprite's silhouette,
-    // preventing tint/lift rectangles from colouring transparent bounding-box areas.
-    const overlays = new Container();
-    const maskSprite = new Sprite(source);
-    container.addChild(maskSprite);
-    overlays.mask = maskSprite;
-
-    const tone = new Graphics();
-    tone.rect(0, 0, source.width, source.height);
-
-    let color = 0x000000;
-    let alpha = 0.08;
     if (style === 'worker_housing') {
-      color = 0x8A755D;
-      alpha = 0.1;
+      sprite.tint = 0xEDE0D0;
     } else if (style === 'heavy_industry') {
-      color = 0x5A5146;
-      alpha = 0.16;
+      sprite.tint = 0xD8D2CC;
     } else if (style === 'scientific_city') {
-      color = 0x7EA9C8;
-      alpha = 0.11;
+      sprite.tint = 0xD8E8F4;
     } else if (style === 'historic_core') {
-      color = 0xA67950;
-      alpha = 0.1;
+      sprite.tint = 0xF0E0C8;
     }
 
-    tone.fill({ color, alpha });
-    overlays.addChild(tone);
-
-    const lift = new Graphics();
-    lift.rect(0, 0, source.width, Math.max(8, source.height * 0.42));
-    lift.fill({ color: 0xFFFFFF, alpha: 0.045 });
-    overlays.addChild(lift);
-
-    const accents = new Graphics();
-    if (style === 'worker_housing') {
-      // Laundry-line style accents.
-      for (let i = 0; i < 3; i++) {
-        const y = 10 + i * 10;
-        accents.rect(4, y, Math.max(6, source.width - 8), 1);
-        accents.fill({ color: 0x3A3026, alpha: 0.26 });
-      }
-    } else if (style === 'heavy_industry') {
-      // Soot and hazard striping.
-      accents.rect(2, Math.max(4, source.height - 10), Math.max(4, source.width - 4), 2);
-      accents.fill({ color: 0xA35A32, alpha: 0.28 });
-      for (let i = 0; i < 8; i++) {
-        const x = 4 + (i * 9) % Math.max(8, source.width - 6);
-        const y = 4 + (i * 5) % Math.max(8, source.height - 6);
-        accents.circle(x, y, 1.2);
-        accents.fill({ color: 0x1C1C1C, alpha: 0.22 });
-      }
-    } else if (style === 'scientific_city') {
-      // Cooler clean bands and cyan glints.
-      accents.rect(3, 6, Math.max(5, source.width - 10), 1);
-      accents.fill({ color: 0xC3E4F3, alpha: 0.3 });
-      accents.rect(3, 13, Math.max(5, source.width - 12), 1);
-      accents.fill({ color: 0xC3E4F3, alpha: 0.24 });
-    } else if (style === 'historic_core') {
-      // Red banners and warm trim.
-      accents.rect(4, 8, Math.max(4, source.width - 12), 2);
-      accents.fill({ color: 0xAA1F23, alpha: 0.35 });
-      accents.rect(4, source.height > 18 ? 16 : 12, Math.max(4, source.width - 14), 1);
-      accents.fill({ color: 0xD8B96D, alpha: 0.32 });
-    }
-    overlays.addChild(accents);
-    addDistrictArchitectureDesign(accents, style, source.width, source.height);
-    container.addChild(overlays);
-
-    const tex = renderer.generateTexture(container);
-    container.destroy();
+    const tex = renderer.generateTexture(sprite);
+    sprite.destroy();
     return tex;
   }
 
@@ -254,36 +152,17 @@ export class TextureFactory {
     return 0xC7C7C7;
   }
 
+  /** Create a darkened copy for unpowered buildings — tint only. */
   private generateUnpoweredVariants(renderer: Renderer): void {
     for (const [key, tex] of this.textures) {
       if (key.endsWith('_unpowered')) continue;
+      if (isNonBuildingTextureKey(key)) continue;
 
-      // Non-building overlays and terrain should not have dark variants.
-      if (isNonBuildingTextureKey(key)) {
-        continue;
-      }
-
-      const container = new Container();
-
-      const baseSprite = new Sprite(tex);
-      container.addChild(baseSprite);
-
-      // Mask the darkening overlay to the base sprite's silhouette so
-      // transparent bounding-box areas stay transparent.
-      const overlays = new Container();
-      const maskSprite = new Sprite(tex);
-      container.addChild(maskSprite);
-      overlays.mask = maskSprite;
-
-      const overlay = new Graphics();
-      overlay.rect(0, 0, tex.width, tex.height);
-      overlay.fill({ color: 0x000000, alpha: 0.15 });
-      overlays.addChild(overlay);
-      container.addChild(overlays);
-
-      const unpoweredTex = renderer.generateTexture(container);
+      const sprite = new Sprite(tex);
+      sprite.tint = 0xB0B0B0; // darken by ~30%
+      const unpoweredTex = renderer.generateTexture(sprite);
       this.textures.set(`${key}_unpowered`, unpoweredTex);
-      container.destroy();
+      sprite.destroy();
     }
   }
 
@@ -295,69 +174,5 @@ export class TextureFactory {
 
   has(key: string): boolean {
     return this.textures.has(key);
-  }
-}
-
-function addDistrictArchitectureDesign(
-  accents: Graphics,
-  style: DistrictStyle,
-  width: number,
-  height: number
-) {
-  if (style === 'worker_housing') {
-    for (let i = 0; i < 3; i++) {
-      const y = height - 12 - i * 10;
-      accents.moveTo(4, y);
-      accents.lineTo(width - 6, y - 2);
-      accents.stroke({ width: 0.8, color: 0x3A2F29, alpha: 0.45 });
-      accents.circle(6 + i * 7, y - 2, 1.2);
-      accents.fill({ color: 0xC5483A, alpha: 0.65 });
-      accents.circle(width - 8 - i * 6, y - 2, 1.2);
-      accents.fill({ color: 0x5B93B9, alpha: 0.55 });
-    }
-  } else if (style === 'heavy_industry') {
-    for (let i = 0; i < 4; i++) {
-      const y = height - 6 - i * 8;
-      const stripeWidth = width - 8;
-      accents.rect(4, y - 2, stripeWidth, 3);
-      accents.fill({ color: 0xC65032, alpha: 0.45 });
-      accents.rect(4, y, stripeWidth * 0.6, 2);
-      accents.fill({ color: 0x1A1A1A, alpha: 0.5 });
-    }
-    accents.moveTo(width - 22, height - 24);
-    accents.lineTo(width - 10, height - 34);
-    accents.stroke({ width: 2, color: 0x5B5B59, alpha: 0.65 });
-    accents.moveTo(width - 22, height - 24);
-    accents.lineTo(width - 22, height - 38);
-    accents.stroke({ width: 2, color: 0x5B5B59, alpha: 0.65 });
-  } else if (style === 'scientific_city') {
-    for (let i = 0; i < 3; i++) {
-      const x = width * 0.3 + i * (width * 0.15);
-      const y = height * 0.35 - i * 4;
-      accents.moveTo(x, y);
-      accents.lineTo(x + 10, y - 6);
-      accents.lineTo(x + 16, y + 4);
-      accents.stroke({ width: 1.2, color: 0x70C0D7, alpha: 0.7 });
-      accents.circle(x + 4, y - 3, 1.5);
-      accents.fill({ color: 0x70C0D7, alpha: 0.6 });
-    }
-    for (let i = 0; i < 2; i++) {
-      const x = width - 12 - i * 8;
-      accents.moveTo(x, 10 + i * 12);
-      accents.lineTo(x, height - 6);
-      accents.stroke({ width: 0.8, color: 0xC3E4F3, alpha: 0.5 });
-    }
-  } else if (style === 'historic_core') {
-    for (let i = 0; i < 2; i++) {
-      const x = 6 + i * 10;
-      const y = height - 18 - i * 8;
-      accents.moveTo(x, y);
-      accents.lineTo(x + 4, y - 10);
-      accents.lineTo(x + 8, y);
-      accents.stroke({ width: 1.4, color: 0xAA1F23, alpha: 0.7 });
-      accents.fill({ color: 0xAA1F23, alpha: 0.65 });
-    }
-    accents.rect(width * 0.3, height - 8, width * 0.4, 5);
-    accents.fill({ color: 0xCDBA6A, alpha: 0.45 });
   }
 }
