@@ -27,6 +27,7 @@ export class TrafficRenderer {
   readonly container: Container;
   private dots: TrafficDot[] = [];
   private carTextures: Texture[] = [];
+  private dotPool: Sprite[] = [];
   private quality: GraphicsQuality = 'high';
   private roadTiles: { gx: number; gy: number }[] = [];
   private maxDots = 40;
@@ -100,7 +101,8 @@ export class TrafficRenderer {
       const removed = this.dots.pop();
       if (!removed) break;
       this.container.removeChild(removed.sprite);
-      removed.sprite.destroy();
+      removed.sprite.visible = false;
+      this.dotPool.push(removed.sprite);
     }
   }
 
@@ -140,10 +142,12 @@ export class TrafficRenderer {
           dot.currentGy = nextRoad.gy;
           dot.progress -= 1;
         } else {
-          // Remove dot
+          // Remove dot — pool sprite and swap-and-pop
           this.container.removeChild(dot.sprite);
-          dot.sprite.destroy();
-          this.dots.splice(i, 1);
+          dot.sprite.visible = false;
+          this.dotPool.push(dot.sprite);
+          this.dots[i] = this.dots[this.dots.length - 1];
+          this.dots.pop();
           continue;
         }
       }
@@ -171,8 +175,15 @@ export class TrafficRenderer {
     const toPos = gridToWorld(target.gx, target.gy, 0);
 
     const texIdx = Math.floor(Math.random() * this.carTextures.length);
-    const sprite = new Sprite(this.carTextures[texIdx]);
-    sprite.anchor.set(0.5);
+    let sprite: Sprite;
+    if (this.dotPool.length > 0) {
+      sprite = this.dotPool.pop()!;
+      sprite.texture = this.carTextures[texIdx];
+      sprite.visible = true;
+    } else {
+      sprite = new Sprite(this.carTextures[texIdx]);
+      sprite.anchor.set(0.5);
+    }
     sprite.x = fromPos.x;
     sprite.y = fromPos.y;
     sprite.zIndex = depthKey(road.gx, road.gy) + 0.5;

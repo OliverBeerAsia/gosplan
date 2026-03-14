@@ -38,6 +38,9 @@ export class TerrainRenderer {
   // Water shimmer tracking
   private waterTiles: { gx: number; gy: number; hash: number }[] = [];
   private currentSeason: TerrainSeason | null = null; // null = summer (default)
+  // Pre-cached shimmer colors (updated on season change)
+  private shimmerBaseR = 0x4A; private shimmerBaseG = 0x6B; private shimmerBaseB = 0x7C;
+  private shimmerLightR = 0x5D; private shimmerLightG = 0x8A; private shimmerLightB = 0x9C;
 
   constructor(
     private grid: Grid,
@@ -192,30 +195,17 @@ export class TerrainRenderer {
     this.decalContainer.visible = quality === 'high';
   }
 
+  private shimmerFrame = 0;
+
   /** Animate water tile tints with a gentle shimmer. Call from the game loop. */
   updateWaterShimmer(now: number): void {
     if (this.quality === 'low') return;
+    // Throttle to every 3rd frame — shimmer is smooth enough at ~20fps
+    if (++this.shimmerFrame % 3 !== 0) return;
 
-    // Season-aware water colors
-    let baseR: number, baseG: number, baseB: number;
-    let lightR: number, lightG: number, lightB: number;
-    if (this.currentSeason === 'winter') {
-      // Icy blue-gray
-      baseR = 0x6A; baseG = 0x7A; baseB = 0x8A;
-      lightR = 0x7A; lightG = 0x8E; lightB = 0x9E;
-    } else if (this.currentSeason === 'autumn') {
-      // Darker, muted water
-      baseR = 0x3E; baseG = 0x5A; baseB = 0x6A;
-      lightR = 0x50; lightG = 0x70; lightB = 0x80;
-    } else if (this.currentSeason === 'spring') {
-      // Slightly brighter
-      baseR = 0x4A; baseG = 0x7A; baseB = 0x90;
-      lightR = 0x5A; lightG = 0x8E; lightB = 0xA4;
-    } else {
-      // Summer default (PALETTE.WATER / PALETTE.WATER_LIGHT)
-      baseR = 0x4A; baseG = 0x6B; baseB = 0x7C;
-      lightR = 0x5D; lightG = 0x8A; lightB = 0x9C;
-    }
+    // Use pre-cached season colors (updated in updateSeason)
+    const baseR = this.shimmerBaseR, baseG = this.shimmerBaseG, baseB = this.shimmerBaseB;
+    const lightR = this.shimmerLightR, lightG = this.shimmerLightG, lightB = this.shimmerLightB;
 
     for (const wt of this.waterTiles) {
       const sprite = this.baseSprites[wt.gx]?.[wt.gy];
@@ -240,6 +230,21 @@ export class TerrainRenderer {
         : null;
 
     this.currentSeason = terrainSeason;
+
+    // Update cached shimmer colors for new season
+    if (terrainSeason === 'winter') {
+      this.shimmerBaseR = 0x6A; this.shimmerBaseG = 0x7A; this.shimmerBaseB = 0x8A;
+      this.shimmerLightR = 0x7A; this.shimmerLightG = 0x8E; this.shimmerLightB = 0x9E;
+    } else if (terrainSeason === 'autumn') {
+      this.shimmerBaseR = 0x3E; this.shimmerBaseG = 0x5A; this.shimmerBaseB = 0x6A;
+      this.shimmerLightR = 0x50; this.shimmerLightG = 0x70; this.shimmerLightB = 0x80;
+    } else if (terrainSeason === 'spring') {
+      this.shimmerBaseR = 0x4A; this.shimmerBaseG = 0x7A; this.shimmerBaseB = 0x90;
+      this.shimmerLightR = 0x5A; this.shimmerLightG = 0x8E; this.shimmerLightB = 0xA4;
+    } else {
+      this.shimmerBaseR = 0x4A; this.shimmerBaseG = 0x6B; this.shimmerBaseB = 0x7C;
+      this.shimmerLightR = 0x5D; this.shimmerLightG = 0x8A; this.shimmerLightB = 0x9C;
+    }
 
     const size = this.grid.size;
     const baseTint = tint ?? 0xFFFFFF;

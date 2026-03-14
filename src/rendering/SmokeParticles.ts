@@ -26,6 +26,8 @@ export class SmokeParticles {
   private smokeTexture: Texture;
   private smogTexture: Texture;
   private smogSprites: SmogSprite[] = [];
+  private spritePool: Sprite[] = [];
+  private smokePositions: { x: number; y: number }[] = [];
   private spawnTimer = 0;
   private spawnInterval = 260;
   private maxParticles = 120;
@@ -43,9 +45,9 @@ export class SmokeParticles {
     this.smokeTexture = this.createSmokeTexture(renderer);
     this.smogTexture = this.createSmogTexture(renderer);
     this.events.on('graphics:quality:changed', ({ quality }) => this.setQuality(quality));
-    this.events.on('building:placed', () => this.rebuildSmog());
-    this.events.on('building:demolished', () => this.rebuildSmog());
-    this.events.on('game:loaded', () => this.rebuildSmog());
+    this.events.on('building:placed', () => { this.rebuildSmog(); this.rebuildSmokePositions(); });
+    this.events.on('building:demolished', () => { this.rebuildSmog(); this.rebuildSmokePositions(); });
+    this.events.on('game:loaded', () => { this.rebuildSmog(); this.rebuildSmokePositions(); });
   }
 
   private createSmokeTexture(renderer: Renderer): Texture {
@@ -75,8 +77,11 @@ export class SmokeParticles {
 
       if (p.life <= 0) {
         this.container.removeChild(p.sprite);
-        p.sprite.destroy();
-        this.particles.splice(i, 1);
+        p.sprite.visible = false;
+        this.spritePool.push(p.sprite);
+        // Swap-and-pop: O(1) removal
+        this.particles[i] = this.particles[this.particles.length - 1];
+        this.particles.pop();
         continue;
       }
 
@@ -89,25 +94,35 @@ export class SmokeParticles {
     this.updateSmog(dt);
   }
 
-  private spawnFromBuildings(): void {
+  private rebuildSmokePositions(): void {
+    this.smokePositions = [];
     const buildings = this.grid.getAllBuildings();
     for (const b of buildings) {
       if (!b.powered) continue;
       const def = this.registry.get(b.defId);
       if (!def) continue;
-
-      // Only factories and power plants smoke
       if (def.id !== 'factory' && def.id !== 'coal_power_plant') continue;
+      const centerGx = b.gx + def.width / 2;
+      const centerGy = b.gy + def.height / 2;
+      this.smokePositions.push(gridToWorld(centerGx, centerGy, 0));
+    }
+  }
 
+  private spawnFromBuildings(): void {
+    for (const pos of this.smokePositions) {
       // Random chance per tick
       if (Math.random() > 0.7) continue;
 
-      const centerGx = b.gx + def.width / 2;
-      const centerGy = b.gy + def.height / 2;
-      const pos = gridToWorld(centerGx, centerGy, 0);
-
-      const sprite = new Sprite(this.smokeTexture);
-      sprite.anchor.set(0.5);
+      // Reuse pooled sprite or create new one
+      let sprite: Sprite;
+      if (this.spritePool.length > 0) {
+        sprite = this.spritePool.pop()!;
+        sprite.visible = true;
+        sprite.scale.set(1);
+      } else {
+        sprite = new Sprite(this.smokeTexture);
+        sprite.anchor.set(0.5);
+      }
       // Offset up from building top
       sprite.x = pos.x + (Math.random() - 0.5) * 15;
       sprite.y = pos.y - 60 - Math.random() * 20;
@@ -222,7 +237,8 @@ export class SmokeParticles {
       const removed = this.particles.pop();
       if (!removed) break;
       this.container.removeChild(removed.sprite);
-      removed.sprite.destroy();
+      removed.sprite.visible = false;
+      this.spritePool.push(removed.sprite);
     }
 
     this.rebuildSmog();

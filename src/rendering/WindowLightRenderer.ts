@@ -22,6 +22,7 @@ export class WindowLightRenderer {
   private glowTexture: Texture;
   private quality: GraphicsQuality = 'high';
   private visible = false;
+  private flickerFrame = 0;
 
   constructor(
     renderer: Renderer,
@@ -132,6 +133,9 @@ export class WindowLightRenderer {
     }
 
     if (!shouldShow) return;
+
+    // Throttle flicker to every 4th frame — 0.08-amplitude sine at 15fps is imperceptible vs 60fps
+    if (++this.flickerFrame % 4 !== 0) return;
 
     // Gentle flicker
     const nightIntensity = Math.max(0, (0.4 - dayFactor) / 0.4); // 0..1

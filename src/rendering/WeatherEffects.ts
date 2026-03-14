@@ -11,6 +11,7 @@ interface SnowParticle {
 export class WeatherEffects {
   readonly container: Container;
   private particles: SnowParticle[] = [];
+  private spritePool: Sprite[] = [];
   private snowTexture: Texture;
   private rainTexture: Texture;
   private active = false;
@@ -61,10 +62,11 @@ export class WeatherEffects {
     this.active = type !== 'none';
 
     if (wasActive && !this.active) {
-      // Clear all particles
+      // Return all particles to pool
       for (const p of this.particles) {
         this.container.removeChild(p.sprite);
-        p.sprite.destroy();
+        p.sprite.visible = false;
+        this.spritePool.push(p.sprite);
       }
       this.particles = [];
     }
@@ -80,8 +82,18 @@ export class WeatherEffects {
     // Spawn new particles
     if (this.particles.length < spawnLimit && Math.random() < spawnRate) {
       const texture = isRain ? this.rainTexture : this.snowTexture;
-      const sprite = new Sprite(texture);
-      sprite.anchor.set(0.5);
+
+      // Reuse pooled sprite or create new one
+      let sprite: Sprite;
+      if (this.spritePool.length > 0) {
+        sprite = this.spritePool.pop()!;
+        sprite.texture = texture;
+        sprite.visible = true;
+        sprite.rotation = 0;
+      } else {
+        sprite = new Sprite(texture);
+        sprite.anchor.set(0.5);
+      }
       sprite.x = Math.random() * this.screenWidth;
       sprite.y = -10;
       sprite.alpha = isRain ? 0.4 + Math.random() * 0.3 : 0.5 + Math.random() * 0.3;
@@ -122,8 +134,11 @@ export class WeatherEffects {
 
       if (p.life <= 0 || p.sprite.y > this.screenHeight + 10) {
         this.container.removeChild(p.sprite);
-        p.sprite.destroy();
-        this.particles.splice(i, 1);
+        p.sprite.visible = false;
+        this.spritePool.push(p.sprite);
+        // Swap-and-pop: O(1) removal
+        this.particles[i] = this.particles[this.particles.length - 1];
+        this.particles.pop();
       }
     }
   }
@@ -144,7 +159,8 @@ export class WeatherEffects {
       const p = this.particles.pop();
       if (!p) break;
       this.container.removeChild(p.sprite);
-      p.sprite.destroy();
+      p.sprite.visible = false;
+      this.spritePool.push(p.sprite);
     }
   }
 }

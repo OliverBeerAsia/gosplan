@@ -526,7 +526,11 @@ export class BuildingRenderer {
     return (r << 16) | (g << 8) | b;
   }
 
+  private queueBobFrame = 0;
+
   updateQueues(now: number): void {
+    // Throttle to every 4th frame — 0.5px sine bob is imperceptible at 15fps vs 60fps
+    if (++this.queueBobFrame % 4 !== 0) return;
     for (const [, entries] of this.queueMap) {
       for (let i = 0; i < entries.length; i++) {
         entries[i].sprite.y = entries[i].baseY + Math.sin(now * 0.002 + i) * 0.5;
