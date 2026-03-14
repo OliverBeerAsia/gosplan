@@ -201,7 +201,9 @@ export function generateBuildingTextures(renderer: Renderer): Map<string, Textur
   // Backward-compatible defaults used by hover ghosts and fallbacks.
   textures.set('road', textures.get('road_5')!);
   textures.set('power_line', textures.get('power_line_5')!);
-  textures.set('park', drawPark(renderer));
+  textures.set('park', drawParkV0(renderer));
+  textures.set('park_v1', drawParkV1(renderer));
+  textures.set('park_v2', drawParkV2(renderer));
   textures.set('monument', drawMonument(renderer));
 
   // New buildings
@@ -213,7 +215,10 @@ export function generateBuildingTextures(renderer: Renderer): Map<string, Textur
   textures.set('plaza', drawPlaza(renderer));
   textures.set('fountain', drawFountain(renderer));
   textures.set('sports_complex', drawSportsComplex(renderer));
-  textures.set('queue_citizen', drawQueueCitizen(renderer));
+  textures.set('queue_citizen', drawQueueCitizen(renderer, 0));
+  textures.set('queue_citizen_1', drawQueueCitizen(renderer, 1));
+  textures.set('queue_citizen_2', drawQueueCitizen(renderer, 2));
+  textures.set('queue_citizen_3', drawQueueCitizen(renderer, 3));
 
   return textures;
 }
@@ -782,7 +787,7 @@ function drawSchool(renderer: Renderer): Texture {
 // ===== INFRASTRUCTURE =====
 
 function drawRoad(renderer: Renderer, mask: number): Texture {
-  // 1x1 tile road with connection-aware markings
+  // 1x1 tile road with connection-aware markings, cracks, curbs, dashed lines
   const g = new Graphics();
 
   // Asphalt diamond
@@ -804,19 +809,28 @@ function drawRoad(renderer: Renderer, mask: number): Texture {
   ];
 
   const hasLinks = (mask & 0xF) !== 0;
+  const popcount = ((mask & 1) + ((mask >> 1) & 1) + ((mask >> 2) & 1) + ((mask >> 3) & 1));
 
   for (const end of endpoints) {
     if ((mask & end.bit) === 0) continue;
 
-    // Asphalt branch.
+    // Asphalt branch
     g.moveTo(cx, cy);
     g.lineTo(end.x, end.y);
     g.stroke({ width: 9, color: PALETTE.ROAD_ASPHALT });
 
-    // Central lane marking.
-    g.moveTo(cx, cy);
-    g.lineTo(end.x, end.y);
-    g.stroke({ width: 1.5, color: PALETTE.ROAD_LINE, alpha: 0.45 });
+    // Dashed center line (3px dash, 4px gap)
+    const dx = end.x - cx;
+    const dy = end.y - cy;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    const steps = Math.floor(len / 7); // 3px line + 4px gap
+    for (let s = 0; s < steps; s++) {
+      const t0 = (s * 7) / len;
+      const t1 = Math.min((s * 7 + 3) / len, 1);
+      g.moveTo(cx + dx * t0, cy + dy * t0);
+      g.lineTo(cx + dx * t1, cy + dy * t1);
+      g.stroke({ width: 1.2, color: PALETTE.ROAD_LINE, alpha: 0.45 });
+    }
   }
 
   if (!hasLinks) {
@@ -824,6 +838,42 @@ function drawRoad(renderer: Renderer, mask: number): Texture {
     g.fill(PALETTE.ROAD_ASPHALT);
     g.circle(cx, cy, 1.2);
     g.fill({ color: PALETTE.ROAD_LINE, alpha: 0.35 });
+  }
+
+  // Curb lines: 1px inset from diamond edge
+  g.poly([
+    { x: TILE_HALF_W, y: 3 },
+    { x: TILE_HALF_W * 2 - 4, y: TILE_HALF_H },
+    { x: TILE_HALF_W, y: TILE_HALF_H * 2 - 3 },
+    { x: 4, y: TILE_HALF_H },
+  ]);
+  g.stroke({ width: 1, color: PALETTE.CURB_LIGHT, alpha: 0.35 });
+
+  // Surface crack lines (deterministic based on mask)
+  const crackHash = mask * 374761393;
+  const crackCount = 3 + (crackHash & 3);
+  for (let i = 0; i < crackCount; i++) {
+    const h = (crackHash + i * 668265263) >>> 0;
+    const x1 = cx + ((h % 30) - 15);
+    const y1 = cy + (((h >> 8) % 20) - 10);
+    const x2 = x1 + ((h >> 16) % 8) - 4;
+    const y2 = y1 + ((h >> 4) % 6) - 3;
+    g.moveTo(x1, y1);
+    g.lineTo(x2, y2);
+    g.stroke({ width: 0.5, color: PALETTE.ROAD_CRACK, alpha: 0.2 });
+  }
+
+  // Crosswalk dashes at 3-way and 4-way junctions
+  if (popcount >= 3) {
+    // Draw crosswalk perpendicular to a connected direction
+    const crossDir = (mask & 1) ? { dx: 1, dy: 0.5 } : { dx: -1, dy: 0.5 };
+    for (let i = -2; i <= 2; i++) {
+      const bx = cx + i * crossDir.dx * 3;
+      const by = cy + i * crossDir.dy * 3;
+      g.moveTo(bx - 2, by - 1);
+      g.lineTo(bx + 2, by + 1);
+      g.stroke({ width: 1.5, color: 0xCCCCCC, alpha: 0.35 });
+    }
   }
 
   // Edge lines
@@ -905,27 +955,186 @@ function drawPowerLine(renderer: Renderer, mask: number): Texture {
 
 // ===== DECORATION =====
 
-function drawPark(renderer: Renderer): Texture {
-  // 1x1 tile with trees
+function drawParkV0(renderer: Renderer): Texture {
+  // Classic park: diagonal gravel path, varied trees, flower dots, benches
   const g = new Graphics();
+  const cx = TILE_HALF_W;
+  const cy = TILE_HALF_H;
 
   // Green ground
   g.poly([
-    { x: TILE_HALF_W, y: 0 },
-    { x: TILE_HALF_W * 2, y: TILE_HALF_H },
-    { x: TILE_HALF_W, y: TILE_HALF_H * 2 },
-    { x: 0, y: TILE_HALF_H },
+    { x: cx, y: 0 },
+    { x: cx * 2, y: cy },
+    { x: cx, y: cy * 2 },
+    { x: 0, y: cy },
   ]);
   g.fill(PALETTE.GREEN);
 
-  // Trees (simple triangle shapes)
-  drawTree(g, TILE_HALF_W - 8, TILE_HALF_H - 6, 8);
-  drawTree(g, TILE_HALF_W + 6, TILE_HALF_H - 2, 7);
-  drawTree(g, TILE_HALF_W - 2, TILE_HALF_H + 4, 6);
+  // Diagonal gravel path (bottom-left to top-right)
+  g.poly([
+    { x: 4, y: cy - 1 },
+    { x: 8, y: cy - 3 },
+    { x: cx * 2 - 8, y: cy + 3 },
+    { x: cx * 2 - 4, y: cy + 1 },
+  ]);
+  g.fill(PALETTE.GROUND_LIGHT);
 
-  // Bench (small detail)
-  g.rect(TILE_HALF_W + 10, TILE_HALF_H + 4, 6, 2);
+  // Varied trees (4-5 trees of different sizes)
+  drawTree(g, cx - 14, cy - 6, 9);
+  drawTree(g, cx - 4, cy - 10, 7);
+  drawTree(g, cx + 10, cy - 4, 8);
+  drawTree(g, cx + 4, cy + 8, 6);
+  drawTree(g, cx - 10, cy + 6, 7);
+
+  // Flower dots
+  const flowerColors = [PALETTE.RED_LIGHT, PALETTE.YELLOW, PALETTE.RED];
+  for (const [fx, fy, ci] of [[cx + 14, cy + 2, 0], [cx - 16, cy + 2, 1], [cx + 2, cy + 12, 2], [cx - 6, cy - 2, 0], [cx + 18, cy + 6, 1]] as [number, number, number][]) {
+    g.circle(fx, fy, 1.2);
+    g.fill(flowerColors[ci]);
+  }
+
+  // Two benches
+  g.rect(cx + 12, cy + 10, 6, 2);
   g.fill(PALETTE.RUST);
+  g.rect(cx - 18, cy + 4, 6, 2);
+  g.fill(PALETTE.RUST);
+
+  const texture = renderer.generateTexture(g);
+  g.destroy();
+  return texture;
+}
+
+function drawParkV1(renderer: Renderer): Texture {
+  // Formal park: cross-shaped path, central circle bed, symmetrical trees, border hedge
+  const g = new Graphics();
+  const cx = TILE_HALF_W;
+  const cy = TILE_HALF_H;
+
+  // Green ground
+  g.poly([
+    { x: cx, y: 0 },
+    { x: cx * 2, y: cy },
+    { x: cx, y: cy * 2 },
+    { x: 0, y: cy },
+  ]);
+  g.fill(PALETTE.GREEN);
+
+  // Cross-shaped path (horizontal iso axis)
+  g.poly([
+    { x: cx, y: cy - 3 },
+    { x: cx * 2 - 6, y: cy },
+    { x: cx, y: cy + 3 },
+    { x: 6, y: cy },
+  ]);
+  g.fill(PALETTE.GROUND_LIGHT);
+
+  // Cross-shaped path (vertical iso axis)
+  g.poly([
+    { x: cx - 3, y: cy - 1.5 },
+    { x: cx, y: cy - 3 },
+    { x: cx + 3, y: cy - 1.5 },
+    { x: cx + 3, y: cy + 1.5 },
+    { x: cx, y: cy + 3 },
+    { x: cx - 3, y: cy + 1.5 },
+  ]);
+  g.fill(PALETTE.GROUND_LIGHT);
+
+  // Central circular flower bed
+  g.circle(cx, cy, 5);
+  g.fill(PALETTE.GREEN_DARK);
+  g.circle(cx, cy, 3);
+  g.fill(PALETTE.RED);
+  g.circle(cx, cy, 1.5);
+  g.fill(PALETTE.YELLOW);
+
+  // Symmetrical trees (4 corners)
+  drawTree(g, cx - 14, cy - 2, 7);
+  drawTree(g, cx + 14, cy - 2, 7);
+  drawTree(g, cx - 6, cy + 8, 7);
+  drawTree(g, cx + 6, cy - 8, 7);
+
+  // Border hedge (inner diamond outline)
+  g.poly([
+    { x: cx, y: 4 },
+    { x: cx * 2 - 8, y: cy },
+    { x: cx, y: cy * 2 - 4 },
+    { x: 8, y: cy },
+  ]);
+  g.stroke({ width: 2, color: PALETTE.GREEN_DARK, alpha: 0.7 });
+
+  const texture = renderer.generateTexture(g);
+  g.destroy();
+  return texture;
+}
+
+function drawParkV2(renderer: Renderer): Texture {
+  // Playground park: sandbox, play structure, one tree, colored dots (children)
+  const g = new Graphics();
+  const cx = TILE_HALF_W;
+  const cy = TILE_HALF_H;
+
+  // Green ground
+  g.poly([
+    { x: cx, y: 0 },
+    { x: cx * 2, y: cy },
+    { x: cx, y: cy * 2 },
+    { x: 0, y: cy },
+  ]);
+  g.fill(PALETTE.GREEN);
+
+  // Sandbox (iso rectangle, sand-colored)
+  g.poly([
+    { x: cx - 10, y: cy - 2 },
+    { x: cx, y: cy - 7 },
+    { x: cx + 10, y: cy - 2 },
+    { x: cx, y: cy + 3 },
+  ]);
+  g.fill(PALETTE.SHORE_SAND);
+  g.poly([
+    { x: cx - 10, y: cy - 2 },
+    { x: cx, y: cy - 7 },
+    { x: cx + 10, y: cy - 2 },
+    { x: cx, y: cy + 3 },
+  ]);
+  g.stroke({ width: 1, color: PALETTE.RUST, alpha: 0.6 });
+
+  // Play structure: slide (left side)
+  // Slide frame
+  g.moveTo(cx - 16, cy + 4);
+  g.lineTo(cx - 16, cy - 6);
+  g.lineTo(cx - 8, cy + 2);
+  g.stroke({ width: 1.5, color: PALETTE.RED, alpha: 0.9 });
+
+  // Slide platform
+  g.rect(cx - 18, cy - 7, 5, 2);
+  g.fill(PALETTE.RED_DARK);
+
+  // Swing frame (right side)
+  // A-frame top bar
+  g.moveTo(cx + 12, cy + 6);
+  g.lineTo(cx + 16, cy - 4);
+  g.lineTo(cx + 20, cy + 6);
+  g.stroke({ width: 1.2, color: PALETTE.IRON, alpha: 0.9 });
+  // Top bar
+  g.moveTo(cx + 14, cy - 2);
+  g.lineTo(cx + 18, cy - 2);
+  g.stroke({ width: 1, color: PALETTE.IRON, alpha: 0.9 });
+  // Swing chain + seat
+  g.moveTo(cx + 16, cy - 2);
+  g.lineTo(cx + 16, cy + 3);
+  g.stroke({ width: 0.8, color: PALETTE.IRON, alpha: 0.7 });
+  g.rect(cx + 14.5, cy + 3, 3, 1);
+  g.fill(PALETTE.RUST);
+
+  // One tree
+  drawTree(g, cx + 6, cy + 10, 7);
+
+  // Colored dots (children playing)
+  const kidColors = [PALETTE.RED_LIGHT, PALETTE.YELLOW, 0x4A90D9, PALETTE.RED];
+  for (const [kx, ky, ci] of [[cx - 4, cy, 0], [cx + 2, cy - 3, 1], [cx - 2, cy + 6, 2], [cx + 14, cy + 4, 3]] as [number, number, number][]) {
+    g.circle(kx, ky, 1.3);
+    g.fill(kidColors[ci]);
+  }
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -1664,20 +1873,41 @@ function drawStar(g: Graphics, cx: number, cy: number, r: number, color: number)
   g.fill(color);
 }
 
-function drawQueueCitizen(renderer: Renderer): Texture {
+function drawQueueCitizen(renderer: Renderer, variant: number): Texture {
   const g = new Graphics();
+
+  // Variant palettes: [coatColor, headgearColor, headgearStyle]
+  const coatColor = [PALETTE.RED_DARK, 0x2A3A5A, 0x6A6A6A, 0x4A5A3A][variant] ?? PALETTE.RED_DARK;
+  const hatColor = [0x3B3B3B, 0x5A4030, 0xC8A060, 0x3A4A2A][variant] ?? 0x3B3B3B;
 
   // Body coat
   g.rect(3, 6, 6, 7);
-  g.fill(PALETTE.RED_DARK);
+  g.fill(coatColor);
 
   // Head
   g.circle(6, 4, 2);
   g.fill(0xD9B38C);
 
-  // Ushanka cap
-  g.rect(3, 1, 6, 2);
-  g.fill(0x3B3B3B);
+  // Headgear varies by variant
+  if (variant === 2) {
+    // Headscarf: triangle shape
+    g.poly([
+      { x: 3, y: 2 },
+      { x: 9, y: 2 },
+      { x: 6, y: 6 },
+    ]);
+    g.fill(hatColor);
+  } else if (variant === 3) {
+    // Peaked cap: flat top with brim
+    g.rect(3, 1.5, 6, 1.5);
+    g.fill(hatColor);
+    g.rect(2.5, 3, 7, 0.8);
+    g.fill(hatColor);
+  } else {
+    // Ushanka / fur cap (variants 0 and 1)
+    g.rect(3, 1, 6, 2);
+    g.fill(hatColor);
+  }
 
   // Legs
   g.rect(4, 13, 1.5, 2);

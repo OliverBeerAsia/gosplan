@@ -476,7 +476,12 @@ export class BuildingRenderer {
     const sprites: Sprite[] = [];
 
     for (let i = 0; i < queueCount; i++) {
-      const sprite = new Sprite(this.textures.get('queue_citizen'));
+      // Select citizen variant based on position hash
+      const variantHash = this.tileHash(building.id * 89 + i * 17);
+      const variantIdx = variantHash % 4;
+      const citizenKey = variantIdx === 0 ? 'queue_citizen' : `queue_citizen_${variantIdx}`;
+      const texKey = this.textures.has(citizenKey) ? citizenKey : 'queue_citizen';
+      const sprite = new Sprite(this.textures.get(texKey));
       sprite.anchor.set(0.5, 1);
       sprite.scale.set(this.quality === 'high' ? 1 : 0.92);
       sprite.alpha = 0.78 + (i % 2) * 0.1;
@@ -518,6 +523,14 @@ export class BuildingRenderer {
     const g = Math.max(0, Math.min(255, ((color >> 8) & 0xFF) + dg));
     const b = Math.max(0, Math.min(255, (color & 0xFF) + db));
     return (r << 16) | (g << 8) | b;
+  }
+
+  updateQueues(now: number): void {
+    for (const [, sprites] of this.queueMap) {
+      for (let i = 0; i < sprites.length; i++) {
+        sprites[i].y += Math.sin(now * 0.002 + i) * 0.5;
+      }
+    }
   }
 
   getBuildingSpriteAt(buildingId: number): Sprite | undefined {

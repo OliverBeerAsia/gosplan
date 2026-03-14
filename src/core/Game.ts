@@ -52,6 +52,9 @@ import { createRuntimeSeed, deriveSeed } from './Rng';
 import { pushBulletinEntry } from './Bulletin';
 import { assetPath } from '../utils/assetPath';
 import { audioManager } from '../audio/AudioManager';
+import { GoatCounterAnalytics } from '../analytics/GoatCounterAnalytics';
+import { WindowLightRenderer } from '../rendering/WindowLightRenderer';
+import { TrafficRenderer } from '../rendering/TrafficRenderer';
 
 export class Game {
   private static readonly STREAMLINED_UI = true;
@@ -75,6 +78,8 @@ export class Game {
   private overlayRenderer!: OverlayRenderer;
   private smokeParticles!: SmokeParticles;
   private weatherEffects!: WeatherEffects;
+  private windowLights!: WindowLightRenderer;
+  private trafficRenderer!: TrafficRenderer;
   private currentSeason: Season = 'winter';
 
   // UI
@@ -96,6 +101,7 @@ export class Game {
   private loadingInterstitial!: LoadingInterstitial;
   private titleScreen!: TitleScreen;
   private openingSplash!: OpeningSplash;
+  private analytics: GoatCounterAnalytics;
   private advancedPanelsVisible = false;
   private bootInProgress = false;
 
@@ -105,6 +111,7 @@ export class Game {
     this.events = new EventBus();
     this.registry = new BuildingRegistry();
     this.textures = new TextureFactory();
+    this.analytics = new GoatCounterAnalytics(this.events);
   }
 
   async init(container: HTMLElement): Promise<void> {
@@ -138,6 +145,7 @@ export class Game {
         ? 'reduced'
         : DEFAULT_UI_SETTINGS.motionPreset,
     });
+    this.analytics.init();
 
     this.openingSplash = new OpeningSplash(this.uiContainer);
     await this.openingSplash.play({
@@ -213,6 +221,7 @@ export class Game {
     if (!loadSave && mode === 'campaign') {
       applyCampaignScenario(this.state, scenarioId);
     }
+    this.analytics.trackGameStart(mode, scenarioId, loadSave);
     this.placer = new BuildingPlacer(this.grid, this.registry, this.events);
 
     if (loadSave) {
@@ -265,11 +274,15 @@ export class Game {
     this.smokeParticles = new SmokeParticles(this.app.renderer, this.grid, this.registry, this.events);
     this.weatherEffects = new WeatherEffects(this.app.renderer);
     this.weatherEffects.setScreenSize(this.app.screen.width, this.app.screen.height);
+    this.windowLights = new WindowLightRenderer(this.app.renderer, this.grid, this.registry, this.events);
+    this.trafficRenderer = new TrafficRenderer(this.app.renderer, this.grid, this.registry, this.events, this.state);
 
     this.worldContainer.addChild(this.terrainRenderer.container);
     this.worldContainer.addChild(this.propRenderer.container);
     this.worldContainer.addChild(this.zoneRenderer.container);
+    this.worldContainer.addChild(this.trafficRenderer.container);
     this.worldContainer.addChild(this.buildingRenderer.container);
+    this.worldContainer.addChild(this.windowLights.container);
     this.worldContainer.addChild(this.smokeParticles.container);
     this.worldContainer.addChild(this.overlayRenderer.container);
 
@@ -595,6 +608,8 @@ export class Game {
     this.overlayRenderer.setQuality(quality);
     this.smokeParticles.setQuality(quality);
     this.weatherEffects.setQuality(quality);
+    this.windowLights.setQuality(quality);
+    this.trafficRenderer.setQuality(quality);
   }
 
   private applyUiSettings(settings: UiSettings): void {
@@ -642,9 +657,23 @@ export class Game {
     // Update construction animations
     this.buildingRenderer.updateConstructionTweens(dt);
 
+    // Update queue citizen shuffle
+    this.buildingRenderer.updateQueues(now);
+
     // Update smoke particles
     if (this.state.speed > 0) {
       this.smokeParticles.update(dt);
+    }
+
+    // Update water shimmer
+    this.terrainRenderer.updateWaterShimmer(now);
+
+    // Update window lights (day/night cycle)
+    this.windowLights.update(now);
+
+    // Update traffic dots on roads
+    if (this.state.speed > 0) {
+      this.trafficRenderer.update(dt);
     }
 
     // Update weather effects
@@ -656,8 +685,24 @@ export class Game {
     if (season !== this.currentSeason) {
       this.currentSeason = season;
       const tint = getSeasonalTerrainTint(season);
-      this.terrainRenderer.updateSeason(tint);
-      this.weatherEffects.setActive(isWinter(season));
+      this.terrainRenderer.updateSeason(tint, season);
+      if (isWinter(season)) {
+        this.weatherEffects.setWeatherType('snow');
+        this.smokeParticles.windX = 6;
+        this.weatherEffects.windX = 8;
+      } else if (season === 'autumn') {
+        this.weatherEffects.setWeatherType('rain');
+        this.smokeParticles.windX = 4;
+        this.weatherEffects.windX = 5;
+      } else if (season === 'spring' && (this.state.week % 4 < 2)) {
+        this.weatherEffects.setWeatherType('rain');
+        this.smokeParticles.windX = 2;
+        this.weatherEffects.windX = 3;
+      } else {
+        this.weatherEffects.setWeatherType('none');
+        this.smokeParticles.windX = 3;
+        this.weatherEffects.windX = 0;
+      }
     }
 
     // Update camera transform

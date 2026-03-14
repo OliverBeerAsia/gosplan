@@ -12,20 +12,34 @@ export class WeatherEffects {
   readonly container: Container;
   private particles: SnowParticle[] = [];
   private snowTexture: Texture;
+  private rainTexture: Texture;
   private active = false;
+  private weatherType: 'none' | 'snow' | 'rain' = 'none';
   private screenWidth = 1200;
   private screenHeight = 800;
   private maxParticles = 50;
   private spawnChance = 0.3;
+  windX = 0;
+  windY = 0;
 
   constructor(renderer: Renderer) {
     this.container = new Container();
     this.snowTexture = this.createSnowTexture(renderer);
+    this.rainTexture = this.createRainTexture(renderer);
   }
 
   private createSnowTexture(renderer: Renderer): Texture {
     const g = new Graphics();
     g.circle(0, 0, 2);
+    g.fill({ color: 0xFFFFFF, alpha: 0.8 });
+    const tex = renderer.generateTexture(g);
+    g.destroy();
+    return tex;
+  }
+
+  private createRainTexture(renderer: Renderer): Texture {
+    const g = new Graphics();
+    g.rect(0, 0, 1, 4);
     g.fill({ color: 0xFFFFFF, alpha: 0.8 });
     const tex = renderer.generateTexture(g);
     g.destroy();
@@ -38,9 +52,15 @@ export class WeatherEffects {
   }
 
   setActive(active: boolean): void {
-    if (this.active === active) return;
-    this.active = active;
-    if (!active) {
+    this.setWeatherType(active ? 'snow' : 'none');
+  }
+
+  setWeatherType(type: 'none' | 'snow' | 'rain'): void {
+    const wasActive = this.active;
+    this.weatherType = type;
+    this.active = type !== 'none';
+
+    if (wasActive && !this.active) {
       // Clear all particles
       for (const p of this.particles) {
         this.container.removeChild(p.sprite);
@@ -53,20 +73,25 @@ export class WeatherEffects {
   update(dt: number): void {
     if (!this.active) return;
 
+    const isRain = this.weatherType === 'rain';
+    const spawnLimit = isRain ? Math.floor(this.maxParticles * 1.5) : this.maxParticles;
+    const spawnRate = isRain ? Math.min(this.spawnChance * 2, 0.8) : this.spawnChance;
+
     // Spawn new particles
-    if (this.particles.length < this.maxParticles && Math.random() < this.spawnChance) {
-      const sprite = new Sprite(this.snowTexture);
+    if (this.particles.length < spawnLimit && Math.random() < spawnRate) {
+      const texture = isRain ? this.rainTexture : this.snowTexture;
+      const sprite = new Sprite(texture);
       sprite.anchor.set(0.5);
       sprite.x = Math.random() * this.screenWidth;
       sprite.y = -10;
-      sprite.alpha = 0.5 + Math.random() * 0.3;
-      sprite.scale.set(0.5 + Math.random() * 1.0);
+      sprite.alpha = isRain ? 0.4 + Math.random() * 0.3 : 0.5 + Math.random() * 0.3;
+      sprite.scale.set(isRain ? 0.8 + Math.random() * 0.5 : 0.5 + Math.random() * 1.0);
 
       const particle: SnowParticle = {
         sprite,
-        vx: (Math.random() - 0.5) * 20, // horizontal drift
-        vy: 30 + Math.random() * 40, // falling speed
-        life: 8000 + Math.random() * 4000,
+        vx: (Math.random() - 0.5) * 20 + this.windX * 0.5,
+        vy: isRain ? 150 + Math.random() * 100 : 30 + Math.random() * 40,
+        life: isRain ? 3000 + Math.random() * 2000 : 8000 + Math.random() * 4000,
       };
 
       this.particles.push(particle);
@@ -78,12 +103,14 @@ export class WeatherEffects {
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
       p.life -= dt;
-      p.sprite.x += p.vx * dtSec;
+      p.sprite.x += p.vx * dtSec + this.windX * dtSec * 0.5;
       p.sprite.y += p.vy * dtSec;
 
-      // Add gentle swaying
-      p.vx += (Math.random() - 0.5) * 5 * dtSec;
-      p.vx = Math.max(-15, Math.min(15, p.vx));
+      // Add gentle swaying (snow only)
+      if (!isRain) {
+        p.vx += (Math.random() - 0.5) * 5 * dtSec;
+        p.vx = Math.max(-15, Math.min(15, p.vx));
+      }
 
       if (p.life <= 0 || p.sprite.y > this.screenHeight + 10) {
         this.container.removeChild(p.sprite);

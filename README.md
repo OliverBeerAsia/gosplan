@@ -242,6 +242,28 @@ The game is hosted on GitHub Pages at `https://oliverbeerasia.github.io/gosplan/
 
 No manual steps are needed — merging to `main` is a production deploy.
 
+## Game Analytics (GoatCounter)
+
+Gameplay analytics are wired through GoatCounter and event tracking is disabled until an endpoint is configured.
+
+1. Open `index.html`.
+2. Set the `goatcounter-endpoint` meta tag to your GoatCounter endpoint, for example:
+   - `<meta name="goatcounter-endpoint" content="https://your-code.goatcounter.com/count" />`
+3. Deploy; tracking starts automatically.
+
+Tracked game events include:
+- session start
+- game start (mode/scenario/load source)
+- building placed/demolished
+- placement rejected (reason + building id)
+- mode changed
+- plan completed
+- campaign ended
+- achievement unlocked
+- event choice selected
+- tutorial completed
+- game saved
+
 ## Release Docs
 
 - `CHANGELOG.md`

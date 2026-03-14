@@ -216,6 +216,12 @@ export class ToolController {
     if (!def) return false;
 
     if (this.state.budget < def.cost) {
+      this.events.emit('placement:rejected', {
+        reason: 'Insufficient rubles',
+        buildingId: this.currentBuildingId,
+        gx,
+        gy,
+      });
       this.events.emit('notification', {
         message: 'Insufficient rubles, Comrade!',
         type: 'error'
@@ -244,6 +250,14 @@ export class ToolController {
       });
       return true;
     }
+    const reason = this.placer.getPlacementRejection(this.currentBuildingId, gx, gy, this.state.budget)
+      ?? 'Placement blocked';
+    this.events.emit('placement:rejected', {
+      reason,
+      buildingId: this.currentBuildingId,
+      gx,
+      gy,
+    });
     return false;
   }
 

@@ -14,13 +14,24 @@ interface Particle {
   maxLife: number;
 }
 
+interface SmogSprite {
+  sprite: Sprite;
+  baseX: number;
+  baseY: number;
+}
+
 export class SmokeParticles {
   readonly container: Container;
   private particles: Particle[] = [];
   private smokeTexture: Texture;
+  private smogTexture: Texture;
+  private smogSprites: SmogSprite[] = [];
   private spawnTimer = 0;
   private spawnInterval = 260;
   private maxParticles = 120;
+  private quality: GraphicsQuality = 'high';
+  windX = 3;
+  windY = 0;
 
   constructor(
     renderer: Renderer,
@@ -30,7 +41,11 @@ export class SmokeParticles {
   ) {
     this.container = new Container();
     this.smokeTexture = this.createSmokeTexture(renderer);
+    this.smogTexture = this.createSmogTexture(renderer);
     this.events.on('graphics:quality:changed', ({ quality }) => this.setQuality(quality));
+    this.events.on('building:placed', () => this.rebuildSmog());
+    this.events.on('building:demolished', () => this.rebuildSmog());
+    this.events.on('game:loaded', () => this.rebuildSmog());
   }
 
   private createSmokeTexture(renderer: Renderer): Texture {
@@ -65,11 +80,13 @@ export class SmokeParticles {
         continue;
       }
 
-      p.sprite.x += p.vx * dt * 0.001;
-      p.sprite.y += p.vy * dt * 0.001;
+      p.sprite.x += (p.vx + this.windX) * dt * 0.001;
+      p.sprite.y += (p.vy + this.windY) * dt * 0.001;
       p.sprite.alpha = (p.life / p.maxLife) * 0.5;
       p.sprite.scale.set(1 + (1 - p.life / p.maxLife) * 1.5);
     }
+
+    this.updateSmog(dt);
   }
 
   private spawnFromBuildings(): void {
@@ -111,7 +128,80 @@ export class SmokeParticles {
     }
   }
 
+  private createSmogTexture(renderer: Renderer): Texture {
+    const g = new Graphics();
+    g.circle(0, 0, 18);
+    g.fill({ color: 0x888888, alpha: 0.1 });
+    g.circle(-4, -4, 12);
+    g.fill({ color: 0x999999, alpha: 0.06 });
+    const tex = renderer.generateTexture(g);
+    g.destroy();
+    return tex;
+  }
+
+  private rebuildSmog(): void {
+    // Clear existing smog
+    for (const s of this.smogSprites) {
+      this.container.removeChild(s.sprite);
+      s.sprite.destroy();
+    }
+    this.smogSprites = [];
+
+    if (this.quality !== 'high') return;
+
+    // Find industrial building clusters
+    const buildings = this.grid.getAllBuildings();
+    const industrialPositions: { x: number; y: number }[] = [];
+
+    for (const b of buildings) {
+      const def = this.registry.get(b.defId);
+      if (!def || def.category !== 'industrial') continue;
+      const centerGx = b.gx + def.width / 2;
+      const centerGy = b.gy + def.height / 2;
+      const pos = gridToWorld(centerGx, centerGy, 0);
+      industrialPositions.push(pos);
+    }
+
+    // Place 2-3 smog sprites per industrial cluster area
+    const placed = new Set<string>();
+    for (const pos of industrialPositions) {
+      // Round to grid to avoid placing too many in the same area
+      const key = `${Math.round(pos.x / 80)}_${Math.round(pos.y / 40)}`;
+      if (placed.has(key)) continue;
+      placed.add(key);
+
+      const count = 2 + (placed.size % 2);
+      for (let i = 0; i < count; i++) {
+        const sprite = new Sprite(this.smogTexture);
+        sprite.anchor.set(0.5);
+        const baseX = pos.x + (i - 1) * 20;
+        const baseY = pos.y - 40 - i * 10;
+        sprite.x = baseX;
+        sprite.y = baseY;
+        sprite.alpha = 0.08 + (i % 3) * 0.02;
+        sprite.scale.set(1.5 + i * 0.3);
+        this.smogSprites.push({ sprite, baseX, baseY });
+        this.container.addChild(sprite);
+      }
+    }
+  }
+
+  /** Drift smog sprites slowly with wind */
+  private updateSmog(dt: number): void {
+    if (this.quality !== 'high' || this.smogSprites.length === 0) return;
+
+    const dtSec = dt * 0.001;
+    for (const s of this.smogSprites) {
+      s.sprite.x += this.windX * dtSec * 1.5;
+      // Wrap back to base when drifted too far
+      if (Math.abs(s.sprite.x - s.baseX) > 60) {
+        s.sprite.x = s.baseX;
+      }
+    }
+  }
+
   setQuality(quality: GraphicsQuality): void {
+    this.quality = quality;
     if (quality === 'low') {
       this.spawnInterval = 520;
       this.maxParticles = 45;
@@ -129,5 +219,7 @@ export class SmokeParticles {
       this.container.removeChild(removed.sprite);
       removed.sprite.destroy();
     }
+
+    this.rebuildSmog();
   }
 }

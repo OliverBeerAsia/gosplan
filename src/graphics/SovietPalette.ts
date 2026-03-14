@@ -75,6 +75,29 @@ export const PALETTE = {
 
   // Dirt
   DIRT_BROWN: 0x8B7D5A,
+  DIRT_WET: 0x6B5D3A,
+  DIRT_CRACK: 0x7A6C48,
+
+  // Shallow water / shore
+  WATER_SHALLOW: 0x5A7A8C,
+  WATER_FOAM: 0xC8D8E0,
+  SHORE_SAND: 0xC8B888,
+
+  // Lichen / moss
+  LICHEN: 0x8A9A6A,
+  LICHEN_DARK: 0x6A7A4A,
+
+  // Road detail
+  ROAD_CRACK: 0x3A3A3A,
+  CURB_LIGHT: 0x6A6A6A,
+
+  // Birch
+  BIRCH_TRUNK: 0xD8D0C0,
+  BIRCH_LEAF: 0x5A9A3A,
+
+  // Night / glow
+  WINDOW_WARM: 0xFFE0A0,
+  LAMP_GLOW: 0xFFE898,
 
   // Weathering / patina
   STAIN_DARK: 0x3A3A38,

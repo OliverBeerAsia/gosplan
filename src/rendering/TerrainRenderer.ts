@@ -6,13 +6,14 @@ import { gridToWorld } from './IsometricRenderer';
 import { TILE_HALF_W, TILE_HALF_H } from '../constants';
 import { GraphicsQuality } from '../core/GameState';
 import { TerrainType } from '../grid/Cell';
+import { TerrainSeason } from '../graphics/TerrainTextures';
 
 const TERRAIN_VARIANTS: Record<TerrainType, number> = {
-  ground: 3,
-  dirt: 3,
-  forest: 3,
-  water: 2,
-  hill: 2,
+  ground: 5,
+  dirt: 5,
+  forest: 5,
+  water: 5,
+  hill: 5,
 };
 
 const TERRAIN_PRIORITY: Record<TerrainType, number> = {
@@ -33,6 +34,10 @@ export class TerrainRenderer {
   private edgeSprites: Sprite[][] = [];
   private decalSprites: Sprite[][] = [];
   private quality: GraphicsQuality = 'high';
+
+  // Water shimmer tracking
+  private waterTiles: { gx: number; gy: number; hash: number }[] = [];
+  private currentSeason: TerrainSeason | null = null; // null = summer (default)
 
   constructor(
     private grid: Grid,
@@ -61,10 +66,18 @@ export class TerrainRenderer {
     return Math.abs(v);
   }
 
-  private getTerrainVariantKey(terrain: TerrainType, gx: number, gy: number): string {
+  private getTerrainVariantKey(terrain: TerrainType, gx: number, gy: number, season?: TerrainSeason | null): string {
     const count = TERRAIN_VARIANTS[terrain] ?? 1;
     if (count <= 1) return terrain;
     const variant = this.tileHash(gx, gy) % count;
+
+    // Try seasonal texture first
+    const s = season ?? this.currentSeason;
+    if (s) {
+      const seasonalKey = `${terrain}_${s}_${variant}`;
+      if (this.textures.has(seasonalKey)) return seasonalKey;
+    }
+
     const key = `${terrain}_${variant}`;
     return this.textures.has(key) ? key : terrain;
   }
@@ -105,6 +118,8 @@ export class TerrainRenderer {
 
   private buildTerrain(): void {
     const size = this.grid.size;
+    this.waterTiles = [];
+
     for (let gx = 0; gx < size; gx++) {
       this.baseSprites[gx] = [];
       this.edgeSprites[gx] = [];
@@ -135,6 +150,10 @@ export class TerrainRenderer {
         decalSprite.alpha = decalKey === 'terrain_decal_0' ? 0 : 0.8;
         this.decalSprites[gx][gy] = decalSprite;
         this.decalContainer.addChild(decalSprite);
+
+        if (cell.terrain === 'water') {
+          this.waterTiles.push({ gx, gy, hash: this.tileHash(gx, gy) });
+        }
       }
     }
   }
@@ -173,19 +192,64 @@ export class TerrainRenderer {
     this.decalContainer.visible = quality === 'high';
   }
 
-  updateSeason(tint: number | null): void {
+  /** Animate water tile tints with a gentle shimmer. Call from the game loop. */
+  updateWaterShimmer(now: number): void {
+    if (this.quality === 'low') return;
+
+    // Water base color components (PALETTE.WATER = 0x4A6B7C)
+    const baseR = 0x4A;
+    const baseG = 0x6B;
+    const baseB = 0x7C;
+    // Light color (PALETTE.WATER_LIGHT = 0x5D8A9C)
+    const lightR = 0x5D;
+    const lightG = 0x8A;
+    const lightB = 0x9C;
+
+    for (const wt of this.waterTiles) {
+      const sprite = this.baseSprites[wt.gx]?.[wt.gy];
+      if (!sprite) continue;
+
+      const phase = now * 0.001 + wt.hash * 0.1;
+      const t = (Math.sin(phase) + 1) * 0.5; // 0..1
+
+      const r = Math.round(baseR + (lightR - baseR) * t * 0.3);
+      const g = Math.round(baseG + (lightG - baseG) * t * 0.3);
+      const b = Math.round(baseB + (lightB - baseB) * t * 0.3);
+
+      sprite.tint = (r << 16) | (g << 8) | b;
+    }
+  }
+
+  updateSeason(tint: number | null, season?: string): void {
+    // Map season string to TerrainSeason (null = summer)
+    const terrainSeason: TerrainSeason | null =
+      season === 'winter' || season === 'autumn' || season === 'spring'
+        ? season
+        : null;
+
+    this.currentSeason = terrainSeason;
+
     const size = this.grid.size;
     const baseTint = tint ?? 0xFFFFFF;
 
     for (let gx = 0; gx < size; gx++) {
       for (let gy = 0; gy < size; gy++) {
+        const cell = this.grid.getCell(gx, gy);
         const base = this.baseSprites[gx]?.[gy];
         const decal = this.decalSprites[gx]?.[gy];
-        if (base) {
-          base.tint = baseTint;
+        if (!cell || !base) continue;
+
+        // Swap to seasonal texture if available
+        const key = this.getTerrainVariantKey(cell.terrain, gx, gy, terrainSeason);
+        base.texture = this.textures.get(key);
+
+        // Water uses shimmer, others get tint for any remaining color correction
+        if (cell.terrain !== 'water') {
+          // Only apply tint if we're using a non-seasonal (summer) texture
+          base.tint = terrainSeason ? 0xFFFFFF : baseTint;
         }
         if (decal) {
-          decal.tint = baseTint;
+          decal.tint = terrainSeason ? 0xFFFFFF : baseTint;
         }
       }
     }

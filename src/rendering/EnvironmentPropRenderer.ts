@@ -14,7 +14,11 @@ type PropTextureKey =
   | 'prop_kiosk'
   | 'prop_courtyard'
   | 'prop_pole'
-  | 'prop_bus_stop';
+  | 'prop_bus_stop'
+  | 'prop_statue'
+  | 'prop_bench'
+  | 'prop_flowerbed'
+  | 'prop_flagpole';
 
 export class EnvironmentPropRenderer {
   readonly container: Container;
@@ -140,7 +144,13 @@ export class EnvironmentPropRenderer {
     }
 
     if (roadCount > 0 && (cell.zone === 'civic' || civicCount > 0)) {
-      if (roll < 28 * density) return hash % 2 === 0 ? 'prop_bus_stop' : 'prop_kiosk';
+      if (roll < 28 * density) {
+        const pick = hash % 4;
+        if (pick === 0) return 'prop_bus_stop';
+        if (pick === 1) return 'prop_kiosk';
+        if (pick === 2) return 'prop_flagpole';
+        return 'prop_statue';
+      }
     }
 
     if (cell.zone === 'industry' || industrialCount > 0) {
@@ -148,15 +158,27 @@ export class EnvironmentPropRenderer {
     }
 
     if (cell.zone === 'housing' || residentialCount > 0) {
-      if (roll < 30 * density) return hash % 3 === 0 ? 'prop_courtyard' : 'prop_fence';
+      if (roll < 30 * density) {
+        const pick = hash % 4;
+        if (pick === 0) return 'prop_courtyard';
+        if (pick === 1) return 'prop_bench';
+        if (pick === 2) return 'prop_flowerbed';
+        return 'prop_fence';
+      }
     }
 
     if (cell.zone === 'green') {
-      if (roll < 40 * density) return 'prop_courtyard';
+      if (roll < 40 * density) {
+        const pick = hash % 4;
+        if (pick === 0) return 'prop_courtyard';
+        if (pick === 1) return 'prop_bench';
+        if (pick === 2) return 'prop_flowerbed';
+        return 'prop_flagpole';
+      }
     }
 
     if (roadCount > 0 && roll < 16 * density) return 'prop_lamp';
-    if (roll < 7 * density) return 'prop_fence';
+    if (roll < 7 * density) return hash % 2 === 0 ? 'prop_fence' : 'prop_bench';
 
     return 'prop_none';
   }

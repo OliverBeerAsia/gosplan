@@ -23,6 +23,7 @@ export type GameEvents = {
   'building:selected': { building: import('../buildings/BuildingTypes').PlacedBuilding } | null;
   'terrain:changed': { gx: number; gy: number };
   'zone:changed': { gx: number; gy: number; zone: import('../grid/Cell').ZoneType };
+  'placement:rejected': { reason: string; buildingId: string; gx: number; gy: number };
   'demand:updated': { residential: number; industrial: number; civic: number };
   'service:updated': { average: number };
   'commute:updated': { commute: number; serviceAccess: number };
@@ -47,6 +48,7 @@ export type GameEvents = {
   'game:loaded': {};
   'game:saved': {};
   'game:save:requested': {};
+  'tutorial:completed': {};
   'ui:settings:changed': { settings: Partial<import('./GameState').UiSettings> };
 };
 

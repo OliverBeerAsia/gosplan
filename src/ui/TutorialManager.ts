@@ -174,5 +174,6 @@ export class TutorialManager {
       message: 'Tutorial complete! Good luck, Comrade Planner.',
       type: 'success',
     });
+    this.events.emit('tutorial:completed', {});
   }
 }
