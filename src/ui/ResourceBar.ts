@@ -46,7 +46,6 @@ export class ResourceBar {
   private powerEl!: HTMLSpanElement;
   private happyEl!: HTMLSpanElement;
   private demandEl!: HTMLSpanElement;
-  private orderEl?: HTMLSpanElement;
   private mobilityEl?: HTMLSpanElement;
   private dateEl!: HTMLSpanElement;
   private trendEls: Record<string, HTMLSpanElement> = {};
@@ -75,7 +74,6 @@ export class ResourceBar {
       ['\u26A1', 'Power', 'power', '0/0 MW', 'Power demand / capacity in megawatts', 'primary'],
       ['\u263A', 'Happiness', 'happy', '50%', 'City-wide happiness affects population growth', 'primary'],
       ['\u2690', 'Demand', 'demand', 'Steady', 'Main growth signal. Positive means expand that zone; negative means hold.', 'secondary'],
-      ['\u262D', 'Stability', 'order', '50% STABLE', 'Composite stability score (loyalty minus unrest). Breakdown in district panel.', 'secondary'],
       ['\u21C4', 'Access', 'mobility', '50% FAIR', 'Average of commute and service access. Breakdown in district panel.', 'secondary'],
     ];
 
@@ -116,7 +114,6 @@ export class ResourceBar {
     this.powerEl = this.el.querySelector('[data-res="power"]')!;
     this.happyEl = this.el.querySelector('[data-res="happy"]')!;
     this.demandEl = this.el.querySelector('[data-res="demand"]')!;
-    this.orderEl = this.el.querySelector('[data-res="order"]') ?? undefined;
     this.mobilityEl = this.el.querySelector('[data-res="mobility"]') ?? undefined;
     this.dateEl = this.el.querySelector('[data-res="date"]')!;
 
@@ -179,11 +176,6 @@ export class ResourceBar {
     this.happyEl.textContent = this.formatHappiness();
     const demandSummary = this.summarizeDemand();
     this.demandEl.textContent = demandSummary.text;
-    if (this.orderEl) {
-      const stability = Math.max(0, Math.min(100, Math.round(this.state.cityLoyalty - this.state.unrestLevel * 0.5)));
-      const stabilityLabel = stability >= 60 ? 'STABLE' : stability >= 35 ? 'SHAKY' : 'UNREST';
-      this.orderEl.textContent = `${stability}% ${stabilityLabel}`;
-    }
     if (this.mobilityEl) {
       const access = Math.max(0, Math.min(100, Math.round((this.state.commuteIndex + this.state.serviceAccessIndex) / 2)));
       const accessLabel = access >= 65 ? 'GOOD' : access >= 40 ? 'FAIR' : 'POOR';
@@ -199,10 +191,6 @@ export class ResourceBar {
     this.powerEl.style.color = powerDeficit ? '#EF5350' : '#FFD700';
     this.happyEl.style.color = this.state.happiness < 30 ? '#EF5350' : this.state.happiness < 50 ? '#FFC107' : '#FFD700';
     this.demandEl.style.color = demandSummary.color;
-    if (this.orderEl) {
-      const stability = Math.max(0, Math.min(100, Math.round(this.state.cityLoyalty - this.state.unrestLevel * 0.5)));
-      this.orderEl.style.color = stability < 35 ? '#EF5350' : stability < 60 ? '#FFC107' : '#FFD700';
-    }
     if (this.mobilityEl) {
       const access = Math.max(0, Math.min(100, Math.round((this.state.commuteIndex + this.state.serviceAccessIndex) / 2)));
       this.mobilityEl.style.color = access < 40 ? '#EF5350' : access < 65 ? '#FFC107' : '#FFD700';

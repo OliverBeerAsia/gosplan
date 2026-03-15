@@ -124,7 +124,7 @@ function createTemplates(): EventTemplate[] {
           id: 'focus_utilities',
           label: 'Fund Utilities Instead',
           description: 'Skip spectacle and prioritize practical infrastructure spending.',
-          summary: 'Practical investments maintained stability, but charisma gains were missed.',
+          summary: 'Practical investments kept citizens content, but charisma gains were missed.',
           effects: { budget: -600, serviceAccessIndex: 4, cityLoyalty: -2, unrestLevel: -1 },
         },
       ],

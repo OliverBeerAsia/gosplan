@@ -30,9 +30,9 @@ const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: 'order_guardian',
-    title: 'Order Guardian',
-    description: 'Reach 75 loyalty while unrest is at or below 20.',
-    condition: (s) => s.cityLoyalty >= 75 && s.unrestLevel <= 20,
+    title: "People's Champion",
+    description: 'Reach 80% city-wide happiness.',
+    condition: (s) => s.happiness >= 80,
   },
   {
     id: 'modernist_mobility',

@@ -52,7 +52,35 @@ const BOOT_LINES = [
   'SYNCHRONIZING MINISTRY TELETYPE',
   'CALIBRATING CONCRETE ALLOCATION',
   'VERIFYING DISTRICT BLUEPRINTS',
+  'ROUTING POWER GRID TOPOLOGY',
+  'INITIALIZING TERRAIN SURVEY',
+  'LOADING BUILDING SCHEMATICS',
+  'DISPATCHING SUPPLY CONVOYS',
+  'COMPILING HOUSING QUOTAS',
+  'CHECKING INDUSTRIAL PERMITS',
+  'MAPPING TRANSPORT CORRIDORS',
 ];
+
+const MODE_INTRO: Record<LoadingMode, string[]> = {
+  campaign: [
+    'COMRADE PLANNER REPORTING:',
+    'The Central Committee has assigned you a critical mandate.',
+    'Build, sustain, and exceed the Five-Year Plan targets.',
+    'The people are counting on you, engineer.',
+  ],
+  sandbox: [
+    'COMRADE PLANNER REPORTING:',
+    'You have been granted full planning autonomy.',
+    'No quotas, no deadlines \u2014 build the city of your vision.',
+    'Resources await your command, engineer.',
+  ],
+  load: [
+    'COMRADE PLANNER REPORTING:',
+    'State archives located. Restoring city blueprints.',
+    'All prior construction data is being verified.',
+    'Resuming operations momentarily, engineer.',
+  ],
+};
 
 export class LoadingInterstitial {
   private el: HTMLDivElement;
@@ -130,12 +158,9 @@ export class LoadingInterstitial {
     void this.music.play();
 
     const reduceMotion = this.prefersReducedMotion();
-    const firstCardIdx = Math.floor(Math.random() * INTERSTITIAL_CARDS.length);
-    const secondCardIdx =
-      (firstCardIdx + 1 + Math.floor(Math.random() * (INTERSTITIAL_CARDS.length - 1)))
-      % INTERSTITIAL_CARDS.length;
+    const cardIdx = Math.floor(Math.random() * INTERSTITIAL_CARDS.length);
 
-    this.applyCard(INTERSTITIAL_CARDS[firstCardIdx], mode);
+    this.applyCard(INTERSTITIAL_CARDS[cardIdx], mode);
     this.progressFillEl.style.width = '0%';
     this.progressValueEl.textContent = '0%';
     this.el.classList.add('visible');
@@ -144,13 +169,14 @@ export class LoadingInterstitial {
 
     const durationMs = Math.max(
       opts.minDurationMs ?? 0,
-      reduceMotion ? 950 : 1700 + Math.floor(Math.random() * 700),
+      reduceMotion ? 1200 : 3800 + Math.floor(Math.random() * 1200),
     );
-    const swapPct = 42 + Math.floor(Math.random() * 22);
-    const bootLine = BOOT_LINES[Math.floor(Math.random() * BOOT_LINES.length)];
     const skipAllowed = Boolean(opts.skipAllowed);
-    let swapped = false;
     let skipRequested = false;
+
+    // Shuffle boot lines and cycle through them
+    const shuffled = [...BOOT_LINES].sort(() => Math.random() - 0.5);
+    let bootIdx = 0;
 
     const onSkip = (): void => {
       if (!skipAllowed) return;
@@ -169,6 +195,7 @@ export class LoadingInterstitial {
 
     await new Promise<void>((resolve) => {
       const started = performance.now();
+      let lastBootSwap = 0;
 
       const tick = (): void => {
         const elapsed = performance.now() - started;
@@ -177,23 +204,27 @@ export class LoadingInterstitial {
           : Math.min(100, Math.floor((elapsed / durationMs) * 100));
         this.progressFillEl.style.width = `${pct}%`;
         this.progressValueEl.textContent = `${pct}%`;
-        this.tickerEl.textContent = `${bootLine} // ${this.currentTicker}${skipAllowed ? ' // PRESS ANY KEY TO SKIP' : ''}`;
 
-        if (!reduceMotion && !swapped && pct >= swapPct) {
-          this.applyCard(INTERSTITIAL_CARDS[secondCardIdx], mode);
-          swapped = true;
+        // Cycle boot lines every ~12% progress
+        const bootStep = Math.floor(pct / 12);
+        if (bootStep > lastBootSwap) {
+          lastBootSwap = bootStep;
+          bootIdx = (bootIdx + 1) % shuffled.length;
         }
+        const bootLine = shuffled[bootIdx];
+
+        this.tickerEl.textContent = `${bootLine} // ${this.currentTicker}${skipAllowed ? ' // PRESS ANY KEY TO SKIP' : ''}`;
 
         if (pct >= 100) {
           const doneId = window.setTimeout(() => {
             this.hide();
             resolve();
-          }, reduceMotion ? 80 : 240);
+          }, reduceMotion ? 80 : 350);
           this.timeoutIds.push(doneId);
           return;
         }
 
-        const waitMs = reduceMotion ? 60 : 55 + Math.floor(Math.random() * 70);
+        const waitMs = reduceMotion ? 60 : 55 + Math.floor(Math.random() * 45);
         const id = window.setTimeout(tick, waitMs);
         this.timeoutIds.push(id);
       };
@@ -218,19 +249,22 @@ export class LoadingInterstitial {
     this.captionEl.textContent = card.caption;
     this.currentTicker = card.ticker;
     this.tickerEl.textContent = card.ticker;
-    this.renderIntroMessage(mode);
   }
 
   private renderIntroMessage(mode: LoadingMode): void {
-    const region = mode === 'sandbox' ? 'Nikolskaya Expanse' : 'Logovia Outpost';
-    const tone = mode === 'load' ? 'State archives recall' : 'Command insists';
-    const lines = [
-      'COMRADE PLANNER CHECKING IN:',
-      tone + ' that you, engineer, secure ' + region + '.',
-      'ISOLATED RURAL STRUCTURES REQUIRE SIX MONTHS OF STEEL & SPIRIT.',
-      'MAINTAIN GRID, SHARE PROGRESS, BROADCAST UPDATES WIRELESSLY.',
-    ];
-    this.introEl.innerHTML = lines.map(line => `<span>${line}</span>`).join('<br/>');
+    const lines = MODE_INTRO[mode];
+    // Build DOM safely without innerHTML
+    while (this.introEl.firstChild) {
+      this.introEl.removeChild(this.introEl.firstChild);
+    }
+    for (let i = 0; i < lines.length; i++) {
+      const span = document.createElement('span');
+      span.textContent = lines[i];
+      this.introEl.appendChild(span);
+      if (i < lines.length - 1) {
+        this.introEl.appendChild(document.createElement('br'));
+      }
+    }
   }
 
   private clearTimers(): void {

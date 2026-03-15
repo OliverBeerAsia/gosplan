@@ -39,7 +39,7 @@ function isoBox(
 
   // Edge outlines for definition
   if (outline) {
-    const edgeStyle = { width: 0.8, color: 0x000000, alpha: 0.18 };
+    const edgeStyle = { width: 1.2, color: 0x000000, alpha: 0.25 };
     // Top diamond
     g.poly([
       { x: ox, y: oy },
@@ -107,7 +107,7 @@ function drawGroundShadow(
     { x: cx + offsetX * 0.4, y: cy + h * 1.1 + offsetY * 0.4 },
     { x: cx - w * 1.1 + offsetX * 0.15, y: cy + offsetY * 0.15 },
   ]);
-  g.fill({ color: 0x101010, alpha: alpha * 0.3 });
+  g.fill({ color: 0x101010, alpha: alpha * 0.45 });
 }
 
 function drawFacadeBands(
@@ -467,7 +467,7 @@ function drawFactory(renderer: Renderer): Texture {
   drawGroundShadow(g, ox, oy + roofDepth + 8, bw * 0.98, 10, 0.24);
 
   isoBox(g, ox, topY, bw, roofDepth, bh, 0x7F95A8, 0x677C8E, 0x4E6373, true);
-  isoBox(g, ox - bw * 0.36, topY + 10, bw * 0.46, roofDepth * 0.45, 34, 0x8EA0AE, 0x738593, 0x5D6E79, true);
+  isoBox(g, ox - bw * 0.36, topY + 10, bw * 0.46, roofDepth * 0.45, 34, 0x6EA0A0, 0x538080, 0x3E6868, true);
 
   // Saw-tooth roof with skylight highlights.
   for (let i = 0; i < 4; i++) {
@@ -534,6 +534,8 @@ function drawFactory(renderer: Renderer): Texture {
 
   drawLeftWindowGrid(g, ox, topY, bw, roofDepth, 2, 4, 12, 13, 7, 10, 3);
   drawRightWindowGrid(g, ox, topY, bw, roofDepth, 2, 4, 12, 13, 7, 10, 0);
+  drawCornice(g, ox, topY, bw, roofDepth);
+  drawBaseBand(g, ox, oy, bw, roofDepth);
 
   // Weathering: heavy soot streaks near chimneys.
   drawWeatherStreak(g, ox - bw * 0.32, topY + 4, ox - bw * 0.3, topY + 28, PALETTE.SOOT, 0.16, 2.5);
@@ -582,17 +584,32 @@ function drawCoalPowerPlant(renderer: Renderer): Texture {
     g.fill(0x64686B);
   }
 
-  // Power emblem.
+  // Window grids on turbine hall
+  drawLeftWindowGrid(g, ox, topY, bw, roofDepth, 2, 3, 12, 14, 8, 10, 2);
+  drawRightWindowGrid(g, ox, topY, bw, roofDepth, 2, 3, 12, 14, 8, 10, 0);
+
+  // Cornice and base band
+  drawCornice(g, ox, topY, bw, roofDepth);
+  drawBaseBand(g, ox, oy, bw, roofDepth);
+
+  // Roof detail
+  drawRoofDetail(g, ox, topY, bw);
+
+  // Power emblem — thick black outline + gold fill for visibility at 0.5x zoom
   g.moveTo(ox + bw * 0.34, oy - 36);
   g.lineTo(ox + bw * 0.4, oy - 22);
   g.lineTo(ox + bw * 0.35, oy - 22);
   g.lineTo(ox + bw * 0.43, oy - 8);
-  g.stroke({ width: 2, color: PALETTE.GOLD });
+  g.stroke({ width: 5, color: 0x000000, alpha: 0.6 });
+  g.moveTo(ox + bw * 0.34, oy - 36);
+  g.lineTo(ox + bw * 0.4, oy - 22);
+  g.lineTo(ox + bw * 0.35, oy - 22);
+  g.lineTo(ox + bw * 0.43, oy - 8);
+  g.stroke({ width: 3, color: PALETTE.GOLD });
 
-  // Weathering: soot streaks on turbine hall.
-  drawWeatherStreak(g, ox - bw * 0.5, topY + roofDepth * 0.6, ox - bw * 0.48, topY + roofDepth * 0.6 + 20, PALETTE.SOOT, 0.18, 2.5);
-  drawWeatherStreak(g, ox - bw * 0.2, topY + roofDepth * 0.5, ox - bw * 0.18, topY + roofDepth * 0.5 + 18, PALETTE.SOOT, 0.15, 2);
-  drawWeatherStreak(g, ox + bw * 0.1, topY + roofDepth * 0.4, ox + bw * 0.12, topY + roofDepth * 0.4 + 16, PALETTE.SOOT, 0.13, 1.5);
+  // Weathering: balanced soot streaks (one left, one right)
+  drawWeatherStreak(g, ox - bw * 0.35, topY + roofDepth * 0.6, ox - bw * 0.33, topY + roofDepth * 0.6 + 20, PALETTE.SOOT, 0.16, 2.5);
+  drawWeatherStreak(g, ox + bw * 0.15, topY + roofDepth * 0.4, ox + bw * 0.17, topY + roofDepth * 0.4 + 18, PALETTE.SOOT, 0.14, 2);
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -637,7 +654,7 @@ function drawPartyHQ(renderer: Renderer): Texture {
   drawRightWindowGrid(g, ox, topY, bw, roofDepth, 4, 3, 10, 13, 6, 8, 0);
   drawCornice(g, ox, topY, bw, roofDepth);
   drawBaseBand(g, ox, oy, bw, roofDepth);
-  drawRoofDetail(g, ox, topY, bw, 3, 0x000000, 0.07);
+  drawRoofDetail(g, ox, topY, bw, 3, 0x000000, 0.14);
 
   // Red banners and crest.
   g.poly([
@@ -800,7 +817,7 @@ function drawSchool(renderer: Renderer): Texture {
 
   // Peaked roof over main block.
   drawPeakedRoof(g, ox, topY, bw, 10, PALETTE.ROOF_TILE_WARM, PALETTE.ROOF_TILE_WARM + 0x181818);
-  drawRoofDetail(g, ox, topY, bw, 2, 0x000000, 0.06);
+  drawRoofDetail(g, ox, topY, bw, 2, 0x000000, 0.12);
 
   // Bell tower element on roof.
   isoBox(g, ox - 3, topY - 8, 5, 3.5, 10, 0xD0AB56, 0xB88F3D, 0x9B7731, false);
@@ -877,7 +894,7 @@ function drawRoad(renderer: Renderer, mask: number): Texture {
       const t1 = Math.min((s * 7 + 3) / len, 1);
       g.moveTo(cx + dx * t0, cy + dy * t0);
       g.lineTo(cx + dx * t1, cy + dy * t1);
-      g.stroke({ width: 1.2, color: PALETTE.ROAD_LINE, alpha: 0.45 });
+      g.stroke({ width: 1.4, color: PALETTE.ROAD_LINE, alpha: 0.55 });
     }
   }
 
@@ -895,11 +912,11 @@ function drawRoad(renderer: Renderer, mask: number): Texture {
     { x: TILE_HALF_W, y: TILE_HALF_H * 2 - 3 },
     { x: 4, y: TILE_HALF_H },
   ]);
-  g.stroke({ width: 1, color: PALETTE.CURB_LIGHT, alpha: 0.35 });
+  g.stroke({ width: 1, color: PALETTE.CURB_LIGHT, alpha: 0.45 });
 
   // Surface crack lines (deterministic based on mask)
   const crackHash = mask * 374761393;
-  const crackCount = 3 + (crackHash & 3);
+  const crackCount = 1 + (crackHash & 1);
   for (let i = 0; i < crackCount; i++) {
     const h = (crackHash + i * 668265263) >>> 0;
     const x1 = cx + ((h % 30) - 15);
@@ -908,7 +925,7 @@ function drawRoad(renderer: Renderer, mask: number): Texture {
     const y2 = y1 + ((h >> 4) % 6) - 3;
     g.moveTo(x1, y1);
     g.lineTo(x2, y2);
-    g.stroke({ width: 0.5, color: PALETTE.ROAD_CRACK, alpha: 0.2 });
+    g.stroke({ width: 0.5, color: PALETTE.ROAD_CRACK, alpha: 0.15 });
   }
 
   // Crosswalk dashes at 3-way and 4-way junctions
@@ -920,7 +937,7 @@ function drawRoad(renderer: Renderer, mask: number): Texture {
       const by = cy + i * crossDir.dy * 3;
       g.moveTo(bx - 2, by - 1);
       g.lineTo(bx + 2, by + 1);
-      g.stroke({ width: 1.5, color: 0xCCCCCC, alpha: 0.35 });
+      g.stroke({ width: 2, color: 0xCCCCCC, alpha: 0.40 });
     }
   }
 
@@ -956,12 +973,12 @@ function drawPowerLine(renderer: Renderer, mask: number): Texture {
   const py = TILE_HALF_H;
   g.moveTo(px, py);
   g.lineTo(px, py - 35);
-  g.stroke({ width: 2, color: PALETTE.POWER_LINE_METAL });
+  g.stroke({ width: 2.5, color: PALETTE.POWER_LINE_METAL });
 
   // Cross arm
   g.moveTo(px - 10, py - 30);
   g.lineTo(px + 10, py - 30);
-  g.stroke({ width: 2, color: PALETTE.POWER_LINE_METAL });
+  g.stroke({ width: 2.5, color: PALETTE.POWER_LINE_METAL });
 
   // Upper cross arm (smaller)
   g.moveTo(px - 6, py - 35);
@@ -984,8 +1001,18 @@ function drawPowerLine(renderer: Renderer, mask: number): Texture {
       end.x,
       end.y
     );
-    g.stroke({ width: 1, color: PALETTE.IRON, alpha: 0.85 });
+    g.stroke({ width: 1.4, color: PALETTE.IRON, alpha: 0.90 });
   }
+
+  // Insulator dots at cross-arm connection points
+  g.circle(px - 10, py - 30, 1.5);
+  g.fill(PALETTE.CONCRETE_LIGHT);
+  g.circle(px + 10, py - 30, 1.5);
+  g.fill(PALETTE.CONCRETE_LIGHT);
+  g.circle(px - 6, py - 35, 1.5);
+  g.fill(PALETTE.CONCRETE_LIGHT);
+  g.circle(px + 6, py - 35, 1.5);
+  g.fill(PALETTE.CONCRETE_LIGHT);
 
   // Base support struts
   g.moveTo(px, py);
@@ -1276,8 +1303,8 @@ function drawPanelak(renderer: Renderer): Texture {
     g.stroke({ width: 0.4, color: PALETTE.PANEL_JOINT, alpha: 0.2 });
   }
 
-  drawLeftWindowGrid(g, ox, topY, bw, roofDepth, 9, 5, 8.5, 10.5, 4.6, 6.5, 1);
-  drawRightWindowGrid(g, ox, topY, bw, roofDepth, 9, 4, 8.5, 10.5, 4.6, 6.5, 0);
+  drawLeftWindowGrid(g, ox, topY, bw, roofDepth, 7, 4, 8.5, 10.5, 6, 8, 1);
+  drawRightWindowGrid(g, ox, topY, bw, roofDepth, 7, 3, 8.5, 10.5, 6, 8, 0);
   drawCornice(g, ox, topY, bw, roofDepth);
   drawBaseBand(g, ox, oy, bw, roofDepth);
 
@@ -1364,9 +1391,12 @@ function drawWarehouse(renderer: Renderer): Texture {
     }
   }
 
-  // Freight markings and socialist badge.
+  drawCornice(g, ox, topY, bw, roofDepth);
+  drawBaseBand(g, ox, oy, bw, roofDepth);
+
+  // Freight markings (ochre loading-bay stripe) and socialist badge.
   g.rect(ox - bw + 7, oy - 2, 24, 2.5);
-  g.fill(0xB16A2E);
+  g.fill(PALETTE.INDUSTRIAL_OCHRE);
   drawStar(g, ox + bw * 0.35, oy - 26, 5, PALETTE.RED);
 
   const texture = renderer.generateTexture(g);
@@ -1546,7 +1576,7 @@ function drawMetroStation(renderer: Renderer): Texture {
   isoBox(g, ox - bw * 0.33, topY + 8, bw * 0.44, roofDepth * 0.38, 22, 0xBEBDBA, 0x9D9C99, 0x848380, false);
   drawCornice(g, ox, topY, bw, roofDepth, PALETTE.GOLD, 0.4);
   drawBaseBand(g, ox, oy, bw, roofDepth);
-  drawRoofDetail(g, ox, topY, bw, 2, 0x000000, 0.07);
+  drawRoofDetail(g, ox, topY, bw, 2, 0x000000, 0.14);
 
   // Portico and steps.
   isoRect(g, ox - bw + 10, oy - 24, 16, 22, 1);
@@ -1759,7 +1789,7 @@ function drawSportsComplex(renderer: Renderer): Texture {
   }
   drawLeftWindowGrid(g, ox, topY, bw, roofDepth, 2, 4, 11, 12, 6, 8, 2);
   drawRightWindowGrid(g, ox, topY, bw, roofDepth, 2, 4, 11, 12, 6, 8, 0);
-  drawRoofDetail(g, ox, topY, bw, 4, 0x000000, 0.06);
+  drawRoofDetail(g, ox, topY, bw, 4, 0x000000, 0.14);
 
   const lightPositions = [
     { x: ox - bw * 0.62, y: topY - 4 },
@@ -1855,7 +1885,7 @@ function drawRoofDetail(
   bw: number,
   lines = 3,
   color = 0x000000,
-  alpha = 0.08
+  alpha = 0.18
 ) {
   for (let i = 1; i <= lines; i++) {
     const t = i / (lines + 1);
@@ -2018,6 +2048,26 @@ function drawCoolingTower(g: Graphics, x: number, y: number, baseRadius: number,
     { x: x + baseRadius, y: y },
   ]);
   g.fill({ color: PALETTE.CONCRETE_DARK, alpha: 0.4 });
+
+  // Horizontal structural ribs
+  for (let i = 1; i <= 4; i++) {
+    const t = i / 5;
+    const ribY = y - height * t;
+    const interpR = ribY >= neckY
+      ? baseRadius + (neckRadius - baseRadius) * ((ribY - y) / (neckY - y))
+      : neckRadius + (topRadius - neckRadius) * ((ribY - neckY) / (y - height - neckY));
+    g.moveTo(x - interpR + 1, ribY);
+    g.lineTo(x + interpR - 1, ribY);
+    g.stroke({ width: 0.8, color: 0x555555, alpha: 0.4 });
+  }
+
+  // Vertical guide lines
+  g.moveTo(x - 3, y);
+  g.lineTo(x - 2, y - height);
+  g.stroke({ width: 0.5, color: 0x555555, alpha: 0.25 });
+  g.moveTo(x + 3, y);
+  g.lineTo(x + 2, y - height);
+  g.stroke({ width: 0.5, color: 0x555555, alpha: 0.25 });
 
   // Neck band and steam.
   g.moveTo(x - neckRadius + 1, neckY);

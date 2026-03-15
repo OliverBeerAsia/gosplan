@@ -38,15 +38,12 @@ export class CampaignDirectorService {
     const budgetHealth = clamp(50 + this.state.budget / 4000, 0, 100);
     const powerBalance = clamp(50 + (this.state.powerCapacity - this.state.powerDemand) * 2, 0, 100);
     const planProgress = planCompletionRatio(this.state) * 100;
-    const orderScore = 100 - this.state.unrestLevel;
-
     const performance = clamp(
       budgetHealth * 0.2 +
-      this.state.happiness * 0.22 +
+      this.state.happiness * 0.30 +
       this.state.commuteIndex * 0.13 +
       this.state.serviceAccessIndex * 0.15 +
       powerBalance * 0.12 +
-      orderScore * 0.08 +
       planProgress * 0.1,
       0,
       100
@@ -63,8 +60,8 @@ export class CampaignDirectorService {
     if (this.state.powerDemand > this.state.powerCapacity) {
       return 'Emergency Electrification Drive: expand generation and connect every district.';
     }
-    if (this.state.unrestLevel > 64) {
-      return 'Public Stability Campaign: expand civic services and neighborhood support.';
+    if (this.state.happiness < 35) {
+      return 'Citizen Welfare Campaign: expand civic services and neighborhood support.';
     }
     if (this.state.residentialDemand > 40) {
       return 'Housing Acceleration Program: prioritize mass residential expansion.';

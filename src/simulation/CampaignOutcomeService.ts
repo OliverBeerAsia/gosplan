@@ -66,14 +66,12 @@ export class CampaignOutcomeService {
 
   private computeScore(): number {
     const score = clamp(
-      this.state.happiness * 0.18 +
-      this.state.cityLoyalty * 0.18 +
-      (100 - this.state.unrestLevel) * 0.15 +
-      this.state.commuteIndex * 0.12 +
-      this.state.serviceAccessIndex * 0.12 +
-      clamp(50 + this.state.budget / 6000, 0, 100) * 0.1 +
-      clamp(this.state.industrialOutput / 35, 0, 100) * 0.1 +
-      clamp(this.state.population / 80, 0, 100) * 0.05,
+      this.state.happiness * 0.40 +
+      this.state.commuteIndex * 0.15 +
+      this.state.serviceAccessIndex * 0.15 +
+      clamp(50 + this.state.budget / 6000, 0, 100) * 0.12 +
+      clamp(this.state.industrialOutput / 35, 0, 100) * 0.12 +
+      clamp(this.state.population / 80, 0, 100) * 0.06,
       0,
       100
     );
@@ -82,23 +80,21 @@ export class CampaignOutcomeService {
 
   private pickEnding(score: number): EndingPayload {
     if (
-      this.state.happiness >= 68 &&
-      this.state.cityLoyalty >= 65 &&
-      this.state.unrestLevel <= 34 &&
+      this.state.happiness >= 72 &&
       this.state.commuteIndex >= 60 &&
       this.state.serviceAccessIndex >= 60
     ) {
       return {
         id: 'model_city',
         title: 'Model Socialist Metropolis',
-        summary: 'Your city balanced growth, welfare, and civic stability with exemplary planning discipline.',
+        summary: 'Your city balanced growth, welfare, and citizen well-being with exemplary planning discipline.',
       };
     }
 
     if (
       this.state.population >= 5000 &&
       this.state.industrialOutput >= 2200 &&
-      (this.state.happiness < 55 || this.state.unrestLevel > 55)
+      this.state.happiness < 50
     ) {
       return {
         id: 'brittle_giant',
@@ -110,8 +106,7 @@ export class CampaignOutcomeService {
     if (
       this.state.commuteIndex >= 62 &&
       this.state.serviceAccessIndex >= 62 &&
-      this.state.unrestLevel < 50 &&
-      this.state.cityLoyalty >= 45
+      this.state.happiness >= 50
     ) {
       return {
         id: 'reformist_transition',

@@ -9,11 +9,11 @@ import { TerrainType } from '../grid/Cell';
 import { TerrainSeason } from '../graphics/TerrainTextures';
 
 const TERRAIN_VARIANTS: Record<TerrainType, number> = {
-  ground: 5,
-  dirt: 5,
-  forest: 5,
-  water: 5,
-  hill: 5,
+  ground: 3,
+  dirt: 3,
+  forest: 3,
+  water: 3,
+  hill: 3,
 };
 
 const TERRAIN_PRIORITY: Record<TerrainType, number> = {
@@ -211,7 +211,7 @@ export class TerrainRenderer {
       const sprite = this.baseSprites[wt.gx]?.[wt.gy];
       if (!sprite) continue;
 
-      const phase = now * 0.001 + wt.hash * 0.1;
+      const phase = now * 0.001 + wt.hash * 0.01;
       const t = (Math.sin(phase) + 1) * 0.5; // 0..1
 
       const r = Math.round(baseR + (lightR - baseR) * t * 0.3);

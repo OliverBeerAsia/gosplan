@@ -8,7 +8,7 @@ export function generateTerrainTextures(renderer: Renderer): Map<string, Texture
   const textures = new Map<string, Texture>();
 
   // Summer (default) variants
-  for (let v = 0; v < 5; v++) {
+  for (let v = 0; v < 3; v++) {
     textures.set(`ground_${v}`, generateGroundTile(renderer, v));
     textures.set(`dirt_${v}`, generateDirtTile(renderer, v));
     textures.set(`forest_${v}`, generateForestTile(renderer, v));
@@ -25,7 +25,7 @@ export function generateTerrainTextures(renderer: Renderer): Map<string, Texture
   // Seasonal variants
   const seasons: TerrainSeason[] = ['winter', 'autumn', 'spring'];
   for (const season of seasons) {
-    for (let v = 0; v < 5; v++) {
+    for (let v = 0; v < 3; v++) {
       textures.set(`ground_${season}_${v}`, generateSeasonalGround(renderer, v, season));
       textures.set(`forest_${season}_${v}`, generateSeasonalForest(renderer, v, season));
       textures.set(`water_${season}_${v}`, generateSeasonalWater(renderer, v, season));
@@ -89,42 +89,19 @@ function generateGroundTile(renderer: Renderer, variant: number): Texture {
   const g = new Graphics();
   const baseColors = [
     PALETTE.GROUND,
-    PALETTE.GROUND + 0x030303,
-    PALETTE.GROUND - 0x020202,
-    PALETTE.GROUND + 0x050201,
-    PALETTE.GROUND - 0x010303,
+    PALETTE.GROUND + 0x010101,
+    PALETTE.GROUND - 0x010101,
   ];
   drawTileDiamond(g);
   g.fill(baseColors[variant]);
 
   // Subtle tile-edge seam
   drawTileDiamond(g);
-  g.stroke({ width: 0.5, color: PALETTE.GROUND_EDGE, alpha: 0.15 });
+  g.stroke({ width: 0.8, color: PALETTE.GROUND_EDGE, alpha: 0.30 });
 
-  // Grass tufts: 8-12 short strokes at varying angles
-  const tufts = 8 + (variant * 3) % 5;
-  for (let i = 0; i < tufts; i++) {
-    const h = varHash(variant * 100 + i, 42);
-    const px = TILE_HALF_W + ((h % 40) - 20) * 0.8;
-    const py = TILE_HALF_H + (((h >> 8) % 24) - 12) * 0.7;
-    const angle = ((h >> 16) % 180) * Math.PI / 180;
-    const len = 2 + (h >> 4) % 3;
-    g.moveTo(px, py);
-    g.lineTo(px + Math.cos(angle) * len, py + Math.sin(angle) * len * 0.5);
-    g.stroke({ width: 0.8, color: PALETTE.GREEN_DARK, alpha: 0.2 + (i % 3) * 0.06 });
-  }
-
-  // 2-3 irregular darker patches
-  const patches = 2 + variant % 2;
-  for (let i = 0; i < patches; i++) {
-    const h = varHash(variant * 50 + i, 99);
-    const px = TILE_HALF_W + ((h % 30) - 15);
-    const py = TILE_HALF_H + (((h >> 8) % 16) - 8);
-    const rx = 4 + (h >> 4) % 3;
-    const ry = 2 + (h >> 6) % 2;
-    g.ellipse(px, py, rx, ry);
-    g.fill({ color: PALETTE.GROUND_EDGE, alpha: 0.12 + variant * 0.02 });
-  }
+  // Subtle center shadow ellipse
+  g.ellipse(TILE_HALF_W, TILE_HALF_H, 6, 3);
+  g.fill({ color: PALETTE.GROUND_EDGE, alpha: 0.10 + variant * 0.02 });
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -134,7 +111,7 @@ function generateGroundTile(renderer: Renderer, variant: number): Texture {
 // ===== WATER =====
 function generateWaterTile(renderer: Renderer, variant: number): Texture {
   const g = new Graphics();
-  const waterColors = [PALETTE.WATER, 0x466578, 0x4A7088, 0x3E6070, 0x507080];
+  const waterColors = [PALETTE.WATER, PALETTE.WATER + 0x010101, PALETTE.WATER - 0x010101];
   drawTileDiamond(g);
   g.fill(waterColors[variant]);
 
@@ -210,16 +187,18 @@ function generateForestTile(renderer: Renderer, variant: number): Texture {
   const g = new Graphics();
   const forestColors = [
     PALETTE.FOREST_GREEN,
-    0x3A6A2C,
-    0x336026,
-    0x3C6830,
-    0x2E5824,
+    PALETTE.FOREST_GREEN + 0x010101,
+    PALETTE.FOREST_GREEN - 0x010101,
   ];
   drawTileDiamond(g);
   g.fill(forestColors[variant]);
 
+  // Dense undergrowth fill
+  g.ellipse(TILE_HALF_W, TILE_HALF_H, 18, 10);
+  g.fill({ color: PALETTE.FOREST_DARK, alpha: 0.25 });
+
   drawTileDiamond(g);
-  g.stroke({ width: 0.5, color: PALETTE.FOREST_DARK, alpha: 0.45 });
+  g.stroke({ width: 0.8, color: PALETTE.FOREST_DARK, alpha: 0.45 });
 
   // 4-5 trees with varied types and heights
   const treePositions = [
@@ -242,23 +221,24 @@ function generateForestTile(renderer: Renderer, variant: number): Texture {
       { x: -10, y: 3, type: 'c', h: 11 },
       { x: 8, y: -3, type: 'c', h: 9 },
     ],
-    [
-      { x: -3, y: -4, type: 'c', h: 16 },
-      { x: 8, y: 2, type: 'b', h: 10 },
-      { x: -9, y: 1, type: 'b', h: 12 },
-      { x: 4, y: -7, type: 'c', h: 9 },
-      { x: -5, y: 6, type: 'c', h: 8 },
-    ],
-    [
-      { x: -11, y: -3, type: 'c', h: 11 },
-      { x: 2, y: -5, type: 'b', h: 13 },
-      { x: 9, y: 1, type: 'c', h: 10 },
-      { x: -2, y: 4, type: 'c', h: 12 },
-      { x: 6, y: -1, type: 'b', h: 8 },
-    ],
   ];
 
   const trees = treePositions[variant];
+
+  // Edge trees at tile boundaries for connectivity
+  const edgeTrees = [
+    { x: -16, y: 0, type: 'c', h: 7 },
+    { x: 16, y: 0, type: 'c', h: 7 },
+    { x: 0, y: -8, type: 'c', h: 6 },
+    { x: 0, y: 8, type: 'c', h: 6 },
+  ];
+
+  for (const t of edgeTrees) {
+    const tx = TILE_HALF_W + t.x;
+    const ty = TILE_HALF_H + t.y;
+    drawConifer(g, tx, ty, t.h);
+  }
+
   for (const t of trees) {
     const tx = TILE_HALF_W + t.x;
     const ty = TILE_HALF_H + t.y;
@@ -281,7 +261,7 @@ function generateForestTile(renderer: Renderer, variant: number): Texture {
 // ===== HILL =====
 function generateHillTile(renderer: Renderer, variant: number): Texture {
   const g = new Graphics();
-  const hillColors = [PALETTE.HILL_GREY, 0x838372, 0x7A7A6E, 0x8E8E80, 0x767668];
+  const hillColors = [PALETTE.HILL_GREY, PALETTE.HILL_GREY + 0x010101, PALETTE.HILL_GREY - 0x010101];
   drawTileDiamond(g);
   g.fill(hillColors[variant]);
 
@@ -349,7 +329,7 @@ function generateHillTile(renderer: Renderer, variant: number): Texture {
 // ===== DIRT =====
 function generateDirtTile(renderer: Renderer, variant: number): Texture {
   const g = new Graphics();
-  const dirtColors = [PALETTE.DIRT_BROWN, 0x7D6F4E, 0x8E7C58, 0x84744C, 0x917F5A];
+  const dirtColors = [PALETTE.DIRT_BROWN, PALETTE.DIRT_BROWN + 0x010101, PALETTE.DIRT_BROWN - 0x010101];
   drawTileDiamond(g);
   g.fill(dirtColors[variant]);
 
@@ -501,7 +481,7 @@ function generateTerrainEdgeMask(renderer: Renderer, mask: number): Texture {
   const drawEdge = (x1: number, y1: number, x2: number, y2: number, nx: number, ny: number) => {
     g.moveTo(x1, y1);
     g.lineTo(x2, y2);
-    g.stroke({ width: 1, color: 0x1B1B1B, alpha: 0.15 });
+    g.stroke({ width: 1, color: 0x1B1B1B, alpha: 0.30 });
 
     g.poly([
       { x: x1, y: y1 },
@@ -509,7 +489,7 @@ function generateTerrainEdgeMask(renderer: Renderer, mask: number): Texture {
       { x: x2 + nx, y: y2 + ny },
       { x: x1 + nx, y: y1 + ny },
     ]);
-    g.fill({ color: 0x000000, alpha: 0.05 });
+    g.fill({ color: 0x000000, alpha: 0.10 });
   };
 
   if (mask & 1) drawEdge(TILE_HALF_W, 0, TILE_HALF_W * 2, TILE_HALF_H, -4, 4);
@@ -557,7 +537,7 @@ function generateTerrainDecal(renderer: Renderer, variant: number): Texture {
 
   for (const p of sets[variant]) {
     g.circle(p.x, p.y, p.r);
-    g.fill({ color: 0x4A4230, alpha: 0.25 });
+    g.fill({ color: 0x4A4230, alpha: 0.12 });
   }
 
   const texture = renderer.generateTexture(g);
@@ -806,7 +786,7 @@ function generateSeasonalGround(renderer: Renderer, variant: number, season: Ter
   }
 
   drawTileDiamond(g);
-  g.stroke({ width: 0.5, color: PALETTE.GROUND_EDGE, alpha: 0.15 });
+  g.stroke({ width: 0.8, color: PALETTE.GROUND_EDGE, alpha: 0.30 });
   const texture = renderer.generateTexture(g);
   g.destroy();
   return texture;

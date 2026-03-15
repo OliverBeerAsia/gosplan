@@ -34,8 +34,8 @@ export const ERA_TOOLBAR_CATEGORIES: Record<number, string[]> = {
 export const ERA_RESOURCE_STATS: Record<number, string[]> = {
   1: ['pop', 'budget', 'power', 'happy'],
   2: ['pop', 'budget', 'power', 'happy', 'demand'],
-  3: ['pop', 'budget', 'power', 'happy', 'demand', 'order', 'mobility'],
-  4: ['pop', 'budget', 'power', 'happy', 'demand', 'order', 'mobility'],
+  3: ['pop', 'budget', 'power', 'happy', 'demand', 'mobility'],
+  4: ['pop', 'budget', 'power', 'happy', 'demand', 'mobility'],
 };
 
 const FIRST_BUILDING_MESSAGES: Record<string, string> = {

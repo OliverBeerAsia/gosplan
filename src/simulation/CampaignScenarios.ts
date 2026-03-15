@@ -17,7 +17,7 @@ export const CAMPAIGN_SCENARIOS: CampaignScenarioDef[] = [
     label: 'Reconstruction Drive',
     subtitle: 'Restore housing and services while rebuilding district confidence.',
     targetYear: 1990,
-    openingDirective: 'Reconstruction Priority: housing, utilities, and district stability.',
+    openingDirective: 'Reconstruction Priority: housing, utilities, and citizen welfare.',
     cardArt: assetPath('assets/ui/scenario-reconstruction.svg'),
     applyStart: (state) => {
       state.budget += 12000;

@@ -99,6 +99,11 @@ export const PALETTE = {
   WINDOW_WARM: 0xFFE0A0,
   LAMP_GLOW: 0xFFE898,
 
+  // Industrial accents
+  INDUSTRIAL_RUST: 0x8B4A2E,
+  INDUSTRIAL_TEAL: 0x4A8B8B,
+  INDUSTRIAL_OCHRE: 0xC89A40,
+
   // Weathering / patina
   STAIN_DARK: 0x3A3A38,
   STAIN_RUST: 0x6B4A32,

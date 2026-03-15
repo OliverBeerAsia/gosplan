@@ -43,17 +43,11 @@ export class DistrictPanel {
 
   private updateHeader(): void {
     const chevron = this.collapsed ? '\u25B8' : '\u25BE';
+    const happiness = Math.round(this.state.happiness);
     if (this.collapsed) {
-      // Summary line
-      const avgLoyalty = this.state.districtStats.length > 0
-        ? Math.round(this.state.districtStats.reduce((s, d) => s + d.loyalty, 0) / this.state.districtStats.length)
-        : this.state.cityLoyalty;
-      const avgUnrest = this.state.districtStats.length > 0
-        ? Math.round(this.state.districtStats.reduce((s, d) => s + d.unrestRisk, 0) / this.state.districtStats.length)
-        : this.state.unrestLevel;
-      this.headerEl.textContent = `${chevron} DISTRICTS \u2014 AVG LOYALTY ${avgLoyalty}% | UNREST ${avgUnrest}%`;
+      this.headerEl.textContent = `${chevron} DISTRICTS \u2014 HAPPINESS ${happiness}%`;
     } else {
-      this.headerEl.textContent = `${chevron} DISTRICTS | LOYALTY ${this.state.cityLoyalty}% | UNREST ${this.state.unrestLevel}%`;
+      this.headerEl.textContent = `${chevron} DISTRICTS | HAPPINESS ${happiness}%`;
     }
   }
 
@@ -88,8 +82,6 @@ export class DistrictPanel {
 
     card.appendChild(this.metricRow('Service', d.serviceAccess));
     card.appendChild(this.metricRow('Commute', d.commute));
-    card.appendChild(this.metricRow('Loyalty', d.loyalty));
-    card.appendChild(this.metricRow('Unrest', d.unrestRisk, true));
 
     return card;
   }
