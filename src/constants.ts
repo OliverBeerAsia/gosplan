@@ -35,7 +35,7 @@ export const ERA_TICK_SPEEDS = [5000, 4000, 3600, 3600];
 // Economy per era
 export const ERA_INCOME_BASE = [800, 700, 500, 500];
 export const ERA_INCOME_PER_POP = [0.7, 0.6, 0.5, 0.5];
-export const ERA_MAINTENANCE_MULT = [0.6, 0.8, 1.0, 1.0];
+export const ERA_MAINTENANCE_MULT = [0.6, 0.8, 1.0, 1.2];
 
 // Building era gates: which era unlocks each building
 export const BUILDING_ERA: Record<string, number> = {

@@ -11,6 +11,8 @@ import { BUILDING_ERA } from '../constants';
 export class EraUnlockOverlay {
   private overlay: HTMLDivElement;
   private previousSpeed = 1;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
+  private lastEra = 0;
 
   constructor(
     private container: HTMLElement,
@@ -31,6 +33,7 @@ export class EraUnlockOverlay {
   private show(era: number): void {
     // Auto-pause
     this.previousSpeed = this.state.speed;
+    this.lastEra = era;
     this.events.emit('speed:changed', { speed: 0 });
 
     const eraName = UIProgressionManager.getEraName(era);
@@ -96,17 +99,37 @@ export class EraUnlockOverlay {
     this.overlay.appendChild(content);
     this.overlay.style.display = '';
 
-    // Also emit advisor congratulation
-    this.events.emit('notification', {
-      message: `Congratulations, Comrade! Your city has entered Era ${era}: ${eraName}!`,
-      type: 'success',
-    });
+    // Keyboard dismiss (Enter, Escape, Space)
+    this.keyHandler = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === 'Escape' || e.key === ' ') {
+        e.preventDefault();
+        this.dismiss();
+      }
+    };
+    document.addEventListener('keydown', this.keyHandler);
+
+    // Stagger the congratulation notification — show after overlay is dismissed
+    // (overlay already displays the same info, so immediate notification is redundant)
   }
 
   private dismiss(): void {
     this.overlay.style.display = 'none';
+    if (this.keyHandler) {
+      document.removeEventListener('keydown', this.keyHandler);
+      this.keyHandler = null;
+    }
     // Resume at previous speed (at least 1x)
     const resumeSpeed = Math.max(1, this.previousSpeed);
     this.events.emit('speed:changed', { speed: resumeSpeed });
+
+    // Show congratulation notification after overlay is dismissed (staggered)
+    const era = this.lastEra;
+    const eraName = UIProgressionManager.getEraName(era);
+    setTimeout(() => {
+      this.events.emit('notification', {
+        message: `Era ${era}: ${eraName} — new buildings and features unlocked!`,
+        type: 'success',
+      });
+    }, 500);
   }
 }

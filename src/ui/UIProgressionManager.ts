@@ -24,15 +24,15 @@ const ERA_DESCRIPTIONS: Record<number, string[]> = {
 
 /** Toolbar category visibility per era */
 export const ERA_TOOLBAR_CATEGORIES: Record<number, string[]> = {
-  1: ['industrial', 'infrastructure'],
-  2: ['industrial', 'infrastructure', 'residential', 'government'],
-  3: ['industrial', 'infrastructure', 'residential', 'government', 'decoration'],
-  4: ['industrial', 'infrastructure', 'residential', 'government', 'decoration'],
+  1: ['residential', 'industrial', 'infrastructure', 'decoration'],
+  2: ['residential', 'industrial', 'infrastructure', 'government', 'decoration'],
+  3: ['residential', 'industrial', 'infrastructure', 'government', 'decoration'],
+  4: ['residential', 'industrial', 'infrastructure', 'government', 'decoration'],
 };
 
 /** Resource bar stat visibility per era */
 export const ERA_RESOURCE_STATS: Record<number, string[]> = {
-  1: ['pop', 'budget', 'power'],
+  1: ['pop', 'budget', 'power', 'happy'],
   2: ['pop', 'budget', 'power', 'happy', 'demand'],
   3: ['pop', 'budget', 'power', 'happy', 'demand', 'order', 'mobility'],
   4: ['pop', 'budget', 'power', 'happy', 'demand', 'order', 'mobility'],
@@ -93,13 +93,23 @@ export class UIProgressionManager {
   }
 
   private showEraHints(era: number): void {
+    // Stagger hints so they don't pile up with the era overlay
+    const delay = 3000; // ms after era change
     if (era === 2) {
-      this.showHint('era2_happiness', 'Happiness now affects growth. Build services and parks to keep citizens content.');
-      this.showHint('era2_plan', 'Five-Year Plans have begun! Complete goals to earn bonus budget.');
+      setTimeout(() => {
+        this.showHint('era2_happiness', 'Happiness now affects growth. Build services and parks.');
+        setTimeout(() => {
+          this.showHint('era2_plan', 'Five-Year Plans have begun! Complete goals for bonus budget.');
+        }, 2000);
+      }, delay);
     }
     if (era === 3) {
-      this.showHint('era3_events', 'City events may now occur. Respond within the deadline or the first option is chosen automatically.');
-      this.showHint('era3_districts', 'District and commute systems are now active. Press I to view the district panel.');
+      setTimeout(() => {
+        this.showHint('era3_events', 'City events may now occur. Respond before the deadline!');
+        setTimeout(() => {
+          this.showHint('era3_districts', 'District and commute systems active. Press I for details.');
+        }, 2000);
+      }, delay);
     }
   }
 

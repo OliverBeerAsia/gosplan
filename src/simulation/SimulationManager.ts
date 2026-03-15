@@ -133,7 +133,7 @@ export class SimulationManager {
     if (era >= 2) this.fiveYearPlan.tick();
     if (era >= 3) this.eventDirector.tick();
     if (era >= 4) this.campaignOutcome.tick();
-    if (era >= 4) this.achievement.tick();
+    if (era >= 2) this.achievement.tick();
     this.milestone.tick();
     this.statsCollector.tick();
 

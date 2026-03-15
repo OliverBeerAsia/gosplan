@@ -91,6 +91,10 @@ export class FiveYearPlanService {
       const scale = 1.5 ** (idx - PLAN_TEMPLATES.length + 1);
       for (const g of goals) {
         g.target = Math.floor(g.target * scale);
+        // Cap happiness targets at 85 (100 is the absolute max)
+        if (g.type === 'happiness' && g.target > 85) {
+          g.target = 85;
+        }
       }
     }
 
