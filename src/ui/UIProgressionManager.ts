@@ -93,22 +93,16 @@ export class UIProgressionManager {
   }
 
   private showEraHints(era: number): void {
-    // Stagger hints so they don't pile up with the era overlay
-    const delay = 3000; // ms after era change
+    // Show a single concise hint per era after a delay (overlay already lists unlocks)
+    const delay = 8000; // ms — well after overlay auto-dismisses (6s)
     if (era === 2) {
       setTimeout(() => {
-        this.showHint('era2_happiness', 'Happiness now affects growth. Build services and parks.');
-        setTimeout(() => {
-          this.showHint('era2_plan', 'Five-Year Plans have begun! Complete goals for bonus budget.');
-        }, 2000);
+        this.showHint('era2_plan', 'Five-Year Plans active — check the plan panel for goals.');
       }, delay);
     }
     if (era === 3) {
       setTimeout(() => {
         this.showHint('era3_events', 'City events may now occur. Respond before the deadline!');
-        setTimeout(() => {
-          this.showHint('era3_districts', 'District and commute systems active. Press I for details.');
-        }, 2000);
       }, delay);
     }
   }

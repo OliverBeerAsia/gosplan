@@ -5,14 +5,14 @@ import { UIProgressionManager } from './UIProgressionManager';
 import { BUILDING_ERA } from '../constants';
 
 /**
- * Full-screen overlay that celebrates era transitions.
- * Auto-pauses, shows new buildings/features, then resumes on dismiss.
+ * Non-blocking banner that celebrates era transitions.
+ * Auto-pauses briefly, shows new unlocks, then auto-dismisses or dismisses on input.
  */
 export class EraUnlockOverlay {
   private overlay: HTMLDivElement;
   private previousSpeed = 1;
   private keyHandler: ((e: KeyboardEvent) => void) | null = null;
-  private lastEra = 0;
+  private autoDismissTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private container: HTMLElement,
@@ -25,6 +25,9 @@ export class EraUnlockOverlay {
     this.overlay.style.display = 'none';
     this.container.appendChild(this.overlay);
 
+    // Click anywhere on backdrop to dismiss
+    this.overlay.addEventListener('click', () => this.dismiss());
+
     this.events.on('era:changed', ({ era }) => {
       this.show(era);
     });
@@ -33,7 +36,6 @@ export class EraUnlockOverlay {
   private show(era: number): void {
     // Auto-pause
     this.previousSpeed = this.state.speed;
-    this.lastEra = era;
     this.events.emit('speed:changed', { speed: 0 });
 
     const eraName = UIProgressionManager.getEraName(era);
@@ -44,92 +46,71 @@ export class EraUnlockOverlay {
       .filter(b => (BUILDING_ERA[b.id] ?? 1) === era)
       .map(b => b.name);
 
-    // Clear previous content safely
     while (this.overlay.firstChild) {
       this.overlay.removeChild(this.overlay.firstChild);
     }
 
     const content = document.createElement('div');
     content.className = 'era-unlock-content';
+    // Stop clicks on content from bubbling to backdrop dismiss
+    content.addEventListener('click', (e) => e.stopPropagation());
 
-    const title = document.createElement('h2');
+    const title = document.createElement('div');
     title.className = 'era-unlock-title';
     title.textContent = `ERA ${era}: ${eraName.toUpperCase()}`;
     content.appendChild(title);
 
-    const subtitle = document.createElement('p');
-    subtitle.className = 'era-unlock-subtitle';
-    subtitle.textContent = 'The city advances to a new stage of development!';
-    content.appendChild(subtitle);
+    // Compact single-line summary of unlocks
+    const items: string[] = [];
+    if (newBuildings.length > 0) items.push(newBuildings.join(', '));
+    for (const u of unlocks) items.push(u);
 
-    if (newBuildings.length > 0) {
-      const buildingSection = document.createElement('div');
-      buildingSection.className = 'era-unlock-section';
-      const bTitle = document.createElement('h3');
-      bTitle.textContent = 'NEW BUILDINGS';
-      buildingSection.appendChild(bTitle);
-      const bList = document.createElement('div');
-      bList.className = 'era-unlock-list';
-      bList.textContent = newBuildings.join(' \u2022 ');
-      buildingSection.appendChild(bList);
-      content.appendChild(buildingSection);
-    }
-
-    if (unlocks.length > 0) {
-      const featureSection = document.createElement('div');
-      featureSection.className = 'era-unlock-section';
-      const fTitle = document.createElement('h3');
-      fTitle.textContent = 'NEW FEATURES';
-      featureSection.appendChild(fTitle);
-      for (const unlock of unlocks) {
-        const item = document.createElement('div');
-        item.className = 'era-unlock-feature';
-        item.textContent = `\u2605 ${unlock}`;
-        featureSection.appendChild(item);
+    if (items.length > 0) {
+      const list = document.createElement('div');
+      list.className = 'era-unlock-list';
+      for (const item of items) {
+        const row = document.createElement('div');
+        row.className = 'era-unlock-item';
+        row.textContent = `\u2605 ${item}`;
+        list.appendChild(row);
       }
-      content.appendChild(featureSection);
+      content.appendChild(list);
     }
 
-    const dismissBtn = document.createElement('button');
-    dismissBtn.className = 'era-unlock-dismiss';
-    dismissBtn.textContent = 'CONTINUE';
-    dismissBtn.addEventListener('click', () => this.dismiss());
-    content.appendChild(dismissBtn);
+    const hint = document.createElement('div');
+    hint.className = 'era-unlock-hint';
+    hint.textContent = 'Press any key or click to continue';
+    content.appendChild(hint);
 
     this.overlay.appendChild(content);
     this.overlay.style.display = '';
 
-    // Keyboard dismiss (Enter, Escape, Space)
+    // Keyboard dismiss (any key)
     this.keyHandler = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' || e.key === 'Escape' || e.key === ' ') {
-        e.preventDefault();
-        this.dismiss();
-      }
+      e.preventDefault();
+      this.dismiss();
     };
     document.addEventListener('keydown', this.keyHandler);
 
-    // Stagger the congratulation notification — show after overlay is dismissed
-    // (overlay already displays the same info, so immediate notification is redundant)
+    // Auto-dismiss after 6 seconds
+    this.autoDismissTimer = setTimeout(() => this.dismiss(), 6000);
   }
 
   private dismiss(): void {
+    if (this.overlay.style.display === 'none') return; // already dismissed
     this.overlay.style.display = 'none';
+
     if (this.keyHandler) {
       document.removeEventListener('keydown', this.keyHandler);
       this.keyHandler = null;
     }
+    if (this.autoDismissTimer) {
+      clearTimeout(this.autoDismissTimer);
+      this.autoDismissTimer = null;
+    }
+
     // Resume at previous speed (at least 1x)
     const resumeSpeed = Math.max(1, this.previousSpeed);
     this.events.emit('speed:changed', { speed: resumeSpeed });
-
-    // Show congratulation notification after overlay is dismissed (staggered)
-    const era = this.lastEra;
-    const eraName = UIProgressionManager.getEraName(era);
-    setTimeout(() => {
-      this.events.emit('notification', {
-        message: `Era ${era}: ${eraName} — new buildings and features unlocked!`,
-        type: 'success',
-      });
-    }, 500);
   }
 }

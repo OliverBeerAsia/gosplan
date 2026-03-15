@@ -2621,80 +2621,57 @@ html.reduced-motion .soviet-ui *::after {
 }
 
 /* Era Unlock Overlay */
+/* Era unlock — lightweight top banner instead of full-screen modal */
 .era-unlock-overlay {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: rgba(10, 10, 10, 0.88);
+  background: rgba(10, 10, 10, 0.45);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  padding-top: 60px;
   pointer-events: auto;
-  animation: eraOverlayFadeIn 0.5s ease-out;
+  cursor: pointer;
+  animation: eraOverlayFadeIn 0.35s ease-out;
 }
 @keyframes eraOverlayFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 .era-unlock-content {
   background: linear-gradient(135deg, #1A0A0A 0%, #2A1010 50%, #1A0A0A 100%);
   border: 2px solid #FFD700;
   border-radius: 4px;
-  padding: 32px 48px;
-  max-width: 520px;
+  padding: 16px 32px 12px;
+  max-width: 420px;
+  width: 90%;
   text-align: center;
-  box-shadow: 0 0 40px rgba(255, 215, 0, 0.15), inset 0 0 20px rgba(255, 215, 0, 0.05);
+  box-shadow: 0 4px 24px rgba(255, 215, 0, 0.12);
+  cursor: default;
 }
 .era-unlock-title {
   font-family: var(--font-display, 'Press Start 2P', monospace);
   color: #FFD700;
-  font-size: 18px;
-  margin: 0 0 8px 0;
-  text-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
+  font-size: 14px;
+  margin: 0 0 10px 0;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
   letter-spacing: 2px;
 }
-.era-unlock-subtitle {
-  color: #C0B89A;
-  font-family: var(--font-ui, 'PT Sans Narrow', sans-serif);
-  font-size: 14px;
-  margin: 0 0 20px 0;
-}
-.era-unlock-section {
-  margin: 16px 0;
-  text-align: left;
-}
-.era-unlock-section h3 {
-  font-family: var(--font-display, 'Press Start 2P', monospace);
-  color: #D32F2F;
-  font-size: 10px;
-  margin: 0 0 8px 0;
-  letter-spacing: 1px;
-}
 .era-unlock-list {
+  text-align: left;
+  margin: 0 0 8px 0;
+}
+.era-unlock-item {
   color: #E0D8C0;
   font-family: var(--font-ui, 'PT Sans Narrow', sans-serif);
   font-size: 13px;
-  line-height: 1.6;
+  padding: 1px 0;
+  line-height: 1.4;
 }
-.era-unlock-feature {
-  color: #E0D8C0;
+.era-unlock-hint {
+  color: #8A8068;
   font-family: var(--font-ui, 'PT Sans Narrow', sans-serif);
-  font-size: 13px;
-  padding: 2px 0;
-}
-.era-unlock-dismiss {
-  margin-top: 24px;
-  padding: 10px 32px;
-  background: #D32F2F;
-  color: #FFD700;
-  border: 1px solid #FFD700;
-  border-radius: 2px;
-  font-family: var(--font-display, 'Press Start 2P', monospace);
   font-size: 11px;
-  cursor: pointer;
-  letter-spacing: 1px;
-  transition: background 0.15s;
-}
-.era-unlock-dismiss:hover {
-  background: #EF5350;
+  margin-top: 6px;
 }
