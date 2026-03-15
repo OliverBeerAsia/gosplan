@@ -5,6 +5,7 @@ import { BuildingRegistry } from '../buildings/BuildingRegistry';
 import { PlacedBuilding } from '../buildings/BuildingTypes';
 import { TerrainType, ZoneType } from '../grid/Cell';
 import { deriveSeed, hashStringToSeed } from './Rng';
+import { ERA_THRESHOLDS, ERA_COUNT } from '../constants';
 
 const SAVE_KEY = 'gosplan_save';
 
@@ -191,6 +192,24 @@ export function loadGame(
       ...DEFAULT_UI_SETTINGS,
       ...(legacy.uiSettings ?? {}),
     };
+
+    // Infer era from peak population for old saves missing era data
+    if (typeof legacy.peakPopulation !== 'number') {
+      mergedState.peakPopulation = mergedState.population;
+    }
+    if (typeof legacy.currentEra !== 'number' || mergedState.currentEra < 1) {
+      let era = 1;
+      for (let i = ERA_COUNT - 1; i >= 0; i--) {
+        if (mergedState.peakPopulation >= ERA_THRESHOLDS[i]) {
+          era = i + 1;
+          break;
+        }
+      }
+      mergedState.currentEra = era;
+    }
+    if (!Array.isArray(legacy.firstBuildingsPlaced)) {
+      mergedState.firstBuildingsPlaced = [];
+    }
 
     return mergedState;
   } catch {

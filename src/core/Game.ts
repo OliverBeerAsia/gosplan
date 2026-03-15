@@ -39,6 +39,8 @@ import { AdvisorPanel } from '../ui/AdvisorPanel';
 import { StatsPanel } from '../ui/StatsPanel';
 import { CampaignEndingModal } from '../ui/CampaignEndingModal';
 import { PauseMenu } from '../ui/PauseMenu';
+import { UIProgressionManager } from '../ui/UIProgressionManager';
+import { EraUnlockOverlay } from '../ui/EraUnlockOverlay';
 import { hasSave, saveGame, loadGame, exportSaveArchive } from './SaveLoad';
 import { gridToWorld } from '../rendering/IsometricRenderer';
 import { MAP_SIZE, TILE_HALF_H, TILE_HALF_W } from '../constants';
@@ -57,7 +59,6 @@ import { WindowLightRenderer } from '../rendering/WindowLightRenderer';
 import { TrafficRenderer } from '../rendering/TrafficRenderer';
 
 export class Game {
-  private static readonly STREAMLINED_UI = true;
   private app!: Application;
   private events: EventBus;
   private state!: GameStateData;
@@ -102,6 +103,8 @@ export class Game {
   private titleScreen!: TitleScreen;
   private openingSplash!: OpeningSplash;
   private analytics: GoatCounterAnalytics;
+  private uiProgression!: UIProgressionManager;
+  private eraOverlay!: EraUnlockOverlay;
   private advancedPanelsVisible = false;
   private bootInProgress = false;
 
@@ -322,6 +325,9 @@ export class Game {
     // UI
     this.setupUI();
 
+    // Sync era from state (handles both new games and loaded saves)
+    this.simulation.syncEra();
+
     if (loadedFromSave) {
       this.events.emit('game:loaded', {});
     }
@@ -415,7 +421,9 @@ export class Game {
 
   private setupUI(): void {
     this.ambienceOverlay = new AmbienceOverlay(this.uiContainer, this.state, this.events);
-    this.resourceBar = new ResourceBar(this.uiContainer, this.state, this.events, Game.STREAMLINED_UI);
+    this.uiProgression = new UIProgressionManager(this.state, this.events);
+    this.eraOverlay = new EraUnlockOverlay(this.uiContainer, this.state, this.registry, this.events);
+    this.resourceBar = new ResourceBar(this.uiContainer, this.state, this.events);
     this.toolbar = new Toolbar(this.uiContainer, this.registry, this.events, (tool, buildingId, zone) => {
       this.toolController.setTool(tool, buildingId, zone);
       if (buildingId) {
@@ -423,7 +431,7 @@ export class Game {
       } else {
         this.tooltip.hide();
       }
-    });
+    }, this.state);
     this.infoPanel = new InfoPanel(this.uiContainer, this.grid, this.registry, this.state, this.events);
     this.planPanel = new PlanPanel(this.uiContainer, this.state, this.events);
     this.notifications = new NotificationManager(this.uiContainer, this.events, this.state);
@@ -438,7 +446,8 @@ export class Game {
     this.pauseMenu = new PauseMenu(this.uiContainer, this.state, this.events, () => {
       window.location.reload();
     });
-    this.setAdvancedPanelsVisible(!Game.STREAMLINED_UI);
+    // Era-driven: hide advanced panels initially (era < 3)
+    this.setAdvancedPanelsVisible(this.state.currentEra >= 3);
 
     // Update resource bar initially
     this.resourceBar.update();
@@ -460,14 +469,14 @@ export class Game {
       }
     });
 
-    this.districtPanel?.update();
+    // Auto-show advanced panels when era 3 is reached
+    this.events.on('era:changed', ({ era }) => {
+      if (era >= 3 && !this.advancedPanelsVisible) {
+        this.setAdvancedPanelsVisible(true);
+      }
+    });
 
-    if (Game.STREAMLINED_UI) {
-      this.events.emit('notification', {
-        message: 'UI streamlined. Press I to toggle district panel.',
-        type: 'info',
-      });
-    }
+    this.districtPanel?.update();
   }
 
   private setupKeyboard(): void {

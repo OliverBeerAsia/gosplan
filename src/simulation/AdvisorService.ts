@@ -89,9 +89,43 @@ export class AdvisorService {
       });
     }
 
-    // All good
+    // === Positive feedback (lower priority, shows when things are going well) ===
+
+    // Power well-balanced
+    if (this.state.powerCapacity > 0 && this.state.powerDemand <= this.state.powerCapacity && this.state.powerCapacity - this.state.powerDemand < this.state.powerCapacity * 0.3) {
+      advices.push({
+        priority: 15,
+        message: 'Your power grid is well-balanced. Excellent planning, Comrade.',
+      });
+    }
+
+    // Housing meets demand
+    if (this.state.housingCapacity > this.state.population && this.state.residentialDemand < 12 && this.state.population > 100) {
+      advices.push({
+        priority: 12,
+        message: 'Housing meets demand. The people are content.',
+      });
+    }
+
+    // Budget surplus growing
+    if (this.state.budget > 20000 && this.state.lastTickNet > 200) {
+      advices.push({
+        priority: 10,
+        message: 'Budget surplus growing. The Treasury commends your discipline.',
+      });
+    }
+
+    // High happiness
+    if (this.state.happiness >= 65 && this.state.population > 200) {
+      advices.push({
+        priority: 14,
+        message: 'Citizens report high satisfaction. The socialist model succeeds!',
+      });
+    }
+
+    // Default idle state
     if (advices.length === 0) {
-      return null; // City is thriving
+      return 'All systems nominal. The Party approves.';
     }
 
     advices.sort((a, b) => b.priority - a.priority);

@@ -87,15 +87,27 @@ function drawGroundShadow(
   cy: number,
   w: number,
   h: number,
-  alpha = 0.24
+  alpha = 0.24,
+  buildingHeight = 1
 ) {
+  const offsetX = buildingHeight * 4;
+  const offsetY = buildingHeight * 2;
+  // Main shadow
   g.poly([
-    { x: cx, y: cy - h },
-    { x: cx + w, y: cy },
-    { x: cx, y: cy + h },
-    { x: cx - w, y: cy },
+    { x: cx + offsetX * 0.3, y: cy - h + offsetY * 0.3 },
+    { x: cx + w + offsetX * 0.6, y: cy + offsetY * 0.6 },
+    { x: cx + offsetX * 0.3, y: cy + h + offsetY * 0.3 },
+    { x: cx - w + offsetX * 0.1, y: cy + offsetY * 0.1 },
   ]);
-  g.fill({ color: 0x101010, alpha });
+  g.fill({ color: 0x101010, alpha: alpha });
+  // Soft outer edge
+  g.poly([
+    { x: cx + offsetX * 0.4, y: cy - h * 1.1 + offsetY * 0.4 },
+    { x: cx + w * 1.1 + offsetX * 0.7, y: cy + offsetY * 0.7 },
+    { x: cx + offsetX * 0.4, y: cy + h * 1.1 + offsetY * 0.4 },
+    { x: cx - w * 1.1 + offsetX * 0.15, y: cy + offsetY * 0.15 },
+  ]);
+  g.fill({ color: 0x101010, alpha: alpha * 0.3 });
 }
 
 function drawFacadeBands(
@@ -259,6 +271,15 @@ function drawKhrushchyovka(renderer: Renderer): Texture {
     g.stroke({ width: 0.8, color: 0x5A5A59, alpha: 0.35 });
   }
 
+  // Horizontal panel joint lines at floor divisions (left face).
+  for (let f = 1; f <= 5; f++) {
+    const jy = topY + roofDepth + f * 12;
+    if (jy >= oy) break;
+    g.moveTo(ox - bw + 3, jy + 1);
+    g.lineTo(ox - 2, jy + (bw - 5) / 2);
+    g.stroke({ width: 0.4, color: PALETTE.PANEL_JOINT, alpha: 0.22 });
+  }
+
   drawLeftWindowGrid(g, ox, topY, bw, roofDepth, 6, 4, 8, 11, 5, 7, 1);
   drawRightWindowGrid(g, ox, topY, bw, roofDepth, 6, 3, 8, 11, 5, 7, 2);
   drawCornice(g, ox, topY, bw, roofDepth);
@@ -353,7 +374,9 @@ function drawStalinka(renderer: Renderer): Texture {
 
   // Setback tower and star crest.
   isoBox(g, ox, topY - 15, bw * 0.28, bw * 0.2, 18, 0xC8B489, 0xA48A5F, 0x8E744D, false);
-  drawStar(g, ox, topY - 18, 5, PALETTE.RED);
+  // Dome cap on the setback tower.
+  drawDomeTop(g, ox, topY - 33, bw * 0.22, bw * 0.12, PALETTE.ROOF_TILE_COOL);
+  drawStar(g, ox, topY - 38, 5, PALETTE.RED);
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -377,10 +400,15 @@ function drawKommunalka(renderer: Renderer): Texture {
 
   // Brick courses and windows.
   drawFacadeBands(g, ox, topY, bw, roofDepth, 3, 11, 0x593628, 0.34);
+  // Brick course lines on left face.
+  drawBrickCourses(g, ox - bw + 3, topY + roofDepth + 2, bw - 5, bh - 8, 1, 3);
   drawLeftWindowGrid(g, ox, topY, bw, roofDepth, 3, 2, 9, 11, 5, 7, 2);
   drawRightWindowGrid(g, ox, topY, bw, roofDepth, 3, 1, 9, 11, 5, 7, 1);
   drawCornice(g, ox, topY, bw, roofDepth, 0x8B6B55, 0.4);
   drawBaseBand(g, ox, oy, bw, roofDepth);
+
+  // Hipped roof over the main block.
+  drawHippedRoof(g, ox, topY, bw, 12, PALETTE.ROOF_TILE_WARM, PALETTE.ROOF_TILE_WARM + 0x181818);
 
   // Entry and rooftop chimney.
   g.poly([
@@ -391,6 +419,12 @@ function drawKommunalka(renderer: Renderer): Texture {
   ]);
   g.fill(0x4F2E1F);
   drawChimney(g, ox + bw * 0.22, topY - 1, 4, 16);
+
+  // Small chimney pot on roof.
+  g.rect(ox - bw * 0.3, topY - 6, 3, 5);
+  g.fill(PALETTE.CHIMNEY_TOP);
+  g.rect(ox - bw * 0.3 - 0.5, topY - 7, 4, 2);
+  g.fill({ color: PALETTE.CHIMNEY_TOP, alpha: 0.8 });
 
   // Laundry line detail.
   g.moveTo(ox - bw + 4, oy - 16);
@@ -621,7 +655,10 @@ function drawPartyHQ(renderer: Renderer): Texture {
   ]);
   g.fill(PALETTE.RED_DARK);
 
-  drawStar(g, ox, topY - 18, 8, PALETTE.RED);
+  // Prominent dome over the central setback mass.
+  drawDomeTop(g, ox, topY - 22, bw * 0.38, bw * 0.2, PALETTE.ROOF_TILE_COOL);
+
+  drawStar(g, ox, topY - 30, 8, PALETTE.RED);
   g.moveTo(ox - bw + 2, topY + roofDepth / 2);
   g.lineTo(ox, topY - 1);
   g.lineTo(ox + bw - 2, topY + roofDepth / 2);
@@ -761,12 +798,23 @@ function drawSchool(renderer: Renderer): Texture {
   // Gold star in mural.
   drawStar(g, ox + 11, oy - 20, 3, PALETTE.GOLD);
 
+  // Peaked roof over main block.
+  drawPeakedRoof(g, ox, topY, bw, 10, PALETTE.ROOF_TILE_WARM, PALETTE.ROOF_TILE_WARM + 0x181818);
   drawRoofDetail(g, ox, topY, bw, 2, 0x000000, 0.06);
 
-  // Clock/bell detail on roof.
-  g.circle(ox - 3, topY + 4, 4);
+  // Bell tower element on roof.
+  isoBox(g, ox - 3, topY - 8, 5, 3.5, 10, 0xD0AB56, 0xB88F3D, 0x9B7731, false);
+  // Bell tower peaked cap.
+  g.poly([
+    { x: ox - 8, y: topY - 18 },
+    { x: ox - 3, y: topY - 24 },
+    { x: ox + 2, y: topY - 18 },
+  ]);
+  g.fill({ color: PALETTE.ROOF_TILE_WARM, alpha: 0.9 });
+  // Clock face.
+  g.circle(ox - 3, topY - 13, 3);
   g.fill({ color: 0x8A7E60, alpha: 0.5 });
-  g.circle(ox - 3, topY + 4, 2.5);
+  g.circle(ox - 3, topY - 13, 1.8);
   g.fill({ color: 0x4A4438, alpha: 0.45 });
 
   g.moveTo(ox + bw * 0.32, topY - 2);
@@ -1211,6 +1259,23 @@ function drawPanelak(renderer: Renderer): Texture {
     g.stroke({ width: 0.8, color: 0x5E6368, alpha: 0.38 });
   }
 
+  // Horizontal panel joint lines at floor divisions (left face).
+  for (let f = 1; f <= 8; f++) {
+    const jy = topY + roofDepth + f * 10.5;
+    if (jy >= oy) break;
+    g.moveTo(ox - bw + 3, jy + 1);
+    g.lineTo(ox - 2, jy + (bw - 5) / 2);
+    g.stroke({ width: 0.4, color: PALETTE.PANEL_JOINT, alpha: 0.2 });
+  }
+  // Horizontal panel joint lines (right face).
+  for (let f = 1; f <= 8; f++) {
+    const jy = topY + roofDepth + f * 10.5;
+    if (jy >= oy) break;
+    g.moveTo(ox + 2, jy + (bw - 5) / 2);
+    g.lineTo(ox + bw - 3, jy + 1);
+    g.stroke({ width: 0.4, color: PALETTE.PANEL_JOINT, alpha: 0.2 });
+  }
+
   drawLeftWindowGrid(g, ox, topY, bw, roofDepth, 9, 5, 8.5, 10.5, 4.6, 6.5, 1);
   drawRightWindowGrid(g, ox, topY, bw, roofDepth, 9, 4, 8.5, 10.5, 4.6, 6.5, 0);
   drawCornice(g, ox, topY, bw, roofDepth);
@@ -1370,14 +1435,30 @@ function drawCinema(renderer: Renderer): Texture {
   isoRect(g, ox + 14, oy - 20, 7, 10, -1);
   g.fill({ color: 0x2E4A6B, alpha: 0.7 });
 
-  // Extended canopy on left face.
+  // Angular canopy extending forward from left face.
+  // Canopy top (angled upward toward the building).
   g.poly([
-    { x: ox - bw + 3, y: oy - 20 },
-    { x: ox - 2, y: oy - 12 },
-    { x: ox - 2, y: oy - 10 },
-    { x: ox - bw + 3, y: oy - 18 },
+    { x: ox - bw - 4, y: oy - 14 },
+    { x: ox - 2, y: oy - 8 },
+    { x: ox - 2, y: oy - 6 },
+    { x: ox - bw - 4, y: oy - 12 },
   ]);
-  g.fill({ color: 0x6A6C6B, alpha: 0.65 });
+  g.fill({ color: 0x7A7C7B, alpha: 0.75 });
+  // Canopy underside shadow.
+  g.poly([
+    { x: ox - bw - 4, y: oy - 12 },
+    { x: ox - 2, y: oy - 6 },
+    { x: ox - 2, y: oy - 4 },
+    { x: ox - bw - 4, y: oy - 10 },
+  ]);
+  g.fill({ color: PALETTE.CANOPY_SHADOW, alpha: 0.5 });
+  // Canopy support struts.
+  g.moveTo(ox - bw + 2, oy - 4);
+  g.lineTo(ox - bw - 2, oy - 13);
+  g.stroke({ width: 1, color: PALETTE.IRON, alpha: 0.6 });
+  g.moveTo(ox - 6, oy - 1);
+  g.lineTo(ox - 4, oy - 7);
+  g.stroke({ width: 1, color: PALETTE.IRON, alpha: 0.6 });
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -1521,6 +1602,24 @@ function drawMetroStation(renderer: Renderer): Texture {
 
   // Gold star above portico.
   drawStar(g, ox - bw + 18, topY + roofDepth - 2, 4, PALETTE.GOLD);
+
+  // Barrel-vaulted glass roof (elongated ellipse over the main body).
+  g.ellipse(ox, topY + roofDepth * 0.32, bw * 0.65, bw * 0.18);
+  g.fill({ color: PALETTE.ROOF_TILE_COOL, alpha: 0.45 });
+  // Glass highlight.
+  g.ellipse(ox - bw * 0.1, topY + roofDepth * 0.28, bw * 0.4, bw * 0.1);
+  g.fill({ color: 0xD6E1E8, alpha: 0.2 });
+  // Structural ribs across the vault.
+  for (let i = 0; i < 5; i++) {
+    const ribX = ox - bw * 0.5 + i * bw * 0.25;
+    const ribSkew = (i - 2) * bw * 0.04;
+    g.moveTo(ribX, topY + roofDepth * 0.18 + Math.abs(i - 2) * 1.5);
+    g.lineTo(ribX + ribSkew, topY + roofDepth * 0.46 + Math.abs(i - 2) * 1.5);
+    g.stroke({ width: 0.6, color: PALETTE.IRON, alpha: 0.35 });
+  }
+  // Vault outline.
+  g.ellipse(ox, topY + roofDepth * 0.32, bw * 0.65, bw * 0.18);
+  g.stroke({ width: 0.7, color: 0x000000, alpha: 0.15 });
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -1783,6 +1882,99 @@ function drawRoofParapet(
   isoBox(g, ox, topY - 1.5, bw + 1, roofDepth + 1, 2,
     topColor, leftColor, rightColor, false
   );
+}
+
+/** Isometric peaked (gable) roof — two sloped triangular polygons meeting at a ridge */
+function drawPeakedRoof(g: Graphics, ox: number, topY: number, bw: number, bh: number, color: number, highlightColor: number): void {
+  const ridgeY = topY - bh * 0.45;
+  // Left slope
+  g.poly([
+    { x: ox - bw, y: topY },
+    { x: ox, y: topY - bw / 2 },
+    { x: ox, y: ridgeY },
+    { x: ox - bw, y: ridgeY + bw / 2 },
+  ]);
+  g.fill({ color, alpha: 0.95 });
+  g.stroke({ width: 0.5, color: 0x000000, alpha: 0.15 });
+  // Right slope (lighter)
+  g.poly([
+    { x: ox, y: topY - bw / 2 },
+    { x: ox + bw, y: topY },
+    { x: ox + bw, y: ridgeY + bw / 2 },
+    { x: ox, y: ridgeY },
+  ]);
+  g.fill({ color: highlightColor, alpha: 0.9 });
+  g.stroke({ width: 0.5, color: 0x000000, alpha: 0.15 });
+  // Ridge line
+  g.moveTo(ox, ridgeY);
+  g.lineTo(ox - bw, ridgeY + bw / 2);
+  g.stroke({ width: 1, color: 0x000000, alpha: 0.2 });
+}
+
+/** Isometric hipped roof — four-sided sloping roof */
+function drawHippedRoof(g: Graphics, ox: number, topY: number, bw: number, bh: number, color: number, highlightColor: number): void {
+  const ridgeY = topY - bh * 0.35;
+  const inset = bw * 0.3;
+  // Left face
+  g.poly([
+    { x: ox - bw, y: topY },
+    { x: ox - inset, y: ridgeY },
+    { x: ox + inset, y: ridgeY - inset / 2 },
+    { x: ox, y: topY - bw / 2 },
+  ]);
+  g.fill({ color, alpha: 0.92 });
+  // Right face
+  g.poly([
+    { x: ox, y: topY - bw / 2 },
+    { x: ox + inset, y: ridgeY - inset / 2 },
+    { x: ox + bw - inset, y: ridgeY + (bw - inset) / 2 - inset / 2 },
+    { x: ox + bw, y: topY },
+  ]);
+  g.fill({ color: highlightColor, alpha: 0.88 });
+  // Top face
+  g.poly([
+    { x: ox - inset, y: ridgeY },
+    { x: ox + inset, y: ridgeY - inset / 2 },
+    { x: ox + bw - inset, y: ridgeY + (bw - inset) / 2 - inset / 2 },
+    { x: ox + bw - bw + inset, y: ridgeY + (bw - inset) / 2 },
+  ]);
+  g.fill({ color, alpha: 0.7 });
+}
+
+/** Dome cap — elliptical dome with highlight crescent */
+function drawDomeTop(g: Graphics, cx: number, cy: number, rx: number, ry: number, color: number): void {
+  g.ellipse(cx, cy, rx, ry);
+  g.fill({ color, alpha: 0.9 });
+  // Highlight crescent
+  g.ellipse(cx - rx * 0.15, cy - ry * 0.1, rx * 0.7, ry * 0.65);
+  g.fill({ color: 0xFFFFFF, alpha: 0.08 });
+  // Outline
+  g.ellipse(cx, cy, rx, ry);
+  g.stroke({ width: 0.7, color: 0x000000, alpha: 0.2 });
+}
+
+/** Draw recessed window with shadow and mullion highlight */
+function drawReliefWindow(g: Graphics, x: number, y: number, w: number, h: number, windowColor: number, _skewDir: number): void {
+  // Shadow recess (offset 1px)
+  g.rect(x - 0.5, y - 0.5, w + 1, h + 1);
+  g.fill({ color: PALETTE.WINDOW_RECESS, alpha: 0.6 });
+  // Window pane
+  g.rect(x, y, w, h);
+  g.fill({ color: windowColor });
+  // Mullion highlight (top edge)
+  g.moveTo(x, y);
+  g.lineTo(x + w, y);
+  g.stroke({ width: 0.5, color: PALETTE.MULLION_LIGHT, alpha: 0.3 });
+}
+
+/** Draw brick course lines for masonry buildings */
+function drawBrickCourses(g: Graphics, x: number, y: number, w: number, h: number, skewDir: number, spacing: number = 3): void {
+  for (let row = spacing; row < h; row += spacing) {
+    const skewOffset = row * 0.5 * skewDir;
+    g.moveTo(x + skewOffset, y + row);
+    g.lineTo(x + w + skewOffset, y + row);
+    g.stroke({ width: 0.3, color: PALETTE.BRICK_MORTAR, alpha: 0.15 });
+  }
 }
 
 function drawChimney(g: Graphics, x: number, y: number, radius: number, height: number) {

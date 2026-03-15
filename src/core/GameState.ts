@@ -134,6 +134,10 @@ export interface GameStateData {
   milestonesTriggered: string[];
   uiSettings: UiSettings;
   statsHistory: import('../simulation/StatsCollector').StatsSnapshot[];
+  currentEra: number; // 1..4
+  peakPopulation: number;
+  firstBuildingsPlaced: string[]; // building defIds placed for the first time
+  planExtensionUsed: boolean; // whether current plan already got an extension
 }
 
 export function createInitialState(): GameStateData {
@@ -141,7 +145,7 @@ export function createInitialState(): GameStateData {
     mode: 'campaign',
     campaignScenarioId: 'none',
     campaignScenarioLabel: 'General Plan',
-    campaignTargetYear: STARTING_YEAR + 8,
+    campaignTargetYear: STARTING_YEAR + 10,
     campaignEnded: false,
     campaignEndingId: null,
     campaignEndingTitle: null,
@@ -185,5 +189,9 @@ export function createInitialState(): GameStateData {
     milestonesTriggered: [],
     uiSettings: { ...DEFAULT_UI_SETTINGS },
     statsHistory: [],
+    currentEra: 1,
+    peakPopulation: 50,
+    firstBuildingsPlaced: [],
+    planExtensionUsed: false,
   };
 }

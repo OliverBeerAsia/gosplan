@@ -1,9 +1,11 @@
 import { BuildingRegistry } from '../buildings/BuildingRegistry';
 import { BuildingDef, BuildingCategory } from '../buildings/BuildingTypes';
 import { EventBus } from '../core/EventBus';
+import { GameStateData } from '../core/GameState';
 import { ToolType } from '../input/ToolController';
 import { ZoneType } from '../grid/Cell';
 import { audioManager } from '../audio/AudioManager';
+import { ERA_TOOLBAR_CATEGORIES } from './UIProgressionManager';
 
 type ToolCallback = (tool: ToolType, buildingId?: string, zone?: ZoneType) => void;
 
@@ -46,18 +48,21 @@ export class Toolbar {
   private activeCategory: string | null = null;
   private selectedBuildingBtn: HTMLElement | null = null;
   private quickToolBar: HTMLDivElement;
+  private catBar!: HTMLDivElement;
+  private lastEra = 0;
 
   constructor(
     container: HTMLElement,
     private registry: BuildingRegistry,
     private events: EventBus,
-    private onToolSelect: ToolCallback
+    private onToolSelect: ToolCallback,
+    private state?: GameStateData
   ) {
     this.el = document.createElement('div');
     this.el.id = 'toolbar';
 
-    const catBar = document.createElement('div');
-    catBar.id = 'toolbar-categories';
+    this.catBar = document.createElement('div') as HTMLDivElement;
+    this.catBar.id = 'toolbar-categories';
 
     for (const cat of CATEGORIES) {
       const btn = document.createElement('button');
@@ -65,13 +70,17 @@ export class Toolbar {
       btn.textContent = cat.label;
       btn.dataset.cat = cat.id;
       btn.addEventListener('click', () => {
+        if (btn.classList.contains('category-btn--locked')) return;
         audioManager.playSfx('ui_click');
-        this.selectCategory(cat.id, catBar);
+        this.selectCategory(cat.id, this.catBar);
       });
-      catBar.appendChild(btn);
+      this.catBar.appendChild(btn);
     }
 
-    this.el.appendChild(catBar);
+    this.el.appendChild(this.catBar);
+
+    // Listen for era changes to update category visibility
+    this.events.on('era:changed', () => this.updateCategoryVisibility());
 
     this.buildingPanel = document.createElement('div');
     this.buildingPanel.id = 'building-panel';
@@ -104,6 +113,43 @@ export class Toolbar {
     this.el.appendChild(this.quickToolBar);
 
     container.appendChild(this.el);
+
+    // Initial category visibility
+    this.updateCategoryVisibility();
+  }
+
+  /** Update which toolbar categories are visible based on era */
+  updateCategoryVisibility(): void {
+    const era = this.state?.currentEra ?? 4;
+    if (era === this.lastEra) return;
+
+    const visible = new Set(ERA_TOOLBAR_CATEGORIES[era] ?? ERA_TOOLBAR_CATEGORIES[4]);
+
+    this.catBar.querySelectorAll<HTMLElement>('.category-btn').forEach(btn => {
+      const catId = btn.dataset.cat ?? '';
+      const wasLocked = btn.classList.contains('category-btn--locked');
+      const isAvailable = visible.has(catId);
+
+      btn.classList.toggle('category-btn--locked', !isAvailable);
+
+      // Flash gold on newly unlocked categories
+      if (isAvailable && wasLocked && this.lastEra > 0) {
+        btn.classList.add('category-unlock-flash');
+        window.setTimeout(() => btn.classList.remove('category-unlock-flash'), 2500);
+      }
+    });
+
+    this.lastEra = era;
+
+    // If active category just got locked, close it
+    if (this.activeCategory && !visible.has(this.activeCategory)) {
+      this.clearSelection();
+    }
+
+    // Refresh building panel if open (buildings may have been added)
+    if (this.activeCategory) {
+      this.showBuildingPanel(this.activeCategory);
+    }
   }
 
   private selectCategory(catId: string, catBar: HTMLElement): void {
@@ -128,8 +174,9 @@ export class Toolbar {
     }
     this.selectedBuildingBtn = null;
 
-    // Show buildings for this category
-    const buildings = this.registry.getByCategory(catId);
+    // Show buildings for this category (era-filtered)
+    const era = this.state?.currentEra ?? 4;
+    const buildings = this.registry.getAvailableByCategory(catId, era);
     for (const def of buildings) {
       const btn = this.createBuildingButton(def);
       this.buildingPanel.appendChild(btn);

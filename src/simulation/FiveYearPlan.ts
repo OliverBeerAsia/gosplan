@@ -5,16 +5,16 @@ import { Grid } from '../grid/Grid';
 import { BuildingRegistry } from '../buildings/BuildingRegistry';
 
 const PLAN_TEMPLATES: (() => FiveYearPlanGoal[])[] = [
-  // Plan 1: Basic housing and power
+  // Plan 1: Basic housing and power (starts at Era 2, ~200 pop)
   () => [
-    { description: 'House 500 comrades', type: 'population', target: 500, current: 0, completed: false },
+    { description: 'House 300 comrades', type: 'population', target: 300, current: 0, completed: false },
     { description: 'Reach 50MW power capacity', type: 'power', target: 50, current: 0, completed: false },
   ],
   // Plan 2: Growth
   () => [
-    { description: 'House 2,000 comrades', type: 'population', target: 2000, current: 0, completed: false },
-    { description: 'Reach 150MW power capacity', type: 'power', target: 150, current: 0, completed: false },
-    { description: 'Achieve 60% happiness', type: 'happiness', target: 60, current: 0, completed: false },
+    { description: 'House 1,200 comrades', type: 'population', target: 1200, current: 0, completed: false },
+    { description: 'Reach 100MW power capacity', type: 'power', target: 100, current: 0, completed: false },
+    { description: 'Achieve 55% happiness', type: 'happiness', target: 55, current: 0, completed: false },
   ],
   // Plan 3: Industrialization
   () => [
@@ -41,6 +41,9 @@ export class FiveYearPlanService {
 
   tick(): void {
     if (this.state.mode === 'sandbox') return;
+
+    // Five-Year Plans don't start until Era 2
+    if (this.state.currentEra < 2) return;
 
     // Start first plan if none active
     if (!this.state.currentPlan) {
@@ -110,11 +113,22 @@ export class FiveYearPlanService {
     const allCompleted = plan.goals.every(g => g.completed);
     const anyCompleted = plan.goals.some(g => g.completed);
 
+    // Extension mechanic: if any goals met but not all, grant one 26-week extension
+    if (anyCompleted && !allCompleted && !this.state.planExtensionUsed) {
+      this.state.planExtensionUsed = true;
+      plan.endTick += 26; // half-year extension
+      this.events.emit('notification', {
+        message: `Five-Year Plan ${plan.index + 1}: Partial progress noted. The Committee grants a 6-month extension.`,
+        type: 'warning',
+      });
+      return;
+    }
+
     plan.active = false;
 
     if (allCompleted) {
-      // Full success: bonus budget
-      const bonus = 10000 + this.state.planIndex * 5000;
+      // Full success: enhanced bonus
+      const bonus = 15000 + this.state.planIndex * 8000;
       this.state.budget += bonus;
       this.events.emit('notification', {
         message: `Five-Year Plan ${plan.index + 1} FULFILLED! +${bonus}₽ bonus! The Motherland is proud!`,
@@ -127,8 +141,8 @@ export class FiveYearPlanService {
         type: 'warning',
       });
     } else {
-      // Failure: budget penalty
-      const penalty = Math.floor(this.state.budget * 0.15);
+      // Failure: reduced penalty (5% instead of 15%)
+      const penalty = Math.floor(this.state.budget * 0.05);
       this.state.budget -= penalty;
       this.events.emit('notification', {
         message: `Five-Year Plan ${plan.index + 1} FAILED! -${penalty}₽ budget cut. Do better, Comrade!`,
@@ -139,5 +153,6 @@ export class FiveYearPlanService {
     this.events.emit('plan:completed', { planIndex: plan.index, success: allCompleted });
     this.state.planIndex++;
     this.state.currentPlan = null;
+    this.state.planExtensionUsed = false;
   }
 }

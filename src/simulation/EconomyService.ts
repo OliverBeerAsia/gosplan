@@ -2,6 +2,7 @@ import { Grid } from '../grid/Grid';
 import { BuildingRegistry } from '../buildings/BuildingRegistry';
 import { GameStateData } from '../core/GameState';
 import { EventBus } from '../core/EventBus';
+import { ERA_INCOME_BASE, ERA_INCOME_PER_POP, ERA_MAINTENANCE_MULT } from '../constants';
 
 export class EconomyService {
   private nextDeficitAlertTick = 0;
@@ -17,6 +18,8 @@ export class EconomyService {
     const buildings = this.grid.getAllBuildings();
     let totalMaintenance = 0;
     let totalIndustrial = 0;
+    const eraIdx = this.state.currentEra - 1;
+    const maintenanceMult = ERA_MAINTENANCE_MULT[eraIdx] ?? 1.0;
 
     for (const b of buildings) {
       const def = this.registry.get(b.defId);
@@ -24,9 +27,9 @@ export class EconomyService {
 
       // Unpowered buildings that require power pay 30% maintenance
       if (def.powerConsumption && !b.powered) {
-        totalMaintenance += Math.floor(def.maintenance * 0.3);
+        totalMaintenance += Math.floor(def.maintenance * 0.3 * maintenanceMult);
       } else {
-        totalMaintenance += def.maintenance;
+        totalMaintenance += Math.floor(def.maintenance * maintenanceMult);
       }
 
       // Only produce if powered (or no power needed)
@@ -35,8 +38,10 @@ export class EconomyService {
       }
     }
 
-    // Central planning base allocation (scales with population)
-    const baseAllocation = 500 + Math.floor(this.state.population * 0.5);
+    // Central planning base allocation (scales with population, era-adjusted)
+    const incomeBase = ERA_INCOME_BASE[eraIdx] ?? 500;
+    const incomePerPop = ERA_INCOME_PER_POP[eraIdx] ?? 0.5;
+    const baseAllocation = incomeBase + Math.floor(this.state.population * incomePerPop);
     const totalIncome = baseAllocation + totalIndustrial;
 
     this.state.industrialOutput = totalIndustrial;

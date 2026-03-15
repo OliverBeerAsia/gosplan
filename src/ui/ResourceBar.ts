@@ -1,5 +1,6 @@
 import { GameStateData } from '../core/GameState';
 import { EventBus } from '../core/EventBus';
+import { ERA_RESOURCE_STATS } from './UIProgressionManager';
 
 function createEl(tag: string, attrs: Record<string, string> = {}, text = ''): HTMLElement {
   const el = document.createElement(tag);
@@ -50,7 +51,8 @@ export class ResourceBar {
   private dateEl!: HTMLSpanElement;
   private trendEls: Record<string, HTMLSpanElement> = {};
   private speedControlEl!: HTMLDivElement;
-  private simplified: boolean;
+  private statItems: Map<string, HTMLElement> = new Map();
+  private lastVisibleEra = 0;
 
   // Previous values for trend arrows
   private prevPop = 0;
@@ -61,31 +63,32 @@ export class ResourceBar {
     container: HTMLElement,
     private state: GameStateData,
     private events: EventBus,
-    simplified: boolean = false
+    _simplified: boolean = false // kept for backward compat, ignored (era-driven now)
   ) {
-    this.simplified = simplified;
     this.el = document.createElement('div');
     this.el.id = 'resource-bar';
 
-    this.el.appendChild(resourceItem('\u2606', 'Population', 'pop', '50', 'Current population of your city', 'primary'));
-    this.el.appendChild(resourceItem('\u20BD', 'Budget', 'budget', '50,000', 'City treasury - income from industry and central planning', 'primary'));
-    this.el.appendChild(resourceItem('\u26A1', 'Power', 'power', '0/0 MW', 'Power demand / capacity in megawatts', 'primary'));
-    this.el.appendChild(resourceItem('\u263A', 'Happiness', 'happy', '50%', 'City-wide happiness affects population growth', 'primary'));
-    this.el.appendChild(
-      resourceItem(
-        '\u2690',
-        'Demand',
-        'demand',
-        'Steady',
-        'Main growth signal. Positive means expand that zone; negative means hold.',
-        'secondary'
-      )
-    );
-    if (!this.simplified) {
-      this.el.appendChild(resourceItem('\u262D', 'Stability', 'order', '50% STABLE', 'Composite stability score (loyalty minus unrest). Breakdown in district panel.', 'secondary'));
-      this.el.appendChild(resourceItem('\u21C4', 'Access', 'mobility', '50% FAIR', 'Average of commute and service access. Breakdown in district panel.', 'secondary'));
+    // Create all stat items (visibility controlled by era)
+    const items: [string, string, string, string, string, 'primary' | 'secondary'][] = [
+      ['\u2606', 'Population', 'pop', '50', 'Current population of your city', 'primary'],
+      ['\u20BD', 'Budget', 'budget', '50,000', 'City treasury - income from industry and central planning', 'primary'],
+      ['\u26A1', 'Power', 'power', '0/0 MW', 'Power demand / capacity in megawatts', 'primary'],
+      ['\u263A', 'Happiness', 'happy', '50%', 'City-wide happiness affects population growth', 'primary'],
+      ['\u2690', 'Demand', 'demand', 'Steady', 'Main growth signal. Positive means expand that zone; negative means hold.', 'secondary'],
+      ['\u262D', 'Stability', 'order', '50% STABLE', 'Composite stability score (loyalty minus unrest). Breakdown in district panel.', 'secondary'],
+      ['\u21C4', 'Access', 'mobility', '50% FAIR', 'Average of commute and service access. Breakdown in district panel.', 'secondary'],
+    ];
+
+    for (const [icon, label, dataRes, initValue, tooltip, priority] of items) {
+      const item = resourceItem(icon, label, dataRes, initValue, tooltip, priority);
+      this.statItems.set(dataRes, item);
+      this.el.appendChild(item);
     }
-    this.el.appendChild(resourceItem('\u2630', 'Date', 'date', 'W1 1980', 'Current week and year', 'secondary'));
+
+    // Date is always visible
+    const dateItem = resourceItem('\u2630', 'Date', 'date', 'W1 1980', 'Current week and year', 'secondary');
+    this.statItems.set('date', dateItem);
+    this.el.appendChild(dateItem);
 
     // Speed controls
     this.speedControlEl = createEl('div', { id: 'speed-controls' }) as HTMLDivElement;
@@ -132,8 +135,33 @@ export class ResourceBar {
     events.on('district:updated', () => this.update());
     events.on('commute:updated', () => this.update());
     events.on('speed:changed', ({ speed }) => this.setSpeedActive(speed));
+    events.on('era:changed', () => this.updateStatVisibility());
 
     this.setSpeedActive(this.state.speed);
+    this.updateStatVisibility();
+  }
+
+  /** Show/hide stats based on current era */
+  private updateStatVisibility(): void {
+    const era = this.state.currentEra;
+    if (era === this.lastVisibleEra) return;
+    this.lastVisibleEra = era;
+
+    const visible = new Set(ERA_RESOURCE_STATS[era] ?? ERA_RESOURCE_STATS[4]);
+    // Date is always visible
+    visible.add('date');
+
+    for (const [key, item] of this.statItems) {
+      const wasHidden = item.style.display === 'none';
+      const shouldShow = visible.has(key);
+      item.style.display = shouldShow ? '' : 'none';
+
+      // Pulse newly visible stats gold briefly
+      if (shouldShow && wasHidden && era > 1) {
+        item.classList.add('stat-unlock-pulse');
+        window.setTimeout(() => item.classList.remove('stat-unlock-pulse'), 2000);
+      }
+    }
   }
 
   update(): void {

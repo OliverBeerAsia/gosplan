@@ -1,4 +1,5 @@
 import { BuildingDef } from './BuildingTypes';
+import { BUILDING_ERA } from '../constants';
 
 const buildings: BuildingDef[] = [
   // Residential
@@ -252,5 +253,22 @@ export class BuildingRegistry {
 
   getByCategory(category: string): BuildingDef[] {
     return this.getAll().filter(b => b.category === category);
+  }
+
+  /** Returns buildings available in the given era for a category */
+  getAvailableByCategory(category: string, era: number): BuildingDef[] {
+    return this.getAll().filter(b =>
+      b.category === category && (BUILDING_ERA[b.id] ?? 1) <= era
+    );
+  }
+
+  /** Returns all buildings available in the given era */
+  getAvailableForEra(era: number): BuildingDef[] {
+    return this.getAll().filter(b => (BUILDING_ERA[b.id] ?? 1) <= era);
+  }
+
+  /** Returns the era required for a specific building */
+  getBuildingEra(id: string): number {
+    return BUILDING_ERA[id] ?? 1;
   }
 }

@@ -17,10 +17,12 @@ import { AchievementService } from './AchievementService';
 import { CampaignOutcomeService } from './CampaignOutcomeService';
 import { MilestoneService } from './MilestoneService';
 import { StatsCollector } from './StatsCollector';
+import { EraService } from './EraService';
 import {
   BASE_TICK_MS, TICKS_PER_YEAR, BASE_HAPPINESS,
   PARK_BONUS, SERVICE_BONUS, MONUMENT_BONUS,
-  NO_POWER_PENALTY, OVERCROWDING_PENALTY
+  NO_POWER_PENALTY, OVERCROWDING_PENALTY,
+  ERA_TICK_SPEEDS
 } from '../constants';
 
 export class SimulationManager {
@@ -38,6 +40,7 @@ export class SimulationManager {
   private campaignOutcome: CampaignOutcomeService;
   private milestone: MilestoneService;
   private statsCollector: StatsCollector;
+  private era: EraService;
   private accumulator = 0;
   private lastTime = 0;
   private running = false;
@@ -63,10 +66,16 @@ export class SimulationManager {
     this.campaignOutcome = new CampaignOutcomeService(state, events);
     this.milestone = new MilestoneService(state, events);
     this.statsCollector = new StatsCollector(state, events);
+    this.era = new EraService(state, events);
 
     events.on('speed:changed', ({ speed }) => {
       this.state.speed = speed;
     });
+  }
+
+  /** Sync era from saved state (must call after loading) */
+  syncEra(): void {
+    this.era.syncEra();
   }
 
   start(): void {
@@ -87,7 +96,8 @@ export class SimulationManager {
     const delta = currentTime - this.lastTime;
     this.lastTime = currentTime;
 
-    const tickInterval = BASE_TICK_MS / this.state.speed;
+    const eraTickMs = ERA_TICK_SPEEDS[this.state.currentEra - 1] ?? BASE_TICK_MS;
+    const tickInterval = eraTickMs / this.state.speed;
     this.accumulator += delta;
 
     while (this.accumulator >= tickInterval) {
@@ -104,22 +114,26 @@ export class SimulationManager {
       this.state.year++;
     }
 
+    // Era tracking must run first (determines gating for other systems)
+    this.era.tick();
+    const era = this.state.currentEra;
+
     // Update order keeps deterministic economy and city behavior:
     // infrastructure -> district metrics -> directives -> core economy/population
     // -> events -> campaign outcomes -> achievement checks.
     this.power.tick();
-    this.serviceCoverage.tick();
-    this.commute.tick();
-    this.district.tick();
-    this.campaignDirector.tick();
+    if (era >= 2) this.serviceCoverage.tick();
+    if (era >= 3) this.commute.tick();
+    if (era >= 3) this.district.tick();
+    if (era >= 3) this.campaignDirector.tick();
     this.updateHappiness();
     this.economy.tick();
     this.population.tick();
     this.zoneGrowth.tick();
-    this.fiveYearPlan.tick();
-    this.eventDirector.tick();
-    this.campaignOutcome.tick();
-    this.achievement.tick();
+    if (era >= 2) this.fiveYearPlan.tick();
+    if (era >= 3) this.eventDirector.tick();
+    if (era >= 4) this.campaignOutcome.tick();
+    if (era >= 4) this.achievement.tick();
     this.milestone.tick();
     this.statsCollector.tick();
 

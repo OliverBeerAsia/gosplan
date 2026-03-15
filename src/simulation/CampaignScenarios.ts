@@ -16,7 +16,7 @@ export const CAMPAIGN_SCENARIOS: CampaignScenarioDef[] = [
     id: 'reconstruction',
     label: 'Reconstruction Drive',
     subtitle: 'Restore housing and services while rebuilding district confidence.',
-    targetYear: 1988,
+    targetYear: 1990,
     openingDirective: 'Reconstruction Priority: housing, utilities, and district stability.',
     cardArt: assetPath('assets/ui/scenario-reconstruction.svg'),
     applyStart: (state) => {
@@ -34,7 +34,7 @@ export const CAMPAIGN_SCENARIOS: CampaignScenarioDef[] = [
     id: 'industrial_surge',
     label: 'Industrial Surge',
     subtitle: 'Push output aggressively while keeping city services in balance.',
-    targetYear: 1987,
+    targetYear: 1989,
     openingDirective: 'Steel and Concrete First: maximize production while keeping districts stable.',
     cardArt: assetPath('assets/ui/scenario-industrial.svg'),
     applyStart: (state) => {
@@ -53,7 +53,7 @@ export const CAMPAIGN_SCENARIOS: CampaignScenarioDef[] = [
     id: 'stagnation',
     label: 'Late-Period Stagnation',
     subtitle: 'Fight decline, aging infrastructure, and civic fatigue under tight resources.',
-    targetYear: 1986,
+    targetYear: 1988,
     openingDirective: 'Stabilization Doctrine: hold the city together under systemic strain.',
     cardArt: assetPath('assets/ui/scenario-stagnation.svg'),
     applyStart: (state) => {

@@ -45,6 +45,7 @@ export type GameEvents = {
   'tile:selected': { gx: number; gy: number };
   'overlay:service:toggle': {};
   'graphics:quality:changed': { quality: import('./GameState').GraphicsQuality };
+  'era:changed': { era: number; previousEra: number };
   'game:loaded': {};
   'game:saved': {};
   'game:save:requested': {};

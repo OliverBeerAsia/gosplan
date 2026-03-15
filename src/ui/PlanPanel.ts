@@ -1,5 +1,7 @@
 import { GameStateData } from '../core/GameState';
 import { EventBus } from '../core/EventBus';
+import { ERA_THRESHOLDS } from '../constants';
+import { UIProgressionManager } from './UIProgressionManager';
 
 const GOAL_HINTS: Record<string, string> = {
   population: 'Paint Housing Zones, ensure power and happiness',
@@ -13,6 +15,7 @@ export class PlanPanel {
   private el: HTMLDivElement;
   private headerEl: HTMLDivElement;
   private bodyEl: HTMLDivElement;
+  private collapsed = false;
 
   constructor(container: HTMLElement, private state: GameStateData, private events: EventBus) {
     this.el = document.createElement('div');
@@ -22,6 +25,9 @@ export class PlanPanel {
     this.headerEl = document.createElement('div');
     this.headerEl.id = 'plan-panel-header';
     this.headerEl.className = 'panel-shell-header';
+    // Make header clickable for collapse/expand
+    this.headerEl.style.cursor = 'pointer';
+    this.headerEl.addEventListener('click', () => this.toggleCollapse());
     this.el.appendChild(this.headerEl);
 
     this.bodyEl = document.createElement('div');
@@ -32,6 +38,17 @@ export class PlanPanel {
     container.appendChild(this.el);
 
     events.on('tick', () => this.update());
+    events.on('era:changed', () => this.update());
+  }
+
+  toggleCollapse(): void {
+    this.collapsed = !this.collapsed;
+    this.bodyEl.style.display = this.collapsed ? 'none' : '';
+  }
+
+  setCollapsed(collapsed: boolean): void {
+    this.collapsed = collapsed;
+    this.bodyEl.style.display = this.collapsed ? 'none' : '';
   }
 
   update(): void {
@@ -61,6 +78,41 @@ export class PlanPanel {
       msg.textContent = `Score ${this.state.campaignScore}/100 - ${this.state.campaignEndingTitle ?? 'Awaiting report'}.
 Choose "Continue as Sandbox" to keep building without campaign directives.`;
       this.bodyEl.appendChild(msg);
+      return;
+    }
+
+    // Era 1: show population progress toward unlocking Five-Year Plans
+    if (this.state.currentEra < 2 && !this.state.currentPlan) {
+      while (this.headerEl.firstChild) this.headerEl.removeChild(this.headerEl.firstChild);
+      const title = document.createElement('span');
+      title.textContent = `ERA 1: ${UIProgressionManager.getEraName(1).toUpperCase()}`;
+      this.headerEl.appendChild(title);
+
+      while (this.bodyEl.firstChild) this.bodyEl.removeChild(this.bodyEl.firstChild);
+
+      const msg = document.createElement('div');
+      msg.className = 'plan-goal-text';
+      msg.textContent = 'Grow to 200 population to unlock Five-Year Plans';
+      this.bodyEl.appendChild(msg);
+
+      const barEl = document.createElement('div');
+      barEl.className = 'plan-goal-bar';
+      const fillEl = document.createElement('div');
+      fillEl.className = 'plan-goal-fill';
+      const target = ERA_THRESHOLDS[1]; // 200
+      const pct = Math.min(100, (this.state.peakPopulation / target) * 100);
+      fillEl.style.width = `${pct}%`;
+      barEl.appendChild(fillEl);
+      const labelEl = document.createElement('span');
+      labelEl.className = 'plan-goal-label';
+      labelEl.textContent = `${this.state.population}/${target}`;
+      barEl.appendChild(labelEl);
+      this.bodyEl.appendChild(barEl);
+
+      const hint = document.createElement('div');
+      hint.className = 'plan-goal-hint';
+      hint.textContent = 'Build housing, roads, and power to attract citizens';
+      this.bodyEl.appendChild(hint);
       return;
     }
 

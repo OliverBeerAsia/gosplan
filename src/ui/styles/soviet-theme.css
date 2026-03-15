@@ -2580,3 +2580,121 @@ html.reduced-motion .soviet-ui *::after {
   animation-iteration-count: 1 !important;
   transition-duration: 1ms !important;
 }
+
+/* === Era Progression UI === */
+
+/* Locked toolbar category */
+.category-btn--locked {
+  opacity: 0.35;
+  cursor: not-allowed !important;
+  filter: grayscale(0.7);
+  position: relative;
+}
+.category-btn--locked::after {
+  content: '\1F512';
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  opacity: 0.6;
+}
+
+/* Category unlock flash animation */
+.category-unlock-flash {
+  animation: categoryUnlock 2.5s ease-out;
+}
+@keyframes categoryUnlock {
+  0%   { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.8); background: #FFD700; color: #1A1A1A; }
+  30%  { box-shadow: 0 0 12px 4px rgba(255, 215, 0, 0.5); }
+  100% { box-shadow: none; }
+}
+
+/* Resource stat unlock pulse */
+.stat-unlock-pulse {
+  animation: statPulse 2s ease-out;
+}
+@keyframes statPulse {
+  0%   { border-color: #FFD700; box-shadow: 0 0 8px rgba(255, 215, 0, 0.6); }
+  50%  { border-color: #FFD700; box-shadow: 0 0 4px rgba(255, 215, 0, 0.3); }
+  100% { box-shadow: none; }
+}
+
+/* Era Unlock Overlay */
+.era-unlock-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(10, 10, 10, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  animation: eraOverlayFadeIn 0.5s ease-out;
+}
+@keyframes eraOverlayFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.era-unlock-content {
+  background: linear-gradient(135deg, #1A0A0A 0%, #2A1010 50%, #1A0A0A 100%);
+  border: 2px solid #FFD700;
+  border-radius: 4px;
+  padding: 32px 48px;
+  max-width: 520px;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(255, 215, 0, 0.15), inset 0 0 20px rgba(255, 215, 0, 0.05);
+}
+.era-unlock-title {
+  font-family: var(--font-display, 'Press Start 2P', monospace);
+  color: #FFD700;
+  font-size: 18px;
+  margin: 0 0 8px 0;
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
+  letter-spacing: 2px;
+}
+.era-unlock-subtitle {
+  color: #C0B89A;
+  font-family: var(--font-ui, 'PT Sans Narrow', sans-serif);
+  font-size: 14px;
+  margin: 0 0 20px 0;
+}
+.era-unlock-section {
+  margin: 16px 0;
+  text-align: left;
+}
+.era-unlock-section h3 {
+  font-family: var(--font-display, 'Press Start 2P', monospace);
+  color: #D32F2F;
+  font-size: 10px;
+  margin: 0 0 8px 0;
+  letter-spacing: 1px;
+}
+.era-unlock-list {
+  color: #E0D8C0;
+  font-family: var(--font-ui, 'PT Sans Narrow', sans-serif);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.era-unlock-feature {
+  color: #E0D8C0;
+  font-family: var(--font-ui, 'PT Sans Narrow', sans-serif);
+  font-size: 13px;
+  padding: 2px 0;
+}
+.era-unlock-dismiss {
+  margin-top: 24px;
+  padding: 10px 32px;
+  background: #D32F2F;
+  color: #FFD700;
+  border: 1px solid #FFD700;
+  border-radius: 2px;
+  font-family: var(--font-display, 'Press Start 2P', monospace);
+  font-size: 11px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: background 0.15s;
+}
+.era-unlock-dismiss:hover {
+  background: #EF5350;
+}

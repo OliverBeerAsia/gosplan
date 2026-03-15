@@ -161,9 +161,16 @@ export class EventDirectorService {
       return;
     }
 
-    if (this.state.totalTicks % 8 !== 0) return;
+    // Events don't fire until Era 3
+    if (this.state.currentEra < 3) return;
 
-    const baseChance = this.state.mode === 'campaign' ? 0.12 : 0.08;
+    // Era 3: check every 16 ticks; Era 4+: every 8 ticks
+    const checkInterval = this.state.currentEra === 3 ? 16 : 8;
+    if (this.state.totalTicks % checkInterval !== 0) return;
+
+    // Era 3: halved base chance
+    const eraChanceMult = this.state.currentEra === 3 ? 0.5 : 1.0;
+    const baseChance = (this.state.mode === 'campaign' ? 0.12 : 0.08) * eraChanceMult;
     const chance = clamp(
       baseChance +
       this.state.performancePressure * 0.0024 +
@@ -190,7 +197,7 @@ export class EventDirectorService {
       severity: template.severity,
       choices: template.choices,
       startedTick: this.state.totalTicks,
-      deadlineTick: this.state.totalTicks + 12,
+      deadlineTick: this.state.totalTicks + 20,
     };
     this.state.activeEvent = activeEvent;
     this.lastTriggeredTickByTemplate.set(template.id, this.state.totalTicks);

@@ -21,8 +21,45 @@ export const TICKS_PER_YEAR = 52; // 52 weeks per year
 export const FIVE_YEAR_PLAN_TICKS = 5 * TICKS_PER_YEAR;
 
 // Starting resources
-export const STARTING_BUDGET = 50000;
+export const STARTING_BUDGET = 75000;
 export const STARTING_YEAR = 1980;
+
+// === Era Progression System ===
+// Population thresholds for era transitions (peak population)
+export const ERA_THRESHOLDS = [0, 200, 1000, 3000]; // Era 1..4
+export const ERA_COUNT = 4;
+
+// Tick speed per era (ms per week at 1x): Era 1 is slowest (more learning time)
+export const ERA_TICK_SPEEDS = [5000, 4000, 3600, 3600];
+
+// Economy per era
+export const ERA_INCOME_BASE = [800, 700, 500, 500];
+export const ERA_INCOME_PER_POP = [0.7, 0.6, 0.5, 0.5];
+export const ERA_MAINTENANCE_MULT = [0.6, 0.8, 1.0, 1.0];
+
+// Building era gates: which era unlocks each building
+export const BUILDING_ERA: Record<string, number> = {
+  kommunalka: 1,
+  coal_power_plant: 1,
+  road: 1,
+  power_line: 1,
+  park: 1,
+  khrushchyovka: 2,
+  factory: 2,
+  warehouse: 2,
+  school: 2,
+  hospital: 2,
+  monument: 2,
+  fountain: 2,
+  stalinka: 3,
+  panelak: 3,
+  cinema: 3,
+  radio_tower: 3,
+  metro_station: 3,
+  plaza: 3,
+  sports_complex: 3,
+  party_hq: 4,
+};
 
 // Population
 export const BASE_GROWTH_RATE = 0.03; // 3% per tick when conditions met

@@ -140,7 +140,7 @@ export class ZoneGrowthService {
     gy: number,
     demand: number
   ): BuildingDef | null {
-    const defs = this.registry.getByCategory(category)
+    const defs = this.registry.getAvailableByCategory(category, this.state.currentEra)
       .filter(def => this.isGrowthEligible(def, zone));
 
     const buildable = defs
