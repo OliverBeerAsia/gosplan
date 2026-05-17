@@ -10,8 +10,13 @@ Every push to `main` auto-deploys to GitHub Pages via the Actions workflow in `.
 
 ## Current Release
 
-- Version: `1.9.3`
+- Version: `1.9.4`
 - Status: playable, desktop-first, production build passing
+
+## What Is In 1.9.4
+
+- **Coal plant stack integration fix** — cooling towers and the stack now sit on a roof service deck so the plant reads as one attached industrial complex.
+- **Visual QA hotfix** — addresses detached-looking stack equipment seen in the live v1.9.3 coal power plant.
 
 ## What Is In 1.9.3
 

@@ -571,19 +571,26 @@ function drawCoalPowerPlant(renderer: Renderer): Texture {
   isoBox(g, ox, topY, bw, roofDepth, bh, 0x9C9F95, 0x7F8377, 0x65695E, true);
   isoBox(g, ox - bw * 0.42, topY + 14, bw * 0.52, roofDepth * 0.5, 34, 0x8A8C85, 0x70736B, 0x5C5F57, true);
 
-  drawCoolingTower(g, ox - bw * 0.43, topY + 2, 20, 48);
-  drawCoolingTower(g, ox + bw * 0.02, topY, 18, 44);
-  drawChimney(g, ox + bw * 0.22, topY - 2, 10, 66);
+  // Roof service deck anchors the stack assembly to the turbine hall so it
+  // reads as one plant, not separate props behind the building.
+  drawPowerPlantStackDeck(g, ox, topY, bw, roofDepth);
+
+  const towerAY = topY + roofDepth * 0.72;
+  const towerBY = topY + roofDepth * 0.58;
+  const stackY = topY + roofDepth * 0.76;
+  drawCoolingTower(g, ox - bw * 0.35, towerAY, 18, 42);
+  drawCoolingTower(g, ox + bw * 0.02, towerBY, 16, 39);
+  drawChimney(g, ox + bw * 0.25, stackY, 9, 62);
 
   // Conveyor and steam pipes.
-  g.moveTo(ox - bw * 0.58, topY + 20);
-  g.lineTo(ox + bw * 0.05, topY + 12);
+  g.moveTo(ox - bw * 0.52, topY + roofDepth * 0.7);
+  g.lineTo(ox + bw * 0.2, topY + roofDepth * 0.72);
   g.stroke({ width: 5, color: 0x4D4E50 });
-  g.moveTo(ox - bw * 0.7, oy - 22);
-  g.lineTo(ox - bw * 0.14, oy - 30);
+  g.moveTo(ox - bw * 0.62, oy - 22);
+  g.lineTo(ox - bw * 0.08, oy - 28);
   g.stroke({ width: 3, color: 0x5C5D60 });
-  g.moveTo(ox - bw * 0.7, oy - 10);
-  g.lineTo(ox - bw * 0.14, oy - 18);
+  g.moveTo(ox - bw * 0.62, oy - 10);
+  g.lineTo(ox - bw * 0.08, oy - 17);
   g.stroke({ width: 3, color: 0x5C5D60 });
 
   // Turbine hall vents.
@@ -2025,6 +2032,46 @@ function drawCivicGroundDetail(
     g.fill({ color: PALETTE.RED, alpha: 0.8 });
     g.circle(ox + bw * 0.14, y + 8, 1.8);
     g.fill({ color: PALETTE.RED_DARK, alpha: 0.72 });
+  }
+}
+
+function drawPowerPlantStackDeck(
+  g: Graphics,
+  ox: number,
+  topY: number,
+  bw: number,
+  roofDepth: number
+): void {
+  const deckY = topY + roofDepth * 0.58;
+  const deckW = bw * 0.5;
+  const deckH = roofDepth * 0.34;
+
+  isoBox(
+    g,
+    ox - bw * 0.16,
+    deckY,
+    deckW,
+    deckH,
+    9,
+    0x6F726B,
+    0x5B5E58,
+    0x484B46,
+    false
+  );
+
+  g.moveTo(ox - bw * 0.5, deckY + deckH * 0.72);
+  g.lineTo(ox + bw * 0.16, deckY + deckH * 0.92);
+  g.stroke({ width: 3, color: 0x4D4E50, alpha: 0.95 });
+
+  g.moveTo(ox - bw * 0.36, deckY + deckH * 0.86);
+  g.lineTo(ox + bw * 0.26, deckY + deckH * 1.04);
+  g.stroke({ width: 1.2, color: 0xB6B8AF, alpha: 0.45 });
+
+  for (let i = 0; i < 3; i++) {
+    const ventX = ox - bw * 0.32 + i * 13;
+    const ventY = deckY + deckH * 0.58 + i * 2;
+    g.rect(ventX, ventY, 8, 3);
+    g.fill({ color: 0x343835, alpha: 0.75 });
   }
 }
 

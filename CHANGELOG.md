@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.9.4] - 2026-05-17
+
+### Fixed
+
+- **Coal power plant stack assembly** — moved cooling towers and the smokestack onto a roof service deck so they read as attached plant infrastructure rather than separate props behind the building.
+
 ## [1.9.3] - 2026-05-17
 
 ### Changed
