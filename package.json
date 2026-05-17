@@ -1,6 +1,6 @@
 {
   "name": "gosplan",
-  "version": "1.9.2",
+  "version": "1.9.3",
   "description": "Soviet City Builder - SimCity 2000 style",
   "type": "module",
   "scripts": {

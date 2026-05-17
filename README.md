@@ -10,8 +10,14 @@ Every push to `main` auto-deploys to GitHub Pages via the Actions workflow in `.
 
 ## Current Release
 
-- Version: `1.7.3`
+- Version: `1.9.3`
 - Status: playable, desktop-first, production build passing
+
+## What Is In 1.9.3
+
+- **TTD-inspired building art pass** — building sprites now have crisper isometric rims, stronger roof silhouettes, residential balcony rhythm, industrial yard cues, and civic forecourt detail.
+- **Solid-body readability preserved** — the upgrade keeps procedural building massing opaque and avoids transparent rectangular overlays or background bleed.
+- **Graphics-only release** — no simulation, save-format, balance, placement, or renderer-anchor changes.
 
 ## What Is In 1.7.3
 

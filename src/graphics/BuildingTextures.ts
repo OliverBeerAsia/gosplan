@@ -312,6 +312,9 @@ function drawKhrushchyovka(renderer: Renderer): Texture {
   // Weathering: water stain streaks below parapet.
   drawWeatherStreak(g, ox - bw + 12, topY + roofDepth + 4, ox - bw + 13, topY + roofDepth + 22, PALETTE.STAIN_DARK, 0.1);
   drawWeatherStreak(g, ox - bw + 28, topY + roofDepth + 12, ox - bw + 29, topY + roofDepth + 28, PALETTE.DAMP_STREAK, 0.1);
+  drawBalconyRun(g, ox, topY, bw, roofDepth, 4, 'left', 1);
+  drawFacadePixelNoise(g, ox, topY, bw, roofDepth, bh, 31, 0.13);
+  drawPixelRim(g, ox, topY, bw, bh, 0.28);
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -377,6 +380,8 @@ function drawStalinka(renderer: Renderer): Texture {
   // Dome cap on the setback tower.
   drawDomeTop(g, ox, topY - 33, bw * 0.22, bw * 0.12, PALETTE.ROOF_TILE_COOL);
   drawStar(g, ox, topY - 38, 5, PALETTE.RED);
+  drawFacadePixelNoise(g, ox, topY, bw, roofDepth, bh, 47, 0.1);
+  drawPixelRim(g, ox, topY, bw, bh, 0.24);
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -446,6 +451,8 @@ function drawKommunalka(renderer: Renderer): Texture {
 
   // Weathering: soot mark near chimney.
   drawWeatherStreak(g, ox + bw * 0.28, topY + 2, ox + bw * 0.3, topY + 14, PALETTE.SOOT, 0.14, 2);
+  drawFacadePixelNoise(g, ox, topY, bw, roofDepth, bh, 59, 0.13);
+  drawPixelRim(g, ox, topY, bw, bh, 0.28);
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -540,6 +547,9 @@ function drawFactory(renderer: Renderer): Texture {
   // Weathering: heavy soot streaks near chimneys.
   drawWeatherStreak(g, ox - bw * 0.32, topY + 4, ox - bw * 0.3, topY + 28, PALETTE.SOOT, 0.16, 2.5);
   drawWeatherStreak(g, ox + bw * 0.14, topY + 2, ox + bw * 0.16, topY + 24, PALETTE.SOOT, 0.14, 2);
+  drawIndustrialYard(g, ox, oy, bw, 'factory');
+  drawFacadePixelNoise(g, ox, topY, bw, roofDepth, bh, 83, 0.16);
+  drawPixelRim(g, ox, topY, bw, bh, 0.26);
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -610,6 +620,9 @@ function drawCoalPowerPlant(renderer: Renderer): Texture {
   // Weathering: balanced soot streaks (one left, one right)
   drawWeatherStreak(g, ox - bw * 0.35, topY + roofDepth * 0.6, ox - bw * 0.33, topY + roofDepth * 0.6 + 20, PALETTE.SOOT, 0.16, 2.5);
   drawWeatherStreak(g, ox + bw * 0.15, topY + roofDepth * 0.4, ox + bw * 0.17, topY + roofDepth * 0.4 + 18, PALETTE.SOOT, 0.14, 2);
+  drawIndustrialYard(g, ox, oy, bw, 'power');
+  drawFacadePixelNoise(g, ox, topY, bw, roofDepth, bh, 97, 0.15);
+  drawPixelRim(g, ox, topY, bw, bh, 0.25);
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -680,6 +693,9 @@ function drawPartyHQ(renderer: Renderer): Texture {
   g.lineTo(ox, topY - 1);
   g.lineTo(ox + bw - 2, topY + roofDepth / 2);
   g.stroke({ width: 2, color: PALETTE.GOLD, alpha: 0.85 });
+  drawCivicGroundDetail(g, ox, oy, bw, 'party');
+  drawFacadePixelNoise(g, ox, topY, bw, roofDepth, bh, 109, 0.09);
+  drawPixelRim(g, ox, topY, bw, bh, 0.23);
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -766,6 +782,9 @@ function drawHospital(renderer: Renderer): Texture {
 
   // Weathering: mild stain on right face.
   drawWeatherStreak(g, ox + 18, topY + roofDepth + 6, ox + 19, topY + roofDepth + 22, PALETTE.STAIN_DARK, 0.08);
+  drawCivicGroundDetail(g, ox, oy, bw, 'hospital');
+  drawFacadePixelNoise(g, ox, topY, bw, roofDepth, bh, 127, 0.08);
+  drawPixelRim(g, ox, topY, bw, bh, 0.22);
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -843,6 +862,9 @@ function drawSchool(renderer: Renderer): Texture {
     { x: ox + bw * 0.32, y: topY - 15 },
   ]);
   g.fill(PALETTE.RED);
+  drawCivicGroundDetail(g, ox, oy, bw, 'school');
+  drawFacadePixelNoise(g, ox, topY, bw, roofDepth, bh, 139, 0.08);
+  drawPixelRim(g, ox, topY, bw, bh, 0.23);
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -1345,6 +1367,9 @@ function drawPanelak(renderer: Renderer): Texture {
   // Weathering: damp streaks at panel joints.
   drawWeatherStreak(g, ox - bw + 14, topY + roofDepth + 16, ox - bw + 15, topY + roofDepth + 38, PALETTE.DAMP_STREAK, 0.11);
   drawWeatherStreak(g, ox - bw + 32, topY + roofDepth + 24, ox - bw + 33, topY + roofDepth + 44, PALETTE.DAMP_STREAK, 0.1);
+  drawBalconyRun(g, ox, topY, bw, roofDepth, 6, 'right', 2);
+  drawFacadePixelNoise(g, ox, topY, bw, roofDepth, bh, 151, 0.12);
+  drawPixelRim(g, ox, topY, bw, bh, 0.27);
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -1398,6 +1423,9 @@ function drawWarehouse(renderer: Renderer): Texture {
   g.rect(ox - bw + 7, oy - 2, 24, 2.5);
   g.fill(PALETTE.INDUSTRIAL_OCHRE);
   drawStar(g, ox + bw * 0.35, oy - 26, 5, PALETTE.RED);
+  drawIndustrialYard(g, ox, oy, bw, 'warehouse');
+  drawFacadePixelNoise(g, ox, topY, bw, roofDepth, bh, 163, 0.14);
+  drawPixelRim(g, ox, topY, bw, bh, 0.26);
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -1489,6 +1517,9 @@ function drawCinema(renderer: Renderer): Texture {
   g.moveTo(ox - 6, oy - 1);
   g.lineTo(ox - 4, oy - 7);
   g.stroke({ width: 1, color: PALETTE.IRON, alpha: 0.6 });
+  drawCivicGroundDetail(g, ox, oy, bw, 'cinema');
+  drawFacadePixelNoise(g, ox, topY, bw, roofDepth, bh, 179, 0.09);
+  drawPixelRim(g, ox, topY, bw, bh, 0.24);
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -1650,6 +1681,9 @@ function drawMetroStation(renderer: Renderer): Texture {
   // Vault outline.
   g.ellipse(ox, topY + roofDepth * 0.32, bw * 0.65, bw * 0.18);
   g.stroke({ width: 0.7, color: 0x000000, alpha: 0.15 });
+  drawCivicGroundDetail(g, ox, oy, bw, 'metro');
+  drawFacadePixelNoise(g, ox, topY, bw, roofDepth, bh, 193, 0.08);
+  drawPixelRim(g, ox, topY, bw, bh, 0.23);
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -1804,6 +1838,9 @@ function drawSportsComplex(renderer: Renderer): Texture {
     g.rect(lp.x - 2.5, lp.y - 18, 5, 3);
     g.fill(PALETTE.YELLOW);
   }
+  drawCivicGroundDetail(g, ox, oy, bw, 'sports');
+  drawFacadePixelNoise(g, ox, topY, bw, roofDepth, bh, 211, 0.08);
+  drawPixelRim(g, ox, topY, bw, bh, 0.24);
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -1811,6 +1848,185 @@ function drawSportsComplex(renderer: Renderer): Texture {
 }
 
 // ===== HELPER DRAWING FUNCTIONS =====
+
+function drawPixelRim(
+  g: Graphics,
+  ox: number,
+  topY: number,
+  bw: number,
+  depth: number,
+  alpha = 0.25
+): void {
+  const top = { x: ox, y: topY };
+  const right = { x: ox + bw, y: topY + bw / 2 };
+  const front = { x: ox, y: topY + bw };
+  const left = { x: ox - bw, y: topY + bw / 2 };
+  const bottomRight = { x: ox + bw, y: topY + bw / 2 + depth };
+  const bottomFront = { x: ox, y: topY + bw + depth };
+  const bottomLeft = { x: ox - bw, y: topY + bw / 2 + depth };
+
+  g.moveTo(top.x, top.y);
+  g.lineTo(left.x, left.y);
+  g.lineTo(front.x, front.y);
+  g.stroke({ width: 1, color: 0xF4EEE0, alpha: alpha * 0.7 });
+
+  g.moveTo(top.x, top.y);
+  g.lineTo(right.x, right.y);
+  g.lineTo(front.x, front.y);
+  g.stroke({ width: 1, color: 0x1F2526, alpha });
+
+  g.moveTo(left.x, left.y);
+  g.lineTo(bottomLeft.x, bottomLeft.y);
+  g.lineTo(bottomFront.x, bottomFront.y);
+  g.lineTo(bottomRight.x, bottomRight.y);
+  g.lineTo(right.x, right.y);
+  g.stroke({ width: 1.1, color: 0x111515, alpha: alpha * 0.9 });
+
+  g.moveTo(front.x, front.y);
+  g.lineTo(bottomFront.x, bottomFront.y);
+  g.stroke({ width: 1, color: 0x0D1010, alpha: alpha * 0.85 });
+}
+
+function drawFacadePixelNoise(
+  g: Graphics,
+  ox: number,
+  topY: number,
+  bw: number,
+  roofDepth: number,
+  depth: number,
+  seed: number,
+  alpha = 0.12
+): void {
+  for (let i = 0; i < 18; i++) {
+    const h = seededHash(seed + i * 37);
+    const onRight = (h & 1) === 1;
+    const width = 1 + ((h >> 5) & 1);
+    const height = 1 + ((h >> 7) & 1);
+    const shade = ((h >> 3) & 1) === 1 ? 0xF6F0DF : 0x1E2425;
+    const faceX = onRight
+      ? ox + 5 + ((h >> 9) % Math.max(8, Math.floor(bw * 0.55)))
+      : ox - bw + 5 + ((h >> 9) % Math.max(8, Math.floor(bw * 0.55)));
+    const faceY = topY + roofDepth + 7 + ((h >> 15) % Math.max(8, Math.floor(depth * 0.72)));
+    if (faceY > topY + bw + depth - 8) continue;
+    g.rect(faceX, faceY, width, height);
+    g.fill({ color: shade, alpha });
+  }
+}
+
+function seededHash(value: number): number {
+  let v = value | 0;
+  v ^= v << 13;
+  v ^= v >>> 17;
+  v ^= v << 5;
+  return v >>> 0;
+}
+
+function drawBalconyRun(
+  g: Graphics,
+  ox: number,
+  topY: number,
+  bw: number,
+  roofDepth: number,
+  rows: number,
+  side: 'left' | 'right',
+  phase = 0
+): void {
+  const isRight = side === 'right';
+  for (let r = 0; r < rows; r++) {
+    const x = isRight
+      ? ox + 6 + ((r + phase) % 2) * 5
+      : ox - bw + 10 + ((r + phase) % 2) * 4;
+    const y = topY + roofDepth + 13 + r * 12;
+    isoRect(g, x, y, 8, 4, isRight ? -1 : 1);
+    g.fill({ color: 0x2F373A, alpha: 0.62 });
+    isoRect(g, x + 1, y + 1, 6, 2, isRight ? -1 : 1);
+    g.fill({ color: 0xD6D1C4, alpha: 0.45 });
+    g.moveTo(x, y + 4);
+    g.lineTo(x + 8, y + 4 + (isRight ? -4 : 4));
+    g.stroke({ width: 0.8, color: PALETTE.IRON, alpha: 0.6 });
+  }
+}
+
+function drawIndustrialYard(
+  g: Graphics,
+  ox: number,
+  oy: number,
+  bw: number,
+  kind: 'factory' | 'power' | 'warehouse'
+): void {
+  const baseY = oy + bw * 0.45;
+  const dirtColor = kind === 'power' ? 0x514C40 : 0x5D5B4B;
+
+  g.poly([
+    { x: ox - bw * 0.82, y: baseY - 5 },
+    { x: ox - bw * 0.28, y: baseY + 6 },
+    { x: ox - bw * 0.48, y: baseY + 15 },
+    { x: ox - bw * 0.98, y: baseY + 3 },
+  ]);
+  g.fill({ color: dirtColor, alpha: 0.45 });
+
+  if (kind === 'power') {
+    g.ellipse(ox - bw * 0.7, baseY + 3, 13, 5);
+    g.fill({ color: 0x2B2925, alpha: 0.68 });
+    g.ellipse(ox - bw * 0.67, baseY + 1, 8, 3);
+    g.fill({ color: 0x171716, alpha: 0.45 });
+  } else {
+    for (let i = 0; i < 3; i++) {
+      const cx = ox - bw * 0.78 + i * 10;
+      const cy = baseY - 1 + i * 3;
+      isoRect(g, cx, cy, 7, 5, 1);
+      g.fill(i === 1 ? PALETTE.INDUSTRIAL_OCHRE : PALETTE.INDUSTRIAL_RUST);
+      isoRect(g, cx + 1, cy + 1, 5, 2, 1);
+      g.fill({ color: 0x1B1D1F, alpha: 0.25 });
+    }
+  }
+
+  // Low fence and track-like dark lines, a compact cue from transport-management games.
+  g.moveTo(ox - bw * 0.98, baseY + 5);
+  g.lineTo(ox - bw * 0.4, baseY + 18);
+  g.stroke({ width: 1, color: PALETTE.IRON, alpha: 0.55 });
+  g.moveTo(ox - bw * 0.92, baseY + 1);
+  g.lineTo(ox - bw * 0.34, baseY + 14);
+  g.stroke({ width: 0.8, color: 0x191B1C, alpha: 0.35 });
+}
+
+function drawCivicGroundDetail(
+  g: Graphics,
+  ox: number,
+  oy: number,
+  bw: number,
+  kind: 'party' | 'hospital' | 'school' | 'cinema' | 'metro' | 'sports'
+): void {
+  const y = oy + bw * 0.48;
+  const stripeColor = kind === 'hospital'
+    ? PALETTE.RED
+    : kind === 'school'
+      ? PALETTE.YELLOW
+      : kind === 'sports'
+        ? 0xD4D0C8
+        : PALETTE.GOLD;
+
+  g.poly([
+    { x: ox - bw * 0.44, y: y - 4 },
+    { x: ox + bw * 0.18, y: y + 7 },
+    { x: ox + bw * 0.08, y: y + 12 },
+    { x: ox - bw * 0.54, y: y + 1 },
+  ]);
+  g.fill({ color: 0x6B6D66, alpha: 0.36 });
+
+  for (let i = 0; i < 3; i++) {
+    g.moveTo(ox - bw * 0.38 + i * 8, y - 1 + i * 2);
+    g.lineTo(ox - bw * 0.2 + i * 8, y + 3 + i * 2);
+    g.stroke({ width: 1, color: stripeColor, alpha: 0.42 });
+  }
+
+  if (kind === 'metro' || kind === 'party') {
+    g.circle(ox - bw * 0.52, y - 2, 2.2);
+    g.fill({ color: PALETTE.RED, alpha: 0.8 });
+    g.circle(ox + bw * 0.14, y + 8, 1.8);
+    g.fill({ color: PALETTE.RED_DARK, alpha: 0.72 });
+  }
+}
 
 // Weathering streak: subtle vertical stain to suggest water/soot damage
 function drawWeatherStreak(

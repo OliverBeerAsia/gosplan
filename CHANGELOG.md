@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [1.9.3] - 2026-05-17
+
+### Changed
+
+- **TTD-inspired building art pass** — sharpened procedural building sprites with crisper 1px isometric rims, stronger face separation, deterministic pixel wear, residential balcony runs, industrial yard cues, and civic forecourt details.
+- **Building massing kept solid** — new polish layers avoid transparent rectangular overlays and preserve opaque building bodies so sprites do not appear ghosted or washed out.
+- **Graphics-only release** — no simulation logic, save format, placement rules, sprite anchors, depth sorting, or balance values changed.
+
+### Added
+
+- Release documentation for v1.9.3 covering implementation notes, multi-agent review, test report, bug check, and release notes.
+
 ## [1.7.3] - 2026-02-18
 
 ### Fixed
