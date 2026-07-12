@@ -1,0 +1,14 @@
+{
+  "image": "buildings-khrushchyovka-1x.svg",
+  "frames": {
+    "short-far": { "x": 0, "y": 0, "w": 160, "h": 176 },
+    "long-far": { "x": 160, "y": 0, "w": 160, "h": 176 },
+    "linked-far": { "x": 320, "y": 0, "w": 160, "h": 176 },
+    "short-mid": { "x": 0, "y": 176, "w": 160, "h": 176 },
+    "long-mid": { "x": 160, "y": 176, "w": 160, "h": 176 },
+    "linked-mid": { "x": 320, "y": 176, "w": 160, "h": 176 },
+    "short-near": { "x": 0, "y": 352, "w": 160, "h": 176 },
+    "long-near": { "x": 160, "y": 352, "w": 160, "h": 176 },
+    "linked-near": { "x": 320, "y": 352, "w": 160, "h": 176 }
+  }
+}

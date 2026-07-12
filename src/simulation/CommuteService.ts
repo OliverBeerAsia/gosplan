@@ -3,6 +3,26 @@ import { EventBus } from '../core/EventBus';
 import { GameStateData } from '../core/GameState';
 import { Grid } from '../grid/Grid';
 
+export function hasRoadNearbyAtEqualElevation(
+  grid: Grid,
+  gx: number,
+  gy: number,
+  roads: Set<string>,
+  radius: number
+): boolean {
+  const targetElevation = grid.getElevation(gx, gy);
+  for (let dx = -radius; dx <= radius; dx++) {
+    for (let dy = -radius; dy <= radius; dy++) {
+      if (Math.abs(dx) + Math.abs(dy) > radius) continue;
+      const roadGx = gx + dx;
+      const roadGy = gy + dy;
+      if (!roads.has(`${roadGx},${roadGy}`)) continue;
+      if (grid.getElevation(roadGx, roadGy) === targetElevation) return true;
+    }
+  }
+  return false;
+}
+
 export class CommuteService {
   private tickCounter = 0;
 
@@ -63,9 +83,11 @@ export class CommuteService {
           !!cell.building;
         if (!activeTile) continue;
 
+        const accessGx = cell.building?.gx ?? gx;
+        const accessGy = cell.building?.gy ?? gy;
         let score = 22;
-        if (this.hasRoadNearby(gx, gy, roads, 2)) score += 38;
-        if (this.hasRoadNearby(gx, gy, roads, 1)) score += 10;
+        if (hasRoadNearbyAtEqualElevation(this.grid, accessGx, accessGy, roads, 2)) score += 38;
+        if (hasRoadNearbyAtEqualElevation(this.grid, accessGx, accessGy, roads, 1)) score += 10;
         if (this.hasMetroNearby(gx, gy, metros, 7)) score += 20;
         score += Math.round(cell.serviceCoverage * 0.13);
 
@@ -93,16 +115,6 @@ export class CommuteService {
 
     if (count === 0) return 0;
     return Math.round(total / count);
-  }
-
-  private hasRoadNearby(gx: number, gy: number, roads: Set<string>, radius: number): boolean {
-    for (let dx = -radius; dx <= radius; dx++) {
-      for (let dy = -radius; dy <= radius; dy++) {
-        if (Math.abs(dx) + Math.abs(dy) > radius) continue;
-        if (roads.has(`${gx + dx},${gy + dy}`)) return true;
-      }
-    }
-    return false;
   }
 
   private hasMetroNearby(

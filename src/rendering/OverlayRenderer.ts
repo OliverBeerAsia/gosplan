@@ -1,4 +1,4 @@
-import { Container, Sprite } from 'pixi.js';
+import { Container, Graphics, Sprite } from 'pixi.js';
 import { TextureFactory } from '../graphics/TextureFactory';
 import { gridToWorld } from './IsometricRenderer';
 import { TILE_HALF_W, TILE_HALF_H } from '../constants';
@@ -9,11 +9,11 @@ import { GraphicsQuality } from '../core/GameState';
 
 export class OverlayRenderer {
   readonly container: Container;
-  private ghostSprites: Sprite[] = [];
-  private zoneGhostSprites: Sprite[] = [];
+  private ghostSprites: Array<Sprite | Graphics> = [];
+  private zoneGhostSprites: Array<Sprite | Graphics> = [];
   private powerOverlayContainer: Container;
   private serviceOverlayContainer: Container;
-  private selectionSprite: Sprite | null = null;
+  private selectionSprites: Sprite[] = [];
   private showPowerOverlay = false;
   private showServiceOverlay = false;
   private quality: GraphicsQuality = 'high';
@@ -33,11 +33,17 @@ export class OverlayRenderer {
     this.container.addChild(this.powerOverlayContainer);
     this.container.addChild(this.serviceOverlayContainer);
 
-    events?.on('service:updated', () => {
-      if (this.showServiceOverlay) {
-        this.updateServiceOverlay();
-      }
-    });
+    const refreshSemanticOverlays = (): void => {
+      if (this.powerOverlayContainer.visible) this.updatePowerOverlay();
+      if (this.serviceOverlayContainer.visible) this.updateServiceOverlay();
+    };
+
+    events?.on('building:placed', refreshSemanticOverlays);
+    events?.on('building:demolished', refreshSemanticOverlays);
+    events?.on('zone:changed', refreshSemanticOverlays);
+    events?.on('power:updated', refreshSemanticOverlays);
+    events?.on('service:updated', refreshSemanticOverlays);
+    events?.on('game:loaded', refreshSemanticOverlays);
 
     events?.on('overlay:service:toggle', () => {
       this.toggleServiceOverlay();
@@ -59,7 +65,8 @@ export class OverlayRenderer {
 
     for (let dx = 0; dx < def.width; dx++) {
       for (let dy = 0; dy < def.height; dy++) {
-        const pos = gridToWorld(gx + dx, gy + dy, 0);
+        const elevation = this.grid.getElevation(gx + dx, gy + dy);
+        const pos = gridToWorld(gx + dx, gy + dy, elevation);
         const sprite = new Sprite(this.textures.get(texKey));
         sprite.x = pos.x - TILE_HALF_W;
         sprite.y = pos.y - TILE_HALF_H;
@@ -75,7 +82,8 @@ export class OverlayRenderer {
       const ghostBuilding = new Sprite(buildingTex);
       const centerGx = gx + def.width / 2;
       const centerGy = gy + def.height / 2;
-      const pos = gridToWorld(centerGx, centerGy, 0);
+      const elevation = this.grid.getElevation(gx, gy);
+      const pos = gridToWorld(centerGx, centerGy, elevation);
       ghostBuilding.anchor.set(0.5, 1);
       ghostBuilding.x = pos.x;
       ghostBuilding.y = pos.y + TILE_HALF_H;
@@ -103,7 +111,7 @@ export class OverlayRenderer {
     const texKey = `zone_${zone}`;
     if (!this.textures.has(texKey)) return;
 
-    const pos = gridToWorld(gx, gy, 0);
+    const pos = gridToWorld(gx, gy, this.grid.getElevation(gx, gy));
     const sprite = new Sprite(this.textures.get(texKey));
     sprite.x = pos.x - TILE_HALF_W;
     sprite.y = pos.y - TILE_HALF_H;
@@ -120,38 +128,86 @@ export class OverlayRenderer {
     this.zoneGhostSprites = [];
   }
 
-  showTileGhost(gx: number, gy: number, textureKey: 'ground_highlight' | 'ground_invalid' = 'ground_invalid'): void {
+  showTileGhost(
+    gx: number,
+    gy: number,
+    textureKey: 'ground_highlight' | 'ground_invalid' = 'ground_invalid',
+    width = 1,
+    height = 1
+  ): void {
     this.clearGhost();
     this.clearZoneGhost();
 
     if (!this.grid.inBounds(gx, gy)) return;
     if (!this.textures.has(textureKey)) return;
 
-    const pos = gridToWorld(gx, gy, 0);
-    const sprite = new Sprite(this.textures.get(textureKey));
-    sprite.x = pos.x - TILE_HALF_W;
-    sprite.y = pos.y - TILE_HALF_H;
-    sprite.alpha = 0.7;
-    this.container.addChild(sprite);
-    this.zoneGhostSprites.push(sprite);
+    for (let dx = 0; dx < width; dx++) {
+      for (let dy = 0; dy < height; dy++) {
+        if (!this.grid.inBounds(gx + dx, gy + dy)) continue;
+        const pos = gridToWorld(
+          gx + dx,
+          gy + dy,
+          this.grid.getElevation(gx + dx, gy + dy)
+        );
+        const sprite = new Sprite(this.textures.get(textureKey));
+        sprite.x = pos.x - TILE_HALF_W;
+        sprite.y = pos.y - TILE_HALF_H;
+        sprite.alpha = 0.7;
+        this.container.addChild(sprite);
+        this.zoneGhostSprites.push(sprite);
+      }
+    }
   }
 
-  showSelection(gx: number, gy: number): void {
+  /** Clear-zone preview uses an X hatch so its meaning does not depend on colour. */
+  showClearZoneGhost(gx: number, gy: number): void {
+    this.clearGhost();
+    this.clearZoneGhost();
+    if (!this.grid.inBounds(gx, gy)) return;
+
+    const pos = gridToWorld(gx, gy, this.grid.getElevation(gx, gy));
+    const marker = new Graphics();
+    marker.poly([
+      { x: TILE_HALF_W, y: 0 },
+      { x: TILE_HALF_W * 2, y: TILE_HALF_H },
+      { x: TILE_HALF_W, y: TILE_HALF_H * 2 },
+      { x: 0, y: TILE_HALF_H },
+    ]).fill({ color: 0x5A1010, alpha: 0.36 }).stroke({ color: 0xFFE4B5, width: 1.5, alpha: 0.9 });
+    marker.moveTo(14, 7).lineTo(50, 25);
+    marker.moveTo(50, 7).lineTo(14, 25);
+    marker.stroke({ color: 0xFFE4B5, width: 2.5, alpha: 0.95 });
+    marker.x = pos.x - TILE_HALF_W;
+    marker.y = pos.y - TILE_HALF_H;
+    this.container.addChild(marker);
+    this.zoneGhostSprites.push(marker);
+  }
+
+  showSelection(gx: number, gy: number, width = 1, height = 1): void {
     this.clearSelection();
-    const pos = gridToWorld(gx, gy, 0);
-    this.selectionSprite = new Sprite(this.textures.get('ground_highlight'));
-    this.selectionSprite.x = pos.x - TILE_HALF_W;
-    this.selectionSprite.y = pos.y - TILE_HALF_H;
-    this.selectionSprite.alpha = 0.5;
-    this.container.addChild(this.selectionSprite);
+    for (let dx = 0; dx < width; dx++) {
+      for (let dy = 0; dy < height; dy++) {
+        if (!this.grid.inBounds(gx + dx, gy + dy)) continue;
+        const pos = gridToWorld(
+          gx + dx,
+          gy + dy,
+          this.grid.getElevation(gx + dx, gy + dy)
+        );
+        const sprite = new Sprite(this.textures.get('ground_highlight'));
+        sprite.x = pos.x - TILE_HALF_W;
+        sprite.y = pos.y - TILE_HALF_H;
+        sprite.alpha = 0.5;
+        this.container.addChild(sprite);
+        this.selectionSprites.push(sprite);
+      }
+    }
   }
 
   clearSelection(): void {
-    if (this.selectionSprite) {
-      this.container.removeChild(this.selectionSprite);
-      this.selectionSprite.destroy();
-      this.selectionSprite = null;
+    for (const sprite of this.selectionSprites) {
+      this.container.removeChild(sprite);
+      sprite.destroy();
     }
+    this.selectionSprites = [];
   }
 
   togglePowerOverlay(show?: boolean): void {
@@ -164,16 +220,15 @@ export class OverlayRenderer {
 
   updatePowerOverlay(): void {
     this.powerOverlayContainer.removeChildren();
-    if (!this.showPowerOverlay) return;
+    if (!this.powerOverlayContainer.visible) return;
 
     const size = this.grid.size;
     for (let gx = 0; gx < size; gx++) {
       for (let gy = 0; gy < size; gy++) {
         const cell = this.grid.getCell(gx, gy);
         if (!cell || !cell.building) continue;
-        if (this.quality === 'low' && (gx + gy) % 2 !== 0) continue;
         if (cell.building.powered) {
-          const pos = gridToWorld(gx, gy, 0);
+          const pos = gridToWorld(gx, gy, this.grid.getElevation(gx, gy));
           const sprite = new Sprite(this.textures.get('power_overlay'));
           sprite.x = pos.x - TILE_HALF_W;
           sprite.y = pos.y - TILE_HALF_H;
@@ -202,10 +257,9 @@ export class OverlayRenderer {
       for (let gy = 0; gy < size; gy++) {
         const cell = this.grid.getCell(gx, gy);
         if (!cell || cell.serviceCoverage <= 0) continue;
-        if (this.quality === 'low' && (gx + gy) % 2 !== 0) continue;
         if (cell.terrain === 'water' || cell.terrain === 'hill') continue;
 
-        const pos = gridToWorld(gx, gy, 0);
+        const pos = gridToWorld(gx, gy, this.grid.getElevation(gx, gy));
         const sprite = new Sprite(this.textures.get('service_overlay'));
         sprite.x = pos.x - TILE_HALF_W;
         sprite.y = pos.y - TILE_HALF_H;

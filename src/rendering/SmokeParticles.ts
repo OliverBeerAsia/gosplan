@@ -105,7 +105,11 @@ export class SmokeParticles {
       if (def.id !== 'factory' && def.id !== 'coal_power_plant') continue;
       const centerGx = b.gx + def.width / 2;
       const centerGy = b.gy + def.height / 2;
-      this.smokePositions.push(gridToWorld(centerGx, centerGy, 0));
+      this.smokePositions.push(gridToWorld(
+        centerGx,
+        centerGy,
+        this.grid.getElevation(b.gx, b.gy)
+      ));
     }
   }
 
@@ -174,7 +178,7 @@ export class SmokeParticles {
       if (!def || def.category !== 'industrial') continue;
       const centerGx = b.gx + def.width / 2;
       const centerGy = b.gy + def.height / 2;
-      const pos = gridToWorld(centerGx, centerGy, 0);
+      const pos = gridToWorld(centerGx, centerGy, this.grid.getElevation(b.gx, b.gy));
       industrialPositions.push(pos);
     }
 

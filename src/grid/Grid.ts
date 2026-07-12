@@ -9,11 +9,17 @@ interface BuildingFootprint {
   height: number;
 }
 
+// Generated maps currently use a much smaller range. This cap is defensive for
+// hand-edited or legacy save data so one corrupt value cannot move sprites far
+// outside the camera and pointer-picking search area.
+export const MAX_RENDER_ELEVATION = 8;
+
 export class Grid {
   readonly size: number;
   private cells: Cell[][];
   private buildingsById = new Map<number, PlacedBuilding>();
   private footprintsById = new Map<number, BuildingFootprint>();
+  private cachedMaxElevation: number | null = null;
 
   constructor(size: number = MAP_SIZE) {
     this.size = size;
@@ -50,9 +56,49 @@ export class Grid {
     return this.cells[gx][gy];
   }
 
+  /**
+   * Return a finite, integer elevation suitable for projection and comparison.
+   * Water is always rendered at the shared water plane, including old saves.
+   */
+  getElevation(gx: number, gy: number): number {
+    const cell = this.getCell(gx, gy);
+    if (!cell || cell.terrain === 'water') return 0;
+    const elevation = Number(cell.elevation);
+    if (!Number.isFinite(elevation)) return 0;
+    return Math.max(0, Math.min(MAX_RENDER_ELEVATION, Math.floor(elevation)));
+  }
+
+  getMaxElevation(): number {
+    if (this.cachedMaxElevation !== null) return this.cachedMaxElevation;
+    let max = 0;
+    for (let gx = 0; gx < this.size; gx++) {
+      for (let gy = 0; gy < this.size; gy++) {
+        max = Math.max(max, this.getElevation(gx, gy));
+      }
+    }
+    this.cachedMaxElevation = max;
+    return this.cachedMaxElevation;
+  }
+
+  setElevation(gx: number, gy: number, elevation: number): void {
+    const cell = this.getCell(gx, gy);
+    if (!cell) return;
+    cell.elevation = elevation;
+    this.cachedMaxElevation = null;
+  }
+
+  /** Networks cannot cross a cliff until explicit ramp assets/rules exist. */
+  canConnectAtEqualElevation(fromGx: number, fromGy: number, toGx: number, toGy: number): boolean {
+    if (!this.inBounds(fromGx, fromGy) || !this.inBounds(toGx, toGy)) return false;
+    return this.getElevation(fromGx, fromGy) === this.getElevation(toGx, toGy);
+  }
+
   setTerrain(gx: number, gy: number, terrain: TerrainType): void {
     const cell = this.getCell(gx, gy);
-    if (cell) cell.terrain = terrain;
+    if (cell) {
+      cell.terrain = terrain;
+      this.cachedMaxElevation = null;
+    }
   }
 
   setZone(gx: number, gy: number, zone: ZoneType): boolean {
@@ -76,7 +122,24 @@ export class Grid {
     return this.getPlacementRejection(gx, gy, width, height) === null;
   }
 
-  getPlacementRejection(gx: number, gy: number, width: number, height: number): string | null {
+  /**
+   * Compatibility predicate for reconstructing archived buildings. Saves made
+   * before level-footprint placement existed may contain a building spanning
+   * multiple elevations; those buildings remain loadable and render from their
+   * master cell's elevation, but cannot be newly placed that way.
+   */
+  canRestoreFootprint(gx: number, gy: number, width: number, height: number): boolean {
+    return this.getPlacementRejection(gx, gy, width, height, false) === null;
+  }
+
+  getPlacementRejection(
+    gx: number,
+    gy: number,
+    width: number,
+    height: number,
+    requireLevel: boolean = true
+  ): string | null {
+    let footprintElevation: number | null = null;
     for (let dx = 0; dx < width; dx++) {
       for (let dy = 0; dy < height; dy++) {
         const cell = this.getCell(gx + dx, gy + dy);
@@ -87,6 +150,14 @@ export class Grid {
           if (cell.terrain === 'hill') return 'Cannot build on hills';
           if (cell.terrain === 'forest') return 'Clear forest first (demolish)';
           return 'Terrain not buildable';
+        }
+        if (requireLevel) {
+          const elevation = this.getElevation(gx + dx, gy + dy);
+          if (footprintElevation === null) {
+            footprintElevation = elevation;
+          } else if (elevation !== footprintElevation) {
+            return 'Ground must be level';
+          }
         }
       }
     }

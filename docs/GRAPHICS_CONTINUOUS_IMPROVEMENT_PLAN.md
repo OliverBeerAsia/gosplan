@@ -1,71 +1,20 @@
 # Graphics Continuous Improvement Plan
 
-## Objective
+This file is retained as a stable routing point for older release notes and links.
 
-Deliver a sustained visual quality increase in buildings, terrain, zoning clarity, and Soviet atmosphere without sacrificing simulation readability or performance.
+The graphics program now has two maintained sources of truth:
 
-## Cadence
+- Creative direction, visual evidence, release packs, and acceptance gates: `docs/GRAPHICS_REVIEW_AND_ROADMAP_2026-07-10.md`
+- Technical architecture, dependency order, sprint-ready work items, QA, and release discipline: `docs/GRAPHICS_IMPLEMENTATION_PLAN_2026-07-10.md`
 
-- Every 2 to 3 weeks:
-  - ship one visual pack
-  - include before/after screenshots
-  - run visual QA checklist and performance smoke
+Supporting operational records:
 
-## Workstreams
+- Backup and rollback runbook: `docs/GRAPHICS_BACKUP_AND_ROLLBACK.md`
+- Generated and production asset provenance: `docs/GRAPHICS_ASSET_PROVENANCE_2026-07-10.md`
+- Phase 1 implementation and adversarial-resolution report: `docs/GRAPHICS_PHASE1_IMPLEMENTATION_REPORT_2026-07-10.md`
+- Exact Phase 1 and pre-existing dirty-path inventory: `docs/GRAPHICS_PHASE1_SCOPE_2026-07-10.md`
+- Browser evidence index: `docs/graphics-implementation-evidence/README.md`
 
-### 1) Buildings
+GitHub Pages must pass authored-art validation, authored-art tests, elevation validation, legacy atlas validation, determinism validation, and the production build before deployment.
 
-- Expand building variant coverage:
-  - facade packs
-  - roof packs
-  - weathering/condition layers
-- Add district-specific architecture options:
-  - worker housing blocks
-  - industrial compounds
-  - civic cores
-- Keep queue storytelling tied to demand and service pressure.
-
-### 2) Terrain and Environment
-
-- Increase material variety:
-  - grass/ground
-  - dirt/yard
-  - industrial wear
-- Continue transition and edge polish.
-- Add ambient props in later packs:
-  - lamp posts
-  - fences
-  - kiosks
-  - utility poles
-
-### 3) Zone and Data Overlays
-
-- Keep map-like hatch language for zones.
-- Add and tune supplementary data layers:
-  - queue pressure
-  - pollution/noise
-  - desirability
-- Maintain strict readability checks.
-
-### 4) Performance and Smoothness
-
-- Keep draw-call and particle budgets per quality tier.
-- Maintain camera smoothness and stable frame times.
-- Track impact per added visual system.
-
-## Release Gate
-
-A visual pack ships only if:
-- build passes
-- visual QA checklist passes
-- no gameplay readability regressions
-- quality-tier behavior remains functional
-
-## Ownership Model
-
-Use rotating review roles for each pack:
-- Rendering Review
-- Simulation/UI Readability Review
-- Stability/Performance Review
-
-This keeps quality high while maintaining gameplay integrity.
+Do not add new workstreams to this legacy file. Update the creative roadmap when the target changes, and update the implementation plan when execution details change.

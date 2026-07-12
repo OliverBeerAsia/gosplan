@@ -2,6 +2,49 @@
 
 ## [Unreleased]
 
+## [1.10.0] - Release candidate
+
+v1.10.0 is a graphics foundation release, not the completed graphics overhaul. Production remains on v1.9.4 until the candidate commit passes CI, deploys through GitHub Pages, and passes live verification.
+
+### Added
+
+- Typed authored-art manifest, read-only runtime registry, deterministic variant resolver, multi-atlas loading, and automated art/fallback validation.
+- Illustrated planning-dossier presentation across opening, scenario selection, loading, pause, and event surfaces.
+- Deterministic elevation, exposed terrain-step rendering, height-aware interaction, and shared world-depth ordering.
+- Authored Khrushchyovka worker-housing family with stable mass selection, far/mid/near LOD, authored effect anchors, and procedural fallback.
+- Deterministic worker-housing courtyard compositions with seasonal LOD frames, bounded quality caps, protected claims, exact road-edge orientation, and owner-aware inspect/demolish feedback.
+- Visual benchmark fixtures, production-bundle exclusion checks, provenance records, checkpoint archives, checksum sidecars, and restore rehearsals.
+- v1.10.0 implementation notes, multi-agent review, test report, bug check, and release notes.
+
+### Changed
+
+- Placement, selection, demolition, zoning, modal shortcuts, and destructive drag cancellation now share more authoritative interaction state.
+- Terrain, zones, props, buildings, traffic, smoke, lights, and overlays use height-aware placement and explicit depth semantics.
+- GitHub Pages candidate workflow includes the new authored-art, worker-housing, courtyard, elevation, interaction, depth, determinism, benchmark, and production-build gates.
+- Opening artwork received a bounded cleanup that replaced malformed prop lettering with an unlabeled planning chart; source and runtime hashes are recorded in the provenance ledger.
+
+### Compatibility
+
+- Save version and simulation RNG contracts remain unchanged.
+- Existing building footprints, costs, capacities, placement rules, zones, roads, power, and balance remain authoritative.
+- Missing or invalid authored art falls back to declared procedural or legacy graphics instead of producing a blank game.
+
+### Known limitations
+
+- This release does not complete the industrial, civic, or scientific-city authored families, final terrain/road atlas, Ministry Console, living-city animation, or the full release capture matrix.
+- Shared focus trapping and restoration now cover loading, opening, credits, events, campaign ending, and pause; the complete two-viewport accessibility matrix remains follow-up work.
+- Zone-paint invalidations are coalesced to one deterministic rebuild per rendered frame; representative browser performance profiling remains follow-up work.
+- The north-west service-edge runtime capture and mixed-family foundation overview are included. Full mixed-family far/low art completion and stronger night ground/road treatment remain follow-up work.
+- The integrated candidate build retains the documented 604.36 kB minified main-chunk warning.
+
+### Release evidence
+
+- Candidate commit SHA: `PENDING`
+- CI workflow run: `PENDING`
+- Deployment run: `PENDING`
+- Live verification: `PENDING`
+- Production and rollback reference until verification: commit `fafaedb`, tag `v1.9.4`, run `25995410642`
+
 ## [1.9.4] - 2026-05-17
 
 ### Fixed

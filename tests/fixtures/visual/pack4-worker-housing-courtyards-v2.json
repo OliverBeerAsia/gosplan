@@ -1,0 +1,2926 @@
+{
+  "version": 4,
+  "state": {
+    "mode": "sandbox",
+    "campaignScenarioId": "none",
+    "campaignScenarioLabel": "Pack 4B Courtyard Benchmark",
+    "budget": 250000,
+    "population": 1350,
+    "housingCapacity": 1800,
+    "powerCapacity": 100,
+    "powerDemand": 18,
+    "industrialOutput": 0,
+    "happiness": 66,
+    "week": 5,
+    "year": 1985,
+    "totalTicks": 265,
+    "speed": 0,
+    "rngSeed": 1346454344,
+    "rngState": 1346454344,
+    "mapSeed": 1346454344,
+    "graphicsQuality": "high",
+    "cityLoyalty": 58,
+    "unrestLevel": 22,
+    "commuteIndex": 74,
+    "serviceAccessIndex": 54,
+    "industrialEfficiency": 1,
+    "happinessModifier": 0,
+    "activeDirective": "Pack 4B visual benchmark: three worker-housing courtyard families.",
+    "performancePressure": 45,
+    "currentEra": 3,
+    "peakPopulation": 1350,
+    "firstBuildingsPlaced": [
+      "khrushchyovka",
+      "coal_power_plant",
+      "road",
+      "power_line",
+      "park",
+      "monument",
+      "plaza"
+    ],
+    "uiSettings": {
+      "motionPreset": "reduced",
+      "uiScale": "compact"
+    }
+  },
+  "buildings": [
+    {
+      "defId": "khrushchyovka",
+      "gx": 4,
+      "gy": 9,
+      "id": 101
+    },
+    {
+      "defId": "khrushchyovka",
+      "gx": 8,
+      "gy": 9,
+      "id": 102
+    },
+    {
+      "defId": "khrushchyovka",
+      "gx": 12,
+      "gy": 9,
+      "id": 103
+    },
+    {
+      "defId": "khrushchyovka",
+      "gx": 5,
+      "gy": 14,
+      "id": 201
+    },
+    {
+      "defId": "khrushchyovka",
+      "gx": 8,
+      "gy": 14,
+      "id": 202
+    },
+    {
+      "defId": "khrushchyovka",
+      "gx": 11,
+      "gy": 14,
+      "id": 203
+    },
+    {
+      "defId": "khrushchyovka",
+      "gx": 19,
+      "gy": 5,
+      "id": 303
+    },
+    {
+      "defId": "khrushchyovka",
+      "gx": 23,
+      "gy": 5,
+      "id": 301
+    },
+    {
+      "defId": "khrushchyovka",
+      "gx": 27,
+      "gy": 5,
+      "id": 302
+    },
+    {
+      "defId": "park",
+      "gx": 7,
+      "gy": 11,
+      "id": 401
+    },
+    {
+      "defId": "monument",
+      "gx": 9,
+      "gy": 11,
+      "id": 402
+    },
+    {
+      "defId": "park",
+      "gx": 11,
+      "gy": 11,
+      "id": 403
+    },
+    {
+      "defId": "park",
+      "gx": 6,
+      "gy": 16,
+      "id": 411
+    },
+    {
+      "defId": "road",
+      "gx": 7,
+      "gy": 16,
+      "id": 412
+    },
+    {
+      "defId": "park",
+      "gx": 10,
+      "gy": 16,
+      "id": 413
+    },
+    {
+      "defId": "park",
+      "gx": 12,
+      "gy": 16,
+      "id": 414
+    },
+    {
+      "defId": "park",
+      "gx": 20,
+      "gy": 8,
+      "id": 421
+    },
+    {
+      "defId": "plaza",
+      "gx": 23,
+      "gy": 8,
+      "id": 422
+    },
+    {
+      "defId": "park",
+      "gx": 27,
+      "gy": 8,
+      "id": 423
+    },
+    {
+      "defId": "coal_power_plant",
+      "gx": 0,
+      "gy": 11,
+      "id": 501
+    },
+    {
+      "defId": "coal_power_plant",
+      "gx": 27,
+      "gy": 0,
+      "id": 502
+    },
+    {
+      "defId": "power_line",
+      "gx": 28,
+      "gy": 3,
+      "id": 503
+    },
+    {
+      "defId": "road",
+      "gx": 3,
+      "gy": 8,
+      "id": 1001
+    },
+    {
+      "defId": "road",
+      "gx": 4,
+      "gy": 8,
+      "id": 1002
+    },
+    {
+      "defId": "road",
+      "gx": 5,
+      "gy": 8,
+      "id": 1003
+    },
+    {
+      "defId": "road",
+      "gx": 6,
+      "gy": 8,
+      "id": 1004
+    },
+    {
+      "defId": "road",
+      "gx": 7,
+      "gy": 8,
+      "id": 1005
+    },
+    {
+      "defId": "road",
+      "gx": 8,
+      "gy": 8,
+      "id": 1006
+    },
+    {
+      "defId": "road",
+      "gx": 9,
+      "gy": 8,
+      "id": 1007
+    },
+    {
+      "defId": "road",
+      "gx": 10,
+      "gy": 8,
+      "id": 1008
+    },
+    {
+      "defId": "road",
+      "gx": 11,
+      "gy": 8,
+      "id": 1009
+    },
+    {
+      "defId": "road",
+      "gx": 12,
+      "gy": 8,
+      "id": 1010
+    },
+    {
+      "defId": "road",
+      "gx": 13,
+      "gy": 8,
+      "id": 1011
+    },
+    {
+      "defId": "road",
+      "gx": 14,
+      "gy": 8,
+      "id": 1012
+    },
+    {
+      "defId": "road",
+      "gx": 3,
+      "gy": 9,
+      "id": 1013
+    },
+    {
+      "defId": "road",
+      "gx": 3,
+      "gy": 10,
+      "id": 1014
+    },
+    {
+      "defId": "road",
+      "gx": 3,
+      "gy": 11,
+      "id": 1015
+    },
+    {
+      "defId": "road",
+      "gx": 3,
+      "gy": 12,
+      "id": 1016
+    },
+    {
+      "defId": "road",
+      "gx": 3,
+      "gy": 13,
+      "id": 1017
+    },
+    {
+      "defId": "road",
+      "gx": 4,
+      "gy": 13,
+      "id": 1018
+    },
+    {
+      "defId": "road",
+      "gx": 5,
+      "gy": 13,
+      "id": 1019
+    },
+    {
+      "defId": "road",
+      "gx": 6,
+      "gy": 13,
+      "id": 1020
+    },
+    {
+      "defId": "road",
+      "gx": 7,
+      "gy": 13,
+      "id": 1021
+    },
+    {
+      "defId": "road",
+      "gx": 8,
+      "gy": 13,
+      "id": 1022
+    },
+    {
+      "defId": "road",
+      "gx": 9,
+      "gy": 13,
+      "id": 1023
+    },
+    {
+      "defId": "road",
+      "gx": 10,
+      "gy": 13,
+      "id": 1024
+    },
+    {
+      "defId": "road",
+      "gx": 11,
+      "gy": 13,
+      "id": 1025
+    },
+    {
+      "defId": "road",
+      "gx": 12,
+      "gy": 13,
+      "id": 1026
+    },
+    {
+      "defId": "road",
+      "gx": 13,
+      "gy": 13,
+      "id": 1027
+    },
+    {
+      "defId": "road",
+      "gx": 14,
+      "gy": 13,
+      "id": 1028
+    },
+    {
+      "defId": "road",
+      "gx": 14,
+      "gy": 14,
+      "id": 1029
+    },
+    {
+      "defId": "road",
+      "gx": 14,
+      "gy": 15,
+      "id": 1030
+    },
+    {
+      "defId": "road",
+      "gx": 18,
+      "gy": 4,
+      "id": 1031
+    },
+    {
+      "defId": "road",
+      "gx": 19,
+      "gy": 4,
+      "id": 1032
+    },
+    {
+      "defId": "road",
+      "gx": 20,
+      "gy": 4,
+      "id": 1033
+    },
+    {
+      "defId": "road",
+      "gx": 21,
+      "gy": 4,
+      "id": 1034
+    },
+    {
+      "defId": "road",
+      "gx": 22,
+      "gy": 4,
+      "id": 1035
+    },
+    {
+      "defId": "road",
+      "gx": 23,
+      "gy": 4,
+      "id": 1036
+    },
+    {
+      "defId": "road",
+      "gx": 24,
+      "gy": 4,
+      "id": 1037
+    },
+    {
+      "defId": "road",
+      "gx": 25,
+      "gy": 4,
+      "id": 1038
+    },
+    {
+      "defId": "road",
+      "gx": 26,
+      "gy": 4,
+      "id": 1039
+    },
+    {
+      "defId": "road",
+      "gx": 27,
+      "gy": 4,
+      "id": 1040
+    },
+    {
+      "defId": "road",
+      "gx": 28,
+      "gy": 4,
+      "id": 1041
+    },
+    {
+      "defId": "road",
+      "gx": 29,
+      "gy": 4,
+      "id": 1042
+    },
+    {
+      "defId": "road",
+      "gx": 29,
+      "gy": 5,
+      "id": 1043
+    },
+    {
+      "defId": "road",
+      "gx": 29,
+      "gy": 6,
+      "id": 1044
+    }
+  ],
+  "nextBuildingId": 2000,
+  "terrainCells": [
+    {
+      "gx": 4,
+      "gy": 10,
+      "terrain": "dirt",
+      "elevation": 0
+    },
+    {
+      "gx": 5,
+      "gy": 10,
+      "terrain": "dirt",
+      "elevation": 0
+    },
+    {
+      "gx": 6,
+      "gy": 10,
+      "terrain": "dirt",
+      "elevation": 0
+    },
+    {
+      "gx": 7,
+      "gy": 10,
+      "terrain": "dirt",
+      "elevation": 0
+    },
+    {
+      "gx": 8,
+      "gy": 10,
+      "terrain": "dirt",
+      "elevation": 0
+    },
+    {
+      "gx": 9,
+      "gy": 10,
+      "terrain": "dirt",
+      "elevation": 0
+    },
+    {
+      "gx": 10,
+      "gy": 10,
+      "terrain": "dirt",
+      "elevation": 0
+    },
+    {
+      "gx": 11,
+      "gy": 10,
+      "terrain": "dirt",
+      "elevation": 0
+    },
+    {
+      "gx": 12,
+      "gy": 10,
+      "terrain": "dirt",
+      "elevation": 0
+    },
+    {
+      "gx": 13,
+      "gy": 10,
+      "terrain": "dirt",
+      "elevation": 0
+    },
+    {
+      "gx": 5,
+      "gy": 15,
+      "terrain": "dirt",
+      "elevation": 0
+    },
+    {
+      "gx": 6,
+      "gy": 15,
+      "terrain": "dirt",
+      "elevation": 0
+    },
+    {
+      "gx": 7,
+      "gy": 15,
+      "terrain": "dirt",
+      "elevation": 0
+    },
+    {
+      "gx": 8,
+      "gy": 15,
+      "terrain": "dirt",
+      "elevation": 0
+    },
+    {
+      "gx": 9,
+      "gy": 15,
+      "terrain": "dirt",
+      "elevation": 0
+    },
+    {
+      "gx": 10,
+      "gy": 15,
+      "terrain": "dirt",
+      "elevation": 0
+    },
+    {
+      "gx": 11,
+      "gy": 15,
+      "terrain": "dirt",
+      "elevation": 0
+    },
+    {
+      "gx": 12,
+      "gy": 15,
+      "terrain": "dirt",
+      "elevation": 0
+    },
+    {
+      "gx": 13,
+      "gy": 15,
+      "terrain": "dirt",
+      "elevation": 0
+    },
+    {
+      "gx": 5,
+      "gy": 11,
+      "terrain": "forest",
+      "elevation": 0
+    },
+    {
+      "gx": 13,
+      "gy": 11,
+      "terrain": "forest",
+      "elevation": 0
+    },
+    {
+      "gx": 6,
+      "gy": 12,
+      "terrain": "forest",
+      "elevation": 0
+    },
+    {
+      "gx": 12,
+      "gy": 12,
+      "terrain": "forest",
+      "elevation": 0
+    },
+    {
+      "gx": 5,
+      "gy": 17,
+      "terrain": "forest",
+      "elevation": 0
+    },
+    {
+      "gx": 7,
+      "gy": 17,
+      "terrain": "forest",
+      "elevation": 0
+    },
+    {
+      "gx": 9,
+      "gy": 17,
+      "terrain": "forest",
+      "elevation": 0
+    },
+    {
+      "gx": 11,
+      "gy": 17,
+      "terrain": "forest",
+      "elevation": 0
+    },
+    {
+      "gx": 13,
+      "gy": 17,
+      "terrain": "forest",
+      "elevation": 0
+    },
+    {
+      "gx": 18,
+      "gy": 0,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 18,
+      "gy": 1,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 18,
+      "gy": 2,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 18,
+      "gy": 3,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 18,
+      "gy": 4,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 18,
+      "gy": 5,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 18,
+      "gy": 6,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 18,
+      "gy": 7,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 18,
+      "gy": 8,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 18,
+      "gy": 9,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 18,
+      "gy": 10,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 18,
+      "gy": 11,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 18,
+      "gy": 12,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 19,
+      "gy": 0,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 19,
+      "gy": 1,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 19,
+      "gy": 2,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 19,
+      "gy": 3,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 19,
+      "gy": 4,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 19,
+      "gy": 5,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 19,
+      "gy": 6,
+      "terrain": "dirt",
+      "elevation": 1
+    },
+    {
+      "gx": 19,
+      "gy": 7,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 19,
+      "gy": 8,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 19,
+      "gy": 9,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 19,
+      "gy": 10,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 19,
+      "gy": 11,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 19,
+      "gy": 12,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 20,
+      "gy": 0,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 20,
+      "gy": 1,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 20,
+      "gy": 2,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 20,
+      "gy": 3,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 20,
+      "gy": 4,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 20,
+      "gy": 5,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 20,
+      "gy": 6,
+      "terrain": "dirt",
+      "elevation": 1
+    },
+    {
+      "gx": 20,
+      "gy": 7,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 20,
+      "gy": 8,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 20,
+      "gy": 9,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 20,
+      "gy": 10,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 20,
+      "gy": 11,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 20,
+      "gy": 12,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 21,
+      "gy": 0,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 21,
+      "gy": 1,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 21,
+      "gy": 2,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 21,
+      "gy": 3,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 21,
+      "gy": 4,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 21,
+      "gy": 5,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 21,
+      "gy": 6,
+      "terrain": "dirt",
+      "elevation": 1
+    },
+    {
+      "gx": 21,
+      "gy": 7,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 21,
+      "gy": 8,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 21,
+      "gy": 9,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 21,
+      "gy": 10,
+      "terrain": "forest",
+      "elevation": 1
+    },
+    {
+      "gx": 21,
+      "gy": 11,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 21,
+      "gy": 12,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 22,
+      "gy": 0,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 22,
+      "gy": 1,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 22,
+      "gy": 2,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 22,
+      "gy": 3,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 22,
+      "gy": 4,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 22,
+      "gy": 5,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 22,
+      "gy": 6,
+      "terrain": "dirt",
+      "elevation": 1
+    },
+    {
+      "gx": 22,
+      "gy": 7,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 22,
+      "gy": 8,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 22,
+      "gy": 9,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 22,
+      "gy": 10,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 22,
+      "gy": 11,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 22,
+      "gy": 12,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 23,
+      "gy": 0,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 23,
+      "gy": 1,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 23,
+      "gy": 2,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 23,
+      "gy": 3,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 23,
+      "gy": 4,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 23,
+      "gy": 5,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 23,
+      "gy": 6,
+      "terrain": "dirt",
+      "elevation": 1
+    },
+    {
+      "gx": 23,
+      "gy": 7,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 23,
+      "gy": 8,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 23,
+      "gy": 9,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 23,
+      "gy": 10,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 23,
+      "gy": 11,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 23,
+      "gy": 12,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 24,
+      "gy": 0,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 24,
+      "gy": 1,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 24,
+      "gy": 2,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 24,
+      "gy": 3,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 24,
+      "gy": 4,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 24,
+      "gy": 5,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 24,
+      "gy": 6,
+      "terrain": "dirt",
+      "elevation": 1
+    },
+    {
+      "gx": 24,
+      "gy": 7,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 24,
+      "gy": 8,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 24,
+      "gy": 9,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 24,
+      "gy": 10,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 24,
+      "gy": 11,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 24,
+      "gy": 12,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 25,
+      "gy": 0,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 25,
+      "gy": 1,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 25,
+      "gy": 2,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 25,
+      "gy": 3,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 25,
+      "gy": 4,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 25,
+      "gy": 5,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 25,
+      "gy": 6,
+      "terrain": "dirt",
+      "elevation": 1
+    },
+    {
+      "gx": 25,
+      "gy": 7,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 25,
+      "gy": 8,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 25,
+      "gy": 9,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 25,
+      "gy": 10,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 25,
+      "gy": 11,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 25,
+      "gy": 12,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 26,
+      "gy": 0,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 26,
+      "gy": 1,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 26,
+      "gy": 2,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 26,
+      "gy": 3,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 26,
+      "gy": 4,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 26,
+      "gy": 5,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 26,
+      "gy": 6,
+      "terrain": "dirt",
+      "elevation": 1
+    },
+    {
+      "gx": 26,
+      "gy": 7,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 26,
+      "gy": 8,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 26,
+      "gy": 9,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 26,
+      "gy": 10,
+      "terrain": "forest",
+      "elevation": 1
+    },
+    {
+      "gx": 26,
+      "gy": 11,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 26,
+      "gy": 12,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 27,
+      "gy": 0,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 27,
+      "gy": 1,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 27,
+      "gy": 2,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 27,
+      "gy": 3,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 27,
+      "gy": 4,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 27,
+      "gy": 5,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 27,
+      "gy": 6,
+      "terrain": "dirt",
+      "elevation": 1
+    },
+    {
+      "gx": 27,
+      "gy": 7,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 27,
+      "gy": 8,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 27,
+      "gy": 9,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 27,
+      "gy": 10,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 27,
+      "gy": 11,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 27,
+      "gy": 12,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 28,
+      "gy": 0,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 28,
+      "gy": 1,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 28,
+      "gy": 2,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 28,
+      "gy": 3,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 28,
+      "gy": 4,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 28,
+      "gy": 5,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 28,
+      "gy": 6,
+      "terrain": "dirt",
+      "elevation": 1
+    },
+    {
+      "gx": 28,
+      "gy": 7,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 28,
+      "gy": 8,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 28,
+      "gy": 9,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 28,
+      "gy": 10,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 28,
+      "gy": 11,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 28,
+      "gy": 12,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 29,
+      "gy": 0,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 29,
+      "gy": 1,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 29,
+      "gy": 2,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 29,
+      "gy": 3,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 29,
+      "gy": 4,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 29,
+      "gy": 5,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 29,
+      "gy": 6,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 29,
+      "gy": 7,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 29,
+      "gy": 8,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 29,
+      "gy": 9,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 29,
+      "gy": 10,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 29,
+      "gy": 11,
+      "terrain": "ground",
+      "elevation": 1
+    },
+    {
+      "gx": 29,
+      "gy": 12,
+      "terrain": "ground",
+      "elevation": 1
+    }
+  ],
+  "zoneCells": [],
+  "benchmark": {
+    "id": "pack4-worker-housing-courtyards-v2",
+    "schemaVersion": 2,
+    "extends": "pack4-worker-housing-v1",
+    "purpose": "Deterministic Pack 4B courtyard composition, entrance approach, winter surface, lighting, LOD, depth, quality, and fallback review.",
+    "productionContract": "The benchmark object is development metadata ignored by SaveLoad. This remains a normal version 4 save and adds no production UI or save fields.",
+    "expected": {
+      "mapSize": 32,
+      "buildingCounts": {
+        "khrushchyovka": 9,
+        "road": 45,
+        "coal_power_plant": 2,
+        "power_line": 1,
+        "park": 7,
+        "monument": 1,
+        "plaza": 1
+      },
+      "roadAccessRadius": 2,
+      "poweredBuildingIds": [
+        101,
+        102,
+        103,
+        201,
+        202,
+        203,
+        301,
+        302,
+        303
+      ],
+      "khrushchyovkas": [
+        {
+          "id": 101,
+          "gx": 4,
+          "gy": 9,
+          "elevation": 0,
+          "familyId": "short_civic_court",
+          "expectedVariantId": "short_slab",
+          "approachCell": [
+            5,
+            10
+          ]
+        },
+        {
+          "id": 102,
+          "gx": 8,
+          "gy": 9,
+          "elevation": 0,
+          "familyId": "short_civic_court",
+          "expectedVariantId": "short_slab",
+          "approachCell": [
+            9,
+            10
+          ]
+        },
+        {
+          "id": 103,
+          "gx": 12,
+          "gy": 9,
+          "elevation": 0,
+          "familyId": "short_civic_court",
+          "expectedVariantId": "short_slab",
+          "approachCell": [
+            13,
+            10
+          ]
+        },
+        {
+          "id": 201,
+          "gx": 5,
+          "gy": 14,
+          "elevation": 0,
+          "familyId": "long_green_court",
+          "expectedVariantId": "long_slab",
+          "approachCell": [
+            6,
+            15
+          ]
+        },
+        {
+          "id": 202,
+          "gx": 8,
+          "gy": 14,
+          "elevation": 0,
+          "familyId": "long_green_court",
+          "expectedVariantId": "long_slab",
+          "approachCell": [
+            9,
+            15
+          ]
+        },
+        {
+          "id": 203,
+          "gx": 11,
+          "gy": 14,
+          "elevation": 0,
+          "familyId": "long_green_court",
+          "expectedVariantId": "long_slab",
+          "approachCell": [
+            12,
+            15
+          ]
+        },
+        {
+          "id": 303,
+          "gx": 19,
+          "gy": 5,
+          "elevation": 1,
+          "familyId": "linked_terrace_court",
+          "expectedVariantId": "linked_return",
+          "approachCell": [
+            20,
+            6
+          ]
+        },
+        {
+          "id": 301,
+          "gx": 23,
+          "gy": 5,
+          "elevation": 1,
+          "familyId": "linked_terrace_court",
+          "expectedVariantId": "linked_return",
+          "approachCell": [
+            24,
+            6
+          ]
+        },
+        {
+          "id": 302,
+          "gx": 27,
+          "gy": 5,
+          "elevation": 1,
+          "familyId": "linked_terrace_court",
+          "expectedVariantId": "linked_return",
+          "approachCell": [
+            28,
+            6
+          ]
+        }
+      ],
+      "courtyardFamilies": [
+        {
+          "id": "short_civic_court",
+          "label": "Short-slab civic court",
+          "elevation": 0,
+          "expectedVariantId": "short_slab",
+          "buildingIds": [
+            101,
+            102,
+            103
+          ],
+          "centerGrid": {
+            "gx": 9,
+            "gy": 11
+          },
+          "approachCells": [
+            [
+              5,
+              10
+            ],
+            [
+              9,
+              10
+            ],
+            [
+              13,
+              10
+            ]
+          ],
+          "pathCells": [
+            [
+              4,
+              10
+            ],
+            [
+              5,
+              10
+            ],
+            [
+              6,
+              10
+            ],
+            [
+              7,
+              10
+            ],
+            [
+              8,
+              10
+            ],
+            [
+              9,
+              10
+            ],
+            [
+              10,
+              10
+            ],
+            [
+              11,
+              10
+            ],
+            [
+              12,
+              10
+            ],
+            [
+              13,
+              10
+            ]
+          ],
+          "roadContactCells": [
+            [
+              3,
+              10
+            ]
+          ],
+          "courtCells": [
+            [
+              4,
+              10
+            ],
+            [
+              4,
+              11
+            ],
+            [
+              4,
+              12
+            ],
+            [
+              5,
+              10
+            ],
+            [
+              5,
+              11
+            ],
+            [
+              5,
+              12
+            ],
+            [
+              6,
+              10
+            ],
+            [
+              6,
+              11
+            ],
+            [
+              6,
+              12
+            ],
+            [
+              7,
+              10
+            ],
+            [
+              7,
+              11
+            ],
+            [
+              7,
+              12
+            ],
+            [
+              8,
+              10
+            ],
+            [
+              8,
+              11
+            ],
+            [
+              8,
+              12
+            ],
+            [
+              9,
+              10
+            ],
+            [
+              9,
+              11
+            ],
+            [
+              9,
+              12
+            ],
+            [
+              10,
+              10
+            ],
+            [
+              10,
+              11
+            ],
+            [
+              10,
+              12
+            ],
+            [
+              11,
+              10
+            ],
+            [
+              11,
+              11
+            ],
+            [
+              11,
+              12
+            ],
+            [
+              12,
+              10
+            ],
+            [
+              12,
+              11
+            ],
+            [
+              12,
+              12
+            ],
+            [
+              13,
+              10
+            ],
+            [
+              13,
+              11
+            ],
+            [
+              13,
+              12
+            ]
+          ],
+          "decorBuildingIds": [
+            401,
+            402,
+            403
+          ],
+          "treeCells": [
+            [
+              5,
+              11
+            ],
+            [
+              13,
+              11
+            ],
+            [
+              6,
+              12
+            ],
+            [
+              12,
+              12
+            ]
+          ]
+        },
+        {
+          "id": "long_green_court",
+          "label": "Long-slab green court",
+          "elevation": 0,
+          "expectedVariantId": "long_slab",
+          "buildingIds": [
+            201,
+            202,
+            203
+          ],
+          "centerGrid": {
+            "gx": 9,
+            "gy": 16
+          },
+          "approachCells": [
+            [
+              6,
+              15
+            ],
+            [
+              9,
+              15
+            ],
+            [
+              12,
+              15
+            ]
+          ],
+          "pathCells": [
+            [
+              5,
+              15
+            ],
+            [
+              6,
+              15
+            ],
+            [
+              7,
+              15
+            ],
+            [
+              8,
+              15
+            ],
+            [
+              9,
+              15
+            ],
+            [
+              10,
+              15
+            ],
+            [
+              11,
+              15
+            ],
+            [
+              12,
+              15
+            ],
+            [
+              13,
+              15
+            ]
+          ],
+          "roadContactCells": [
+            [
+              14,
+              15
+            ],
+            [
+              7,
+              16
+            ]
+          ],
+          "courtCells": [
+            [
+              5,
+              15
+            ],
+            [
+              5,
+              16
+            ],
+            [
+              5,
+              17
+            ],
+            [
+              5,
+              18
+            ],
+            [
+              6,
+              15
+            ],
+            [
+              6,
+              16
+            ],
+            [
+              6,
+              17
+            ],
+            [
+              6,
+              18
+            ],
+            [
+              7,
+              15
+            ],
+            [
+              7,
+              17
+            ],
+            [
+              7,
+              18
+            ],
+            [
+              8,
+              15
+            ],
+            [
+              8,
+              16
+            ],
+            [
+              8,
+              17
+            ],
+            [
+              8,
+              18
+            ],
+            [
+              9,
+              15
+            ],
+            [
+              9,
+              16
+            ],
+            [
+              9,
+              17
+            ],
+            [
+              9,
+              18
+            ],
+            [
+              10,
+              15
+            ],
+            [
+              10,
+              16
+            ],
+            [
+              10,
+              17
+            ],
+            [
+              10,
+              18
+            ],
+            [
+              11,
+              15
+            ],
+            [
+              11,
+              16
+            ],
+            [
+              11,
+              17
+            ],
+            [
+              11,
+              18
+            ],
+            [
+              12,
+              15
+            ],
+            [
+              12,
+              16
+            ],
+            [
+              12,
+              17
+            ],
+            [
+              12,
+              18
+            ],
+            [
+              13,
+              15
+            ],
+            [
+              13,
+              16
+            ],
+            [
+              13,
+              17
+            ],
+            [
+              13,
+              18
+            ]
+          ],
+          "decorBuildingIds": [
+            411,
+            413,
+            414
+          ],
+          "treeCells": [
+            [
+              5,
+              17
+            ],
+            [
+              7,
+              17
+            ],
+            [
+              9,
+              17
+            ],
+            [
+              11,
+              17
+            ],
+            [
+              13,
+              17
+            ]
+          ]
+        },
+        {
+          "id": "linked_terrace_court",
+          "label": "Linked-return terrace court",
+          "elevation": 1,
+          "expectedVariantId": "linked_return",
+          "buildingIds": [
+            303,
+            301,
+            302
+          ],
+          "centerGrid": {
+            "gx": 24,
+            "gy": 8
+          },
+          "approachCells": [
+            [
+              20,
+              6
+            ],
+            [
+              24,
+              6
+            ],
+            [
+              28,
+              6
+            ]
+          ],
+          "pathCells": [
+            [
+              19,
+              6
+            ],
+            [
+              20,
+              6
+            ],
+            [
+              21,
+              6
+            ],
+            [
+              22,
+              6
+            ],
+            [
+              23,
+              6
+            ],
+            [
+              24,
+              6
+            ],
+            [
+              25,
+              6
+            ],
+            [
+              26,
+              6
+            ],
+            [
+              27,
+              6
+            ],
+            [
+              28,
+              6
+            ]
+          ],
+          "roadContactCells": [
+            [
+              29,
+              6
+            ]
+          ],
+          "courtCells": [
+            [
+              19,
+              6
+            ],
+            [
+              19,
+              7
+            ],
+            [
+              19,
+              8
+            ],
+            [
+              19,
+              9
+            ],
+            [
+              19,
+              10
+            ],
+            [
+              20,
+              6
+            ],
+            [
+              20,
+              7
+            ],
+            [
+              20,
+              8
+            ],
+            [
+              20,
+              9
+            ],
+            [
+              20,
+              10
+            ],
+            [
+              21,
+              6
+            ],
+            [
+              21,
+              7
+            ],
+            [
+              21,
+              8
+            ],
+            [
+              21,
+              9
+            ],
+            [
+              21,
+              10
+            ],
+            [
+              22,
+              6
+            ],
+            [
+              22,
+              7
+            ],
+            [
+              22,
+              8
+            ],
+            [
+              22,
+              9
+            ],
+            [
+              22,
+              10
+            ],
+            [
+              23,
+              6
+            ],
+            [
+              23,
+              7
+            ],
+            [
+              23,
+              8
+            ],
+            [
+              23,
+              9
+            ],
+            [
+              23,
+              10
+            ],
+            [
+              24,
+              6
+            ],
+            [
+              24,
+              7
+            ],
+            [
+              24,
+              8
+            ],
+            [
+              24,
+              9
+            ],
+            [
+              24,
+              10
+            ],
+            [
+              25,
+              6
+            ],
+            [
+              25,
+              7
+            ],
+            [
+              25,
+              8
+            ],
+            [
+              25,
+              9
+            ],
+            [
+              25,
+              10
+            ],
+            [
+              26,
+              6
+            ],
+            [
+              26,
+              7
+            ],
+            [
+              26,
+              8
+            ],
+            [
+              26,
+              9
+            ],
+            [
+              26,
+              10
+            ],
+            [
+              27,
+              6
+            ],
+            [
+              27,
+              7
+            ],
+            [
+              27,
+              8
+            ],
+            [
+              27,
+              9
+            ],
+            [
+              27,
+              10
+            ],
+            [
+              28,
+              6
+            ],
+            [
+              28,
+              7
+            ],
+            [
+              28,
+              8
+            ],
+            [
+              28,
+              9
+            ],
+            [
+              28,
+              10
+            ]
+          ],
+          "decorBuildingIds": [
+            421,
+            422,
+            423
+          ],
+          "treeCells": [
+            [
+              21,
+              10
+            ],
+            [
+              26,
+              10
+            ]
+          ]
+        }
+      ],
+      "elevationTransitionPairs": [
+        [
+          [
+            18,
+            13
+          ],
+          [
+            18,
+            12
+          ]
+        ],
+        [
+          [
+            21,
+            13
+          ],
+          [
+            21,
+            12
+          ]
+        ],
+        [
+          [
+            24,
+            13
+          ],
+          [
+            24,
+            12
+          ]
+        ],
+        [
+          [
+            27,
+            13
+          ],
+          [
+            27,
+            12
+          ]
+        ],
+        [
+          [
+            29,
+            13
+          ],
+          [
+            29,
+            12
+          ]
+        ]
+      ],
+      "environmentPlanner": {
+        "source": "src/rendering/EnvironmentCompositionPlanner.ts",
+        "ownerBuildingIds": [
+          101,
+          102,
+          103,
+          201,
+          202,
+          203,
+          301,
+          302,
+          303
+        ],
+        "qualityCaps": {
+          "low": 0,
+          "medium": 12,
+          "high": 24
+        },
+        "requiredCompositionFields": [
+          "definitionId",
+          "variantId",
+          "placementId",
+          "ownerBuildingId",
+          "ownerDefId",
+          "gx",
+          "gy",
+          "elevation",
+          "footprint",
+          "claimedCells",
+          "parts"
+        ],
+        "requiredPartFields": [
+          "partId",
+          "gx",
+          "gy",
+          "elevation",
+          "stableId",
+          "definition",
+          "variant",
+          "part"
+        ],
+        "identitySeasons": [
+          "base",
+          "winter"
+        ],
+        "contract": "Environment compositions are derived from immutable owner identity and map seed. They are never serialized into the save."
+      },
+      "northWestServiceEdgeContract": {
+        "ownerBuildingId": 202,
+        "definitionId": "environment.worker_housing.service_edge",
+        "variantId": "north_west_service",
+        "placementId": "north_west_road_edge",
+        "anchorCell": [
+          8,
+          16
+        ],
+        "roadEdgeCells": [
+          [
+            7,
+            16
+          ]
+        ],
+        "elevation": 0,
+        "contract": "The checked-in development save must produce this north-west service-edge composition through the production planner."
+      },
+      "winterSurfaceContract": {
+        "season": "winter",
+        "week": 5,
+        "weatherOverlay": "off",
+        "statement": "Static seasonal ground, dirt, forest, roof snow, and cliff lips are reviewed without nondeterministic live particles."
+      },
+      "fallbackContract": {
+        "expectedPlanIdentity": "unchanged",
+        "expectedBlankCompositionCount": 0,
+        "cases": [
+          {
+            "id": "environment-atlas-loss",
+            "request": "assets/art/atlases/environment-worker-housing-1x.json",
+            "failureMode": "abort",
+            "expectedPartMode": "procedural_fallback"
+          },
+          {
+            "id": "building-atlas-loss",
+            "request": "assets/art/atlases/buildings-khrushchyovka-1x.json",
+            "failureMode": "abort",
+            "expectedBuildingMode": "procedural_fallback"
+          },
+          {
+            "id": "partial-environment-frame-loss",
+            "request": "assets/art/atlases/environment-worker-housing-1x.json",
+            "failureMode": "remove-frame",
+            "frameId": "service-shelter-nw-winter-near",
+            "expectedPartMode": "mixed_authored_and_procedural_fallback"
+          }
+        ],
+        "boundary": "These cases prove graceful local recovery for the two authored Pack 4 atlases and one selected environment frame. They do not exhaust every frame, decode, or transport corruption mode."
+      }
+    },
+    "capture": {
+      "cases": [
+        {
+          "id": "short-civic-near-day",
+          "familyId": "short_civic_court",
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "centerGrid": {
+            "gx": 9,
+            "gy": 11
+          },
+          "zoom": 2,
+          "quality": "high",
+          "light": "day",
+          "weatherOverlay": "off",
+          "artMode": "authored"
+        },
+        {
+          "id": "short-civic-near-night",
+          "familyId": "short_civic_court",
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "centerGrid": {
+            "gx": 9,
+            "gy": 11
+          },
+          "zoom": 2,
+          "quality": "high",
+          "light": "night",
+          "weatherOverlay": "off",
+          "artMode": "authored"
+        },
+        {
+          "id": "short-civic-far-day-high",
+          "familyId": "short_civic_court",
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "centerGrid": {
+            "gx": 9,
+            "gy": 11
+          },
+          "zoom": 0.25,
+          "quality": "high",
+          "light": "day",
+          "weatherOverlay": "off",
+          "artMode": "authored"
+        },
+        {
+          "id": "long-green-near-day",
+          "familyId": "long_green_court",
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "centerGrid": {
+            "gx": 9,
+            "gy": 16
+          },
+          "zoom": 2,
+          "quality": "high",
+          "light": "day",
+          "weatherOverlay": "off",
+          "artMode": "authored"
+        },
+        {
+          "id": "long-green-near-night",
+          "familyId": "long_green_court",
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "centerGrid": {
+            "gx": 9,
+            "gy": 16
+          },
+          "zoom": 2,
+          "quality": "high",
+          "light": "night",
+          "weatherOverlay": "off",
+          "artMode": "authored"
+        },
+        {
+          "id": "long-green-far-day-high",
+          "familyId": "long_green_court",
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "centerGrid": {
+            "gx": 9,
+            "gy": 16
+          },
+          "zoom": 0.25,
+          "quality": "high",
+          "light": "day",
+          "weatherOverlay": "off",
+          "artMode": "authored"
+        },
+        {
+          "id": "linked-terrace-near-day",
+          "familyId": "linked_terrace_court",
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "centerGrid": {
+            "gx": 24,
+            "gy": 8
+          },
+          "zoom": 2,
+          "quality": "high",
+          "light": "day",
+          "weatherOverlay": "off",
+          "artMode": "authored"
+        },
+        {
+          "id": "linked-terrace-near-night",
+          "familyId": "linked_terrace_court",
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "centerGrid": {
+            "gx": 24,
+            "gy": 8
+          },
+          "zoom": 2,
+          "quality": "high",
+          "light": "night",
+          "weatherOverlay": "off",
+          "artMode": "authored"
+        },
+        {
+          "id": "linked-terrace-far-day-high",
+          "familyId": "linked_terrace_court",
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "centerGrid": {
+            "gx": 24,
+            "gy": 8
+          },
+          "zoom": 0.25,
+          "quality": "high",
+          "light": "day",
+          "weatherOverlay": "off",
+          "artMode": "authored"
+        },
+        {
+          "id": "overview-day",
+          "familyId": "overview",
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "centerGrid": {
+            "gx": 16,
+            "gy": 11
+          },
+          "zoom": 1,
+          "quality": "high",
+          "light": "day",
+          "weatherOverlay": "off",
+          "artMode": "authored"
+        },
+        {
+          "id": "overview-night",
+          "familyId": "overview",
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "centerGrid": {
+            "gx": 16,
+            "gy": 11
+          },
+          "zoom": 1,
+          "quality": "high",
+          "light": "night",
+          "weatherOverlay": "off",
+          "artMode": "authored"
+        },
+        {
+          "id": "overview-low-day",
+          "familyId": "overview",
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "centerGrid": {
+            "gx": 16,
+            "gy": 11
+          },
+          "zoom": 0.25,
+          "quality": "low",
+          "light": "day",
+          "weatherOverlay": "off",
+          "artMode": "authored"
+        },
+        {
+          "id": "fallback-overview-day",
+          "familyId": "overview",
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "centerGrid": {
+            "gx": 16,
+            "gy": 11
+          },
+          "zoom": 1,
+          "quality": "high",
+          "light": "day",
+          "weatherOverlay": "off",
+          "artMode": "environment-fallback",
+          "atlasFailure": "abort environment-worker-housing-1x.json before navigation"
+        },
+        {
+          "id": "north-west-service-edge-day",
+          "familyId": "long_green_court",
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "centerGrid": {
+            "gx": 8,
+            "gy": 16
+          },
+          "zoom": 2,
+          "quality": "high",
+          "light": "day",
+          "weatherOverlay": "off",
+          "artMode": "authored",
+          "expectedComposition": "north_west_service"
+        },
+        {
+          "id": "mixed-family-overview-foundation-day",
+          "familyId": "overview",
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "centerGrid": {
+            "gx": 16,
+            "gy": 11
+          },
+          "zoom": 0.5,
+          "quality": "high",
+          "light": "day",
+          "weatherOverlay": "off",
+          "artMode": "authored",
+          "evidenceScope": "foundation-only"
+        },
+        {
+          "id": "fallback-building-atlas-day",
+          "familyId": "overview",
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "centerGrid": {
+            "gx": 16,
+            "gy": 11
+          },
+          "zoom": 1,
+          "quality": "high",
+          "light": "day",
+          "weatherOverlay": "off",
+          "artMode": "building-fallback",
+          "atlasFailure": "abort buildings-khrushchyovka-1x.json before navigation"
+        },
+        {
+          "id": "fallback-partial-environment-frame-day",
+          "familyId": "long_green_court",
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "centerGrid": {
+            "gx": 8,
+            "gy": 16
+          },
+          "zoom": 2,
+          "quality": "high",
+          "light": "day",
+          "weatherOverlay": "off",
+          "artMode": "partial-environment-fallback",
+          "atlasFailure": "remove service-shelter-nw-winter-near from environment-worker-housing-1x.json before navigation"
+        }
+      ],
+      "requiredCaseCount": 17,
+      "filenameTemplate": "pack4b-courtyard__{caseId}__{width}x{height}.png",
+      "reviewContract": [
+        "Pair each family day/night at identical near camera settings.",
+        "Inspect each family at authored far LOD and High quality.",
+        "Inspect the far Low-quality overview for graceful degradation.",
+        "Inspect the elevated terrace and cliff boundary in both overview frames.",
+        "Inspect static winter roof/ground/path separation with weather particles disabled.",
+        "Inspect the deterministic north-west service edge through the runtime fixture.",
+        "Treat the mixed-family overview as foundation evidence only, not full Pack 4 completion evidence.",
+        "Inspect building and environment procedural fallbacks after aborting each authored atlas frames request.",
+        "Inspect one selected environment-frame loss with unaffected authored parts still present."
+      ]
+    },
+    "claimBoundaries": [
+      "Dirt paths prove visible same-elevation approach coherence, not pedestrian pathfinding or door routing.",
+      "The version 4 footprint model does not rotate buildings; this benchmark makes no orientation or inward-facing-facade claim.",
+      "A fixed save and clock do not make screenshots byte-identical across browsers or machines.",
+      "Snapshot light state does not by itself prove visible day/night contrast; paired visual review is required.",
+      "Static validation cannot prove snow separation or depth composition; the approved capture matrix remains required evidence.",
+      "The mixed-family overview is foundation evidence for shared composition and depth only; it is not evidence that every Pack 4 family is implemented.",
+      "The fallback captures cover whole building-atlas loss, whole environment-atlas loss, and one selected environment-frame loss; they do not exhaust every frame or corruption mode."
+    ]
+  }
+}

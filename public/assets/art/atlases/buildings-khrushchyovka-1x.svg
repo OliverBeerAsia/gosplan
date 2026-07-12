@@ -1,0 +1,237 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="528" viewBox="0 0 480 528" shape-rendering="crispEdges">
+  <!--
+    Original GOSPLAN Pack 4 production art. Each transparent 160x176 cell is
+    untrimmed and uses anchor [80,168]. Rows are far, mid, near; columns are
+    short slab, long slab, shallow linked return. No terrain is baked in.
+  -->
+
+  <!-- SHORT SLAB: FAR -->
+  <g transform="translate(0 0) translate(80 160) scale(1.05 .64) translate(-80 -160)">
+    <polygon fill="#D5D5CB" points="64,42 116,68 92,80 40,54"/>
+    <polygon fill="#969C93" points="40,54 92,80 92,154 40,128"/>
+    <polygon fill="#727970" points="92,80 116,68 116,142 92,154"/>
+    <polygon fill="#5B5E59" points="40,122 92,148 92,154 40,128"/>
+    <polygon fill="#4A4F4B" points="92,148 116,136 116,142 92,154"/>
+    <path fill="none" stroke="#303331" stroke-width="3" d="M44 67l44 22M44 79l44 22M44 91l44 22M44 103l44 22M44 115l44 22"/>
+    <path fill="none" stroke="#4A4F4B" stroke-width="3" d="M96 90l16-8M96 102l16-8M96 114l16-8M96 126l16-8M96 138l16-8"/>
+    <polygon fill="#8B4A3A" points="51,122 57,125 57,136 51,133"/>
+    <polygon fill="#8B4A3A" points="75,134 81,137 81,148 75,145"/>
+  </g>
+
+  <!-- LONG SLAB: FAR -->
+  <g transform="translate(160 0) translate(80 160) scale(1.10 .70) translate(-80 -160)">
+    <polygon fill="#D5D5CB" points="64,34 128,66 96,82 32,50"/>
+    <polygon fill="#969C93" points="32,50 96,82 96,160 32,128"/>
+    <polygon fill="#727970" points="96,82 128,66 128,144 96,160"/>
+    <polygon fill="#5B5E59" points="32,122 96,154 96,160 32,128"/>
+    <polygon fill="#4A4F4B" points="96,154 128,138 128,144 96,160"/>
+    <path fill="none" stroke="#303331" stroke-width="3" d="M36 63l56 28M36 76l56 28M36 89l56 28M36 102l56 28M36 115l56 28"/>
+    <path fill="none" stroke="#4A4F4B" stroke-width="3" d="M100 92l24-12M100 105l24-12M100 118l24-12M100 131l24-12M100 144l24-12"/>
+    <polygon fill="#8B4A3A" points="41,121 47,124 47,135 41,132"/>
+    <polygon fill="#8B4A3A" points="61,131 67,134 67,145 61,142"/>
+    <polygon fill="#8B4A3A" points="81,141 87,144 87,155 81,152"/>
+  </g>
+
+  <!-- LINKED SHALLOW RETURN: FAR -->
+  <g transform="translate(320 0) translate(80 160) scale(1.08 .70) translate(-80 -160)">
+    <polygon fill="#D5D5CB" points="55,40 111,68 99,74 125,87 99,100 87,94 87,90 31,62"/>
+    <polygon fill="#969C93" points="31,62 87,90 87,150 31,122"/>
+    <polygon fill="#303331" points="87,90 99,96 99,160 87,154"/>
+    <polygon fill="#969C93" points="99,100 125,87 125,147 99,160"/>
+    <polygon fill="#5B5E59" points="31,116 87,144 87,150 31,122"/>
+    <polygon fill="#4A4F4B" points="87,144 99,150 99,160 87,154"/>
+    <polygon fill="#4A4F4B" points="99,154 125,141 125,147 99,160"/>
+    <path fill="none" stroke="#303331" stroke-width="3" d="M35 74l48 24M35 85l48 24M35 96l48 24M35 107l48 24M35 118l48 24"/>
+    <path fill="none" stroke="#4A4F4B" stroke-width="3" d="M103 108l18-9M103 119l18-9M103 130l18-9M103 141l18-9M103 152l18-9"/>
+    <polygon fill="#8B4A3A" points="44,116 50,119 50,130 44,127"/>
+    <polygon fill="#8B4A3A" points="68,128 74,131 74,142 68,139"/>
+    <polygon fill="#B66A4C" points="105,148 111,145 111,154 105,157"/>
+  </g>
+
+  <!-- SHORT SLAB: MID -->
+  <g transform="translate(0 176) translate(80 160) scale(1.05 .64) translate(-80 -160)">
+    <polygon fill="#D5D5CB" points="64,42 116,68 92,80 40,54"/>
+    <polygon fill="#C6CFD1" points="46,53 64,44 105,65 91,72"/>
+    <polygon fill="#969C93" points="40,54 92,80 92,154 40,128"/>
+    <polygon fill="#727970" points="92,80 116,68 116,142 92,154"/>
+    <polygon fill="#5B5E59" points="40,122 92,148 92,154 40,128"/>
+    <polygon fill="#4A4F4B" points="92,148 116,136 116,142 92,154"/>
+    <path fill="none" stroke="#7A7D76" stroke-width="1" d="M66 67v74"/>
+    <g fill="#263D49">
+      <path d="M45 65l7 4v4l-7-4zM57 71l6 3v4l-6-3zM69 77l7 4v4l-7-4zM81 83l6 3v4l-6-3z"/>
+      <path d="M45 77l7 4v4l-7-4zM57 83l6 3v4l-6-3zM69 89l7 4v4l-7-4zM81 95l6 3v4l-6-3z"/>
+      <path d="M45 89l7 4v4l-7-4zM57 95l6 3v4l-6-3zM69 101l7 4v4l-7-4zM81 107l6 3v4l-6-3z"/>
+      <path d="M45 101l7 4v4l-7-4zM57 107l6 3v4l-6-3zM69 113l7 4v4l-7-4zM81 119l6 3v4l-6-3z"/>
+      <path d="M45 113l7 4v4l-7-4zM57 119l6 3v4l-6-3zM69 125l7 4v4l-7-4zM81 131l6 3v4l-6-3z"/>
+    </g>
+    <g fill="#263D49">
+      <path d="M97 88l7-3v4l-7 3zM106 83l6-3v4l-6 3zM97 100l7-3v4l-7 3zM106 95l6-3v4l-6 3z"/>
+      <path d="M97 112l7-3v4l-7 3zM106 107l6-3v4l-6 3zM97 124l7-3v4l-7 3zM106 119l6-3v4l-6 3zM97 136l7-3v4l-7 3zM106 131l6-3v4l-6 3z"/>
+    </g>
+    <polygon fill="#8B4A3A" points="51,122 57,125 57,136 51,133"/>
+    <polygon fill="#B66A4C" points="75,134 81,137 81,148 75,145"/>
+    <rect fill="#4A4F4B" x="69" y="49" width="7" height="6"/>
+  </g>
+
+  <!-- LONG SLAB: MID -->
+  <g transform="translate(160 176) translate(80 160) scale(1.10 .70) translate(-80 -160)">
+    <polygon fill="#D5D5CB" points="64,34 128,66 96,82 32,50"/>
+    <polygon fill="#C6CFD1" points="39,49 64,36 117,63 95,74"/>
+    <polygon fill="#969C93" points="32,50 96,82 96,160 32,128"/>
+    <polygon fill="#727970" points="96,82 128,66 128,144 96,160"/>
+    <polygon fill="#5B5E59" points="32,122 96,154 96,160 32,128"/>
+    <polygon fill="#4A4F4B" points="96,154 128,138 128,144 96,160"/>
+    <path fill="none" stroke="#7A7D76" stroke-width="1" d="M52 60v78M74 71v78"/>
+    <g fill="#263D49">
+      <path d="M36 61l6 3v4l-6-3zM46 66l6 3v4l-6-3zM57 71l6 3v4l-6-3zM68 77l6 3v4l-6-3zM79 82l6 3v4l-6-3zM89 87l4 2v4l-4-2z"/>
+      <path d="M36 74l6 3v4l-6-3zM46 79l6 3v4l-6-3zM57 84l6 3v4l-6-3zM68 90l6 3v4l-6-3zM79 95l6 3v4l-6-3zM89 100l4 2v4l-4-2z"/>
+      <path d="M36 87l6 3v4l-6-3zM46 92l6 3v4l-6-3zM57 97l6 3v4l-6-3zM68 103l6 3v4l-6-3zM79 108l6 3v4l-6-3zM89 113l4 2v4l-4-2z"/>
+      <path d="M36 100l6 3v4l-6-3zM46 105l6 3v4l-6-3zM57 110l6 3v4l-6-3zM68 116l6 3v4l-6-3zM79 121l6 3v4l-6-3zM89 126l4 2v4l-4-2z"/>
+      <path d="M36 113l6 3v4l-6-3zM46 118l6 3v4l-6-3zM57 123l6 3v4l-6-3zM68 129l6 3v4l-6-3zM79 134l6 3v4l-6-3zM89 139l4 2v4l-4-2z"/>
+    </g>
+    <g fill="#263D49">
+      <path d="M101 91l7-3v4l-7 3zM113 85l8-4v4l-8 4zM101 104l7-3v4l-7 3zM113 98l8-4v4l-8 4z"/>
+      <path d="M101 117l7-3v4l-7 3zM113 111l8-4v4l-8 4zM101 130l7-3v4l-7 3zM113 124l8-4v4l-8 4zM101 143l7-3v4l-7 3zM113 137l8-4v4l-8 4z"/>
+    </g>
+    <polygon fill="#8B4A3A" points="41,121 47,124 47,135 41,132"/>
+    <polygon fill="#B66A4C" points="61,131 67,134 67,145 61,142"/>
+    <polygon fill="#8B4A3A" points="81,141 87,144 87,155 81,152"/>
+    <rect fill="#4A4F4B" x="69" y="41" width="9" height="7"/>
+  </g>
+
+  <!-- LINKED SHALLOW RETURN: MID -->
+  <g transform="translate(320 176) translate(80 160) scale(1.08 .70) translate(-80 -160)">
+    <polygon fill="#D5D5CB" points="55,40 111,68 99,74 125,87 99,100 87,94 87,90 31,62"/>
+    <polygon fill="#C6CFD1" points="38,61 55,43 104,67 96,72 114,82 99,90 89,86"/>
+    <polygon fill="#969C93" points="31,62 87,90 87,150 31,122"/>
+    <polygon fill="#303331" points="87,90 99,96 99,160 87,154"/>
+    <polygon fill="#969C93" points="99,100 125,87 125,147 99,160"/>
+    <polygon fill="#5B5E59" points="31,116 87,144 87,150 31,122"/>
+    <polygon fill="#4A4F4B" points="87,144 99,150 99,160 87,154"/>
+    <polygon fill="#4A4F4B" points="99,154 125,141 125,147 99,160"/>
+    <path fill="none" stroke="#7A7D76" stroke-width="1" d="M58 76v61"/>
+    <g fill="#263D49">
+      <path d="M35 73l6 3v4l-6-3zM46 78l6 3v4l-6-3zM59 85l6 3v4l-6-3zM70 90l6 3v4l-6-3zM79 95l5 2v4l-5-2z"/>
+      <path d="M35 84l6 3v4l-6-3zM46 89l6 3v4l-6-3zM59 96l6 3v4l-6-3zM70 101l6 3v4l-6-3zM79 106l5 2v4l-5-2z"/>
+      <path d="M35 95l6 3v4l-6-3zM46 100l6 3v4l-6-3zM59 107l6 3v4l-6-3zM70 112l6 3v4l-6-3zM79 117l5 2v4l-5-2z"/>
+      <path d="M35 106l6 3v4l-6-3zM46 111l6 3v4l-6-3zM59 118l6 3v4l-6-3zM70 123l6 3v4l-6-3zM79 128l5 2v4l-5-2z"/>
+      <path d="M35 117l6 3v4l-6-3zM46 122l6 3v4l-6-3zM59 129l6 3v4l-6-3zM70 134l6 3v4l-6-3zM79 139l5 2v4l-5-2z"/>
+    </g>
+    <g fill="#263D49">
+      <path d="M103 107l7-3v4l-7 3zM114 101l7-3v4l-7 3zM103 118l7-3v4l-7 3zM114 112l7-3v4l-7 3z"/>
+      <path d="M103 129l7-3v4l-7 3zM114 123l7-3v4l-7 3zM103 140l7-3v4l-7 3zM114 134l7-3v4l-7 3zM103 151l7-3v4l-7 3zM114 145l7-3v4l-7 3z"/>
+    </g>
+    <polygon fill="#8B4A3A" points="44,116 50,119 50,130 44,127"/>
+    <polygon fill="#B66A4C" points="68,128 74,131 74,142 68,139"/>
+    <polygon fill="#B66A4C" points="105,148 111,145 111,154 105,157"/>
+    <rect fill="#4A4F4B" x="62" y="49" width="8" height="7"/>
+  </g>
+
+  <!-- SHORT SLAB: NEAR -->
+  <g transform="translate(0 352) translate(80 160) scale(1.05 .64) translate(-80 -160)">
+    <polygon fill="#4A4F4B" points="62,43 116,70 94,82 39,55"/>
+    <polygon fill="#D5D5CB" points="64,40 118,67 92,80 38,53"/>
+    <polygon fill="#ECEBE3" points="43,53 64,42 108,64 91,72"/>
+    <polygon fill="#A7AEAA" points="43,53 91,77 91,80 38,53"/>
+    <polygon fill="#B8BCB5" points="38,53 92,80 92,154 38,127"/>
+    <polygon fill="#727970" points="92,80 118,67 118,141 92,154"/>
+    <polygon fill="#5B5E59" points="38,121 92,148 92,154 38,127"/>
+    <polygon fill="#4A4F4B" points="92,148 118,135 118,141 92,154"/>
+    <path fill="none" stroke="#7A7D76" stroke-width="1" d="M65 66v75M40 65l50 25M40 77l50 25M40 89l50 25M40 101l50 25M40 113l50 25"/>
+    <path fill="none" stroke="#4A4F4B" stroke-width="1" d="M94 92l22-11M94 104l22-11M94 116l22-11M94 128l22-11M94 140l22-11"/>
+    <g fill="#263D49">
+      <path d="M43 64l7 4v5l-7-4zM54 70l7 3v5l-7-3zM69 77l7 4v5l-7-4zM80 83l7 3v5l-7-3z"/>
+      <path d="M43 76l7 4v5l-7-4zM54 82l7 3v5l-7-3zM69 89l7 4v5l-7-4zM80 95l7 3v5l-7-3z"/>
+      <path d="M43 88l7 4v5l-7-4zM54 94l7 3v5l-7-3zM69 101l7 4v5l-7-4zM80 107l7 3v5l-7-3z"/>
+      <path d="M43 100l7 4v5l-7-4zM54 106l7 3v5l-7-3zM69 113l7 4v5l-7-4zM80 119l7 3v5l-7-3z"/>
+      <path d="M43 112l7 4v5l-7-4zM54 118l7 3v5l-7-3zM69 125l7 4v5l-7-4zM80 131l7 3v5l-7-3z"/>
+    </g>
+    <g fill="#53788A">
+      <path d="M44 65l2 1v3l-2-1zM70 78l2 1v3l-2-1zM55 95l2 1v3l-2-1zM81 120l2 1v3l-2-1z"/>
+    </g>
+    <g fill="#263D49">
+      <path d="M96 87l8-4v5l-8 4zM107 82l7-4v5l-7 4zM96 99l8-4v5l-8 4zM107 94l7-4v5l-7 4z"/>
+      <path d="M96 111l8-4v5l-8 4zM107 106l7-4v5l-7 4zM96 123l8-4v5l-8 4zM107 118l7-4v5l-7 4zM96 135l8-4v5l-8 4zM107 130l7-4v5l-7 4z"/>
+    </g>
+    <polygon fill="#8B4A3A" points="49,120 57,124 57,137 49,133"/>
+    <polygon fill="#B66A4C" points="73,132 81,136 81,149 73,145"/>
+    <path fill="none" stroke="#303331" stroke-width="1" d="M51 124l4 2M75 136l4 2"/>
+    <rect fill="#4A4F4B" x="68" y="46" width="9" height="7"/>
+    <rect fill="#727970" x="69" y="44" width="9" height="2"/>
+    <rect fill="#A7AEAA" x="76" y="44" width="2" height="2"/>
+  </g>
+
+  <!-- LONG SLAB: NEAR -->
+  <g transform="translate(160 352) translate(80 160) scale(1.10 .70) translate(-80 -160)">
+    <polygon fill="#4A4F4B" points="62,35 128,68 98,84 31,51"/>
+    <polygon fill="#D5D5CB" points="64,32 130,65 96,82 30,49"/>
+    <polygon fill="#ECEBE3" points="36,49 64,35 120,63 95,75"/>
+    <polygon fill="#A7AEAA" points="36,49 95,78 95,82 30,49"/>
+    <polygon fill="#B8BCB5" points="30,49 96,82 96,160 30,127"/>
+    <polygon fill="#727970" points="96,82 130,65 130,143 96,160"/>
+    <polygon fill="#5B5E59" points="30,121 96,154 96,160 30,127"/>
+    <polygon fill="#4A4F4B" points="96,154 130,137 130,143 96,160"/>
+    <path fill="none" stroke="#7A7D76" stroke-width="1" d="M51 59v79M73 70v79M32 62l62 31M32 75l62 31M32 88l62 31M32 101l62 31M32 114l62 31"/>
+    <path fill="none" stroke="#4A4F4B" stroke-width="1" d="M98 94l30-15M98 107l30-15M98 120l30-15M98 133l30-15M98 146l30-15"/>
+    <g fill="#263D49">
+      <path d="M34 60l7 4v5l-7-4zM44 65l7 4v5l-7-4zM55 71l7 3v5l-7-3zM66 76l7 4v5l-7-4zM77 82l7 3v5l-7-3zM87 87l7 3v5l-7-3z"/>
+      <path d="M34 73l7 4v5l-7-4zM44 78l7 4v5l-7-4zM55 84l7 3v5l-7-3zM66 89l7 4v5l-7-4zM77 95l7 3v5l-7-3zM87 100l7 3v5l-7-3z"/>
+      <path d="M34 86l7 4v5l-7-4zM44 91l7 4v5l-7-4zM55 97l7 3v5l-7-3zM66 102l7 4v5l-7-4zM77 108l7 3v5l-7-3zM87 113l7 3v5l-7-3z"/>
+      <path d="M34 99l7 4v5l-7-4zM44 104l7 4v5l-7-4zM55 110l7 3v5l-7-3zM66 115l7 4v5l-7-4zM77 121l7 3v5l-7-3zM87 126l7 3v5l-7-3z"/>
+      <path d="M34 112l7 4v5l-7-4zM44 117l7 4v5l-7-4zM55 123l7 3v5l-7-3zM66 128l7 4v5l-7-4zM77 134l7 3v5l-7-3zM87 139l7 3v5l-7-3z"/>
+    </g>
+    <g fill="#53788A">
+      <path d="M35 61l2 1v3l-2-1zM56 98l2 1v3l-2-1zM78 96l2 1v3l-2-1zM88 140l2 1v3l-2-1z"/>
+    </g>
+    <g fill="#263D49">
+      <path d="M100 89l8-4v5l-8 4zM113 83l10-5v5l-10 5zM100 102l8-4v5l-8 4zM113 96l10-5v5l-10 5z"/>
+      <path d="M100 115l8-4v5l-8 4zM113 109l10-5v5l-10 5zM100 128l8-4v5l-8 4zM113 122l10-5v5l-10 5zM100 141l8-4v5l-8 4zM113 135l10-5v5l-10 5z"/>
+    </g>
+    <polygon fill="#8B4A3A" points="39,119 47,123 47,136 39,132"/>
+    <polygon fill="#B66A4C" points="59,129 67,133 67,146 59,142"/>
+    <polygon fill="#8B4A3A" points="79,139 87,143 87,156 79,152"/>
+    <path fill="none" stroke="#303331" stroke-width="1" d="M41 123l4 2M61 133l4 2M81 143l4 2"/>
+    <rect fill="#4A4F4B" x="68" y="38" width="11" height="8"/>
+    <rect fill="#727970" x="69" y="36" width="11" height="2"/>
+    <rect fill="#A7AEAA" x="78" y="36" width="2" height="2"/>
+    <rect fill="#4A4F4B" x="88" y="49" width="6" height="5"/>
+  </g>
+
+  <!-- LINKED SHALLOW RETURN: NEAR -->
+  <g transform="translate(320 352) translate(80 160) scale(1.08 .70) translate(-80 -160)">
+    <polygon fill="#4A4F4B" points="53,42 123,77 113,82 127,89 101,102 87,95 85,92 29,64"/>
+    <polygon fill="#D5D5CB" points="55,38 113,67 99,74 129,89 99,102 85,95 85,91 29,63"/>
+    <polygon fill="#ECEBE3" points="36,62 55,41 104,66 96,72 116,81 99,90 88,85"/>
+    <polygon fill="#A7AEAA" points="36,62 86,87 86,91 29,63"/>
+    <polygon fill="#B8BCB5" points="29,63 85,91 85,151 29,123"/>
+    <polygon fill="#303331" points="85,91 99,98 99,160 85,153"/>
+    <polygon fill="#B8BCB5" points="99,102 127,88 127,146 99,160"/>
+    <polygon fill="#5B5E59" points="29,117 85,145 85,151 29,123"/>
+    <polygon fill="#4A4F4B" points="85,145 99,152 99,160 85,153"/>
+    <polygon fill="#4A4F4B" points="99,154 127,140 127,146 99,160"/>
+    <path fill="none" stroke="#7A7D76" stroke-width="1" d="M57 77v61M31 75l52 26M31 86l52 26M31 97l52 26M31 108l52 26M31 119l52 26"/>
+    <path fill="none" stroke="#4A4F4B" stroke-width="1" d="M101 113l24-12M101 124l24-12M101 135l24-12M101 146l24-12"/>
+    <g fill="#263D49">
+      <path d="M33 72l7 4v5l-7-4zM44 78l7 3v5l-7-3zM59 85l7 4v5l-7-4zM70 91l7 3v5l-7-3z"/>
+      <path d="M33 83l7 4v5l-7-4zM44 89l7 3v5l-7-3zM59 96l7 4v5l-7-4zM70 102l7 3v5l-7-3z"/>
+      <path d="M33 94l7 4v5l-7-4zM44 100l7 3v5l-7-3zM59 107l7 4v5l-7-4zM70 113l7 3v5l-7-3z"/>
+      <path d="M33 105l7 4v5l-7-4zM44 111l7 3v5l-7-3zM59 118l7 4v5l-7-4zM70 124l7 3v5l-7-3z"/>
+      <path d="M33 116l7 4v5l-7-4zM44 122l7 3v5l-7-3zM59 129l7 4v5l-7-4zM70 135l7 3v5l-7-3z"/>
+    </g>
+    <g fill="#53788A">
+      <path d="M34 73l2 1v3l-2-1zM60 97l2 1v3l-2-1zM45 123l2 1v3l-2-1zM71 136l2 1v3l-2-1z"/>
+    </g>
+    <g fill="#263D49">
+      <path d="M103 108l8-4v5l-8 4zM115 102l8-4v5l-8 4zM103 119l8-4v5l-8 4zM115 113l8-4v5l-8 4z"/>
+      <path d="M103 130l8-4v5l-8 4zM115 124l8-4v5l-8 4zM103 141l8-4v5l-8 4zM115 135l8-4v5l-8 4zM103 152l8-4v5l-8 4zM115 146l8-4v5l-8 4z"/>
+    </g>
+    <polygon fill="#8B4A3A" points="42,115 50,119 50,132 42,128"/>
+    <polygon fill="#B66A4C" points="66,127 74,131 74,144 66,140"/>
+    <polygon fill="#B66A4C" points="105,147 113,143 113,155 105,159"/>
+    <path fill="none" stroke="#303331" stroke-width="1" d="M44 119l4 2M68 131l4 2M107 148l4-2"/>
+    <rect fill="#4A4F4B" x="61" y="46" width="10" height="7"/>
+    <rect fill="#727970" x="62" y="44" width="10" height="2"/>
+    <rect fill="#4A4F4B" x="82" y="57" width="6" height="5"/>
+    <rect fill="#A7AEAA" x="70" y="44" width="2" height="2"/>
+  </g>
+</svg>

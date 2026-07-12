@@ -4,6 +4,17 @@ import { GameStateData } from '../core/GameState';
 import { EventBus } from '../core/EventBus';
 import type { BuildingCategory } from '../buildings/BuildingTypes';
 
+export function canTraversePowerEdge(
+  grid: Grid,
+  fromGx: number,
+  fromGy: number,
+  toGx: number,
+  toGy: number
+): boolean {
+  const adjacent = Math.max(Math.abs(fromGx - toGx), Math.abs(fromGy - toGy)) === 1;
+  return adjacent && grid.canConnectAtEqualElevation(fromGx, fromGy, toGx, toGy);
+}
+
 export class PowerService {
   constructor(
     private grid: Grid,
@@ -90,6 +101,7 @@ export class PowerService {
 
         if (visited.has(key)) continue;
         if (!this.grid.inBounds(nx, ny)) continue;
+        if (!canTraversePowerEdge(this.grid, cx, cy, nx, ny)) continue;
 
         const cell = this.grid.getCell(nx, ny);
         if (!cell || !cell.building) continue;

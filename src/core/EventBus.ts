@@ -10,7 +10,8 @@ export type GameEvents = {
     gx: number;
     gy: number;
   };
-  'tool:selected': { tool: string; buildingId?: string; zone?: import('../grid/Cell').ZoneType };
+  /** Authoritative interaction state. All tool-facing UI renders from this snapshot. */
+  'tool:selected': import('../input/ToolController').ToolSnapshot;
   'tick': { week: number; year: number };
   'speed:changed': { speed: number };
   'budget:changed': { budget: number };
@@ -50,6 +51,7 @@ export type GameEvents = {
   'game:saved': {};
   'game:save:requested': {};
   'tutorial:completed': {};
+  'plan:viewed': {};
   'ui:settings:changed': { settings: Partial<import('./GameState').UiSettings> };
 };
 

@@ -3,15 +3,23 @@ import { Grid } from '../grid/Grid';
 import { BuildingRegistry } from '../buildings/BuildingRegistry';
 import { EventBus } from '../core/EventBus';
 import { GraphicsQuality } from '../core/GameState';
-import { gridToWorld, depthKey } from './IsometricRenderer';
+import { gridToWorld } from './IsometricRenderer';
+import { footprintDepth, WorldDepthPhase, type WorldDepthLayer } from './WorldDepth';
 import { TILE_HALF_H, TILE_HALF_W } from '../constants';
 import { PALETTE } from '../graphics/SovietPalette';
+import { AuthoredBuildingTexture } from '../graphics/TextureFactory';
+import { ArtLod, ArtPoint } from '../graphics/ArtManifest';
+import { resolveArtLodForZoom } from '../graphics/ArtVariantResolver';
 
 interface LightSprite {
   sprite: Sprite;
   buildingId: number;
   baseAlpha: number;
 }
+
+export type AuthoredBuildingVisualProvider = (
+  buildingId: number,
+) => AuthoredBuildingTexture | undefined;
 
 const RESIDENTIAL_IDS = new Set(['khrushchyovka', 'stalinka', 'kommunalka', 'panelak']);
 const CIVIC_IDS = new Set(['party_hq', 'hospital', 'school', 'cinema', 'metro_station']);
@@ -21,6 +29,7 @@ export class WindowLightRenderer {
   private lights: LightSprite[] = [];
   private glowTexture: Texture;
   private quality: GraphicsQuality = 'high';
+  private artLod: ArtLod = 'near';
   private visible = false;
   private flickerFrame = 0;
 
@@ -28,15 +37,26 @@ export class WindowLightRenderer {
     renderer: Renderer,
     private grid: Grid,
     private registry: BuildingRegistry,
-    private events: EventBus
+    private events: EventBus,
+    private worldDepth: WorldDepthLayer,
+    private getAuthoredBuildingVisual?: AuthoredBuildingVisualProvider,
   ) {
     this.container = new Container();
+    this.container.sortableChildren = true;
     this.glowTexture = this.createGlowTexture(renderer);
 
     events.on('building:placed', () => this.rebuild());
     events.on('building:demolished', () => this.rebuild());
     events.on('game:loaded', () => this.rebuild());
     events.on('power:updated', () => this.rebuild());
+    // BuildingRenderer registers first and updates its retained visual before
+    // this handler asks the provider for the new authored LOD.
+    events.on('camera:moved', ({ zoom }) => {
+      const nextLod = resolveArtLodForZoom(zoom, this.artLod);
+      if (nextLod === this.artLod) return;
+      this.artLod = nextLod;
+      this.rebuild();
+    });
     events.on('graphics:quality:changed', ({ quality }) => this.setQuality(quality));
   }
 
@@ -55,9 +75,7 @@ export class WindowLightRenderer {
 
   setQuality(quality: GraphicsQuality): void {
     this.quality = quality;
-    if (quality === 'low') {
-      this.container.visible = false;
-    }
+    this.container.visible = quality !== 'low' && this.visible;
     this.rebuild();
   }
 
@@ -83,7 +101,18 @@ export class WindowLightRenderer {
 
       const centerGx = building.gx + def.width / 2;
       const centerGy = building.gy + def.height / 2;
-      const pos = gridToWorld(centerGx, centerGy, 0);
+      const elevation = this.grid.getElevation(building.gx, building.gy);
+      const pos = gridToWorld(centerGx, centerGy, elevation);
+
+      const authored = this.getAuthoredBuildingVisual?.(building.id);
+      if (authored) {
+        // Far physical-mass frames deliberately carry no individual window
+        // effects. Authored art with no declared anchors must not receive the
+        // old generic floating-light treatment.
+        if (authored.lod === 'far' || authored.windowAnchors.length === 0) continue;
+        this.addAuthoredLights(building.id, building.gx, building.gy, def.width, def.height, pos, authored);
+        continue;
+      }
 
       // Place 3-8 window lights depending on building size
       const lightCount = this.quality === 'high'
@@ -105,7 +134,14 @@ export class WindowLightRenderer {
 
         sprite.x = pos.x + offsetX;
         sprite.y = pos.y + TILE_HALF_H + offsetY;
-        sprite.zIndex = depthKey(building.gx + def.width - 1, building.gy + def.height - 1) + 0.5;
+        sprite.zIndex = footprintDepth(
+          building.gx,
+          building.gy,
+          def.width,
+          def.height,
+          WorldDepthPhase.BUILDING_EFFECT,
+          building.id * 16 + i
+        );
 
         const baseAlpha = 0.5 + ((hash + i) % 40) / 100;
 
@@ -114,8 +150,70 @@ export class WindowLightRenderer {
 
         this.lights.push({ sprite, buildingId: building.id, baseAlpha });
         this.container.addChild(sprite);
+        this.worldDepth.attach(sprite);
       }
     }
+  }
+
+  private addAuthoredLights(
+    buildingId: number,
+    gx: number,
+    gy: number,
+    width: number,
+    height: number,
+    baseline: { x: number; y: number },
+    authored: AuthoredBuildingTexture,
+  ): void {
+    const maxLights = this.quality === 'high' ? 8 : 4;
+    const selected = this.selectAuthoredWindowAnchors(
+      buildingId,
+      authored.windowAnchors,
+      maxLights,
+    );
+    const buildingHash = this.tileHash(buildingId);
+
+    for (let index = 0; index < selected.length; index++) {
+      const { point, sourceIndex } = selected[index];
+      const sprite = new Sprite(this.glowTexture);
+      sprite.anchor.set(0.5);
+      sprite.x = baseline.x + point[0] - authored.anchor[0];
+      sprite.y = baseline.y + TILE_HALF_H + point[1] - authored.anchor[1];
+      sprite.zIndex = footprintDepth(
+        gx,
+        gy,
+        width,
+        height,
+        WorldDepthPhase.BUILDING_EFFECT,
+        buildingId * 64 + sourceIndex,
+      );
+
+      const baseAlpha = 0.5 + ((buildingHash + sourceIndex) % 40) / 100;
+      sprite.alpha = 0;
+      sprite.visible = false;
+
+      this.lights.push({ sprite, buildingId, baseAlpha });
+      this.container.addChild(sprite);
+      this.worldDepth.attach(sprite);
+    }
+  }
+
+  private selectAuthoredWindowAnchors(
+    buildingId: number,
+    anchors: readonly ArtPoint[],
+    limit: number,
+  ): { point: ArtPoint; sourceIndex: number }[] {
+    return anchors
+      .map((point, sourceIndex) => ({
+        point,
+        sourceIndex,
+        rank: this.tileHash(buildingId * 131 + sourceIndex * 977 + 17),
+      }))
+      .sort((left, right) => left.rank - right.rank || left.sourceIndex - right.sourceIndex)
+      .slice(0, limit)
+      // A stable spatial order makes effect depth IDs and flicker phase easy
+      // to inspect while preserving the deterministic subset above.
+      .sort((left, right) => left.sourceIndex - right.sourceIndex)
+      .map(({ point, sourceIndex }) => ({ point, sourceIndex }));
   }
 
   /** Update light visibility based on day/night cycle. Call from game loop. */
@@ -152,5 +250,13 @@ export class WindowLightRenderer {
     let v = seed * 1103515245 + 12345;
     v = (v ^ (v >>> 13)) * 1274126177;
     return Math.abs(v);
+  }
+
+  /** Development benchmark readback without exposing mutable sprite state. */
+  getVisibleLightCount(): number {
+    return this.lights.reduce(
+      (count, light) => count + (light.sprite.visible && light.sprite.alpha > 0 ? 1 : 0),
+      0,
+    );
   }
 }

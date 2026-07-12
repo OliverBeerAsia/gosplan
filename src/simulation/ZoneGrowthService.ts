@@ -7,6 +7,29 @@ import { Grid } from '../grid/Grid';
 import { ZoneType } from '../grid/Cell';
 import { nextGameRandom, nextGameRandomInt } from '../core/Rng';
 
+export function hasEqualElevationRoadAccess(
+  grid: Grid,
+  registry: BuildingRegistry,
+  gx: number,
+  gy: number,
+  width: number,
+  height: number
+): boolean {
+  const footprintElevation = grid.getElevation(gx, gy);
+  for (let x = gx - 1; x <= gx + width; x++) {
+    for (let y = gy - 1; y <= gy + height; y++) {
+      if (x >= gx && x < gx + width && y >= gy && y < gy + height) continue;
+
+      const building = grid.getMasterBuilding(x, y);
+      if (!building) continue;
+      const def = registry.get(building.defId);
+      if (!def?.isRoad) continue;
+      if (grid.getElevation(x, y) === footprintElevation) return true;
+    }
+  }
+  return false;
+}
+
 const DEMAND_MIN = -100;
 const DEMAND_MAX = 100;
 
@@ -145,7 +168,8 @@ export class ZoneGrowthService {
 
     const buildable = defs
       .filter(def => this.grid.canPlace(gx, gy, def.width, def.height))
-      .filter(def => !this.requiresRoadAccess(def) || this.hasRoadAccess(gx, gy, def.width, def.height));
+      .filter(def => !this.requiresRoadAccess(def)
+        || hasEqualElevationRoadAccess(this.grid, this.registry, gx, gy, def.width, def.height));
 
     if (buildable.length === 0) return null;
 
@@ -167,26 +191,6 @@ export class ZoneGrowthService {
 
   private requiresRoadAccess(def: BuildingDef): boolean {
     return !def.isRoad && !def.powerGeneration;
-  }
-
-  private hasRoadAccess(gx: number, gy: number, width: number, height: number): boolean {
-    for (let x = gx - 1; x <= gx + width; x++) {
-      for (let y = gy - 1; y <= gy + height; y++) {
-        // Skip interior cells.
-        if (x >= gx && x < gx + width && y >= gy && y < gy + height) continue;
-
-        const neighbor = this.grid.getCell(x, y);
-        if (!neighbor?.building) continue;
-
-        const master = this.grid.getMasterBuilding(x, y);
-        if (!master) continue;
-
-        const def = this.registry.get(master.defId);
-        if (def?.isRoad) return true;
-      }
-    }
-
-    return false;
   }
 
   private scoreBuilding(def: BuildingDef, demand: number): number {

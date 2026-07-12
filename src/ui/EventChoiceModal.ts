@@ -1,13 +1,15 @@
 import { EventBus } from '../core/EventBus';
 import { ActiveCityEvent, GameStateData } from '../core/GameState';
+import { activateModal } from './ModalFocus';
 
 export class EventChoiceModal {
   private el: HTMLDivElement;
-  private titleEl: HTMLDivElement;
+  private titleEl: HTMLHeadingElement;
   private bodyEl: HTMLDivElement;
   private choicesEl: HTMLDivElement;
   private timerEl: HTMLDivElement;
   private currentEvent: ActiveCityEvent | null = null;
+  private deactivateModal: (() => void) | null = null;
 
   constructor(
     container: HTMLElement,
@@ -16,31 +18,54 @@ export class EventChoiceModal {
   ) {
     this.el = document.createElement('div');
     this.el.id = 'event-modal';
+    this.el.setAttribute('role', 'alertdialog');
+    this.el.setAttribute('aria-modal', 'true');
+    this.el.setAttribute('aria-labelledby', 'event-modal-title');
+    this.el.setAttribute('aria-describedby', 'event-modal-body');
+    this.el.setAttribute('aria-hidden', 'true');
     this.el.style.display = 'none';
 
     const panel = document.createElement('div');
     panel.id = 'event-modal-panel';
-    panel.className = 'panel-shell panel-shell--red';
+    panel.className = 'event-decree';
     this.el.appendChild(panel);
 
-    this.titleEl = document.createElement('div');
+    const header = document.createElement('header');
+    header.className = 'event-modal-header';
+    panel.appendChild(header);
+
+    const seal = document.createElement('div');
+    seal.className = 'event-modal-seal';
+    seal.setAttribute('aria-hidden', 'true');
+    seal.textContent = '★';
+    header.appendChild(seal);
+
+    const heading = document.createElement('div');
+    heading.className = 'event-modal-heading';
+    header.appendChild(heading);
+
+    const eyebrow = document.createElement('div');
+    eyebrow.className = 'event-modal-eyebrow';
+    eyebrow.textContent = 'Urgent Ministry Telegram';
+    heading.appendChild(eyebrow);
+
+    this.titleEl = document.createElement('h2');
     this.titleEl.id = 'event-modal-title';
-    this.titleEl.className = 'panel-shell-header';
-    panel.appendChild(this.titleEl);
+    heading.appendChild(this.titleEl);
 
     this.bodyEl = document.createElement('div');
     this.bodyEl.id = 'event-modal-body';
-    this.bodyEl.className = 'panel-shell-body';
     panel.appendChild(this.bodyEl);
 
     this.timerEl = document.createElement('div');
     this.timerEl.id = 'event-modal-timer';
-    this.timerEl.className = 'panel-shell-body';
+    this.timerEl.setAttribute('aria-live', 'polite');
     panel.appendChild(this.timerEl);
 
     this.choicesEl = document.createElement('div');
     this.choicesEl.id = 'event-modal-choices';
-    this.choicesEl.className = 'panel-shell-body';
+    this.choicesEl.setAttribute('role', 'group');
+    this.choicesEl.setAttribute('aria-label', 'Available ministry responses');
     panel.appendChild(this.choicesEl);
 
     container.appendChild(this.el);
@@ -64,20 +89,37 @@ export class EventChoiceModal {
     this.renderChoices(event);
     this.updateTimer();
     this.el.style.display = 'flex';
+    this.el.setAttribute('aria-hidden', 'false');
+    this.deactivateModal?.();
+    this.deactivateModal = activateModal(this.el, {
+      initialFocus: () => this.choicesEl.querySelector<HTMLButtonElement>('button'),
+      onEscape: null,
+    });
   }
 
   private hide(): void {
     this.currentEvent = null;
     this.el.style.display = 'none';
+    this.el.setAttribute('aria-hidden', 'true');
+    this.deactivateModal?.();
+    this.deactivateModal = null;
     while (this.choicesEl.firstChild) this.choicesEl.removeChild(this.choicesEl.firstChild);
   }
 
   private renderChoices(event: ActiveCityEvent): void {
     while (this.choicesEl.firstChild) this.choicesEl.removeChild(this.choicesEl.firstChild);
 
-    for (const choice of event.choices) {
+    for (const [index, choice] of event.choices.entries()) {
       const btn = document.createElement('button');
+      btn.type = 'button';
       btn.className = 'event-choice-btn';
+      btn.setAttribute('aria-label', `${choice.label}. ${choice.description}`);
+
+      const tab = document.createElement('div');
+      tab.className = 'event-choice-tab';
+      tab.setAttribute('aria-hidden', 'true');
+      tab.textContent = `Response ${String(index + 1).padStart(2, '0')}`;
+      btn.appendChild(tab);
 
       const label = document.createElement('div');
       label.className = 'event-choice-label';

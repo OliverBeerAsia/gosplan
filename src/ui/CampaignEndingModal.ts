@@ -1,12 +1,14 @@
 import { EventBus } from '../core/EventBus';
 import { GameStateData } from '../core/GameState';
+import { activateModal } from './ModalFocus';
 
 export class CampaignEndingModal {
   private el: HTMLDivElement;
-  private titleEl: HTMLDivElement;
+  private titleEl: HTMLHeadingElement;
   private summaryEl: HTMLDivElement;
   private scoreEl: HTMLDivElement;
   private scenarioEl: HTMLDivElement;
+  private deactivateModal: (() => void) | null = null;
 
   constructor(
     container: HTMLElement,
@@ -15,6 +17,11 @@ export class CampaignEndingModal {
   ) {
     this.el = document.createElement('div');
     this.el.id = 'campaign-ending-modal';
+    this.el.setAttribute('role', 'dialog');
+    this.el.setAttribute('aria-modal', 'true');
+    this.el.setAttribute('aria-labelledby', 'campaign-ending-title');
+    this.el.setAttribute('aria-describedby', 'campaign-ending-summary');
+    this.el.setAttribute('aria-hidden', 'true');
     this.el.style.display = 'none';
 
     const panel = document.createElement('div');
@@ -28,7 +35,7 @@ export class CampaignEndingModal {
     header.textContent = 'CAMPAIGN REPORT';
     panel.appendChild(header);
 
-    this.titleEl = document.createElement('div');
+    this.titleEl = document.createElement('h2');
     this.titleEl.id = 'campaign-ending-title';
     this.titleEl.className = 'panel-shell-body';
     panel.appendChild(this.titleEl);
@@ -52,6 +59,7 @@ export class CampaignEndingModal {
     actions.id = 'campaign-ending-actions';
 
     const sandboxBtn = document.createElement('button');
+    sandboxBtn.type = 'button';
     sandboxBtn.className = 'campaign-ending-btn primary';
     sandboxBtn.textContent = 'CONTINUE AS SANDBOX';
     sandboxBtn.addEventListener('click', () => {
@@ -66,6 +74,7 @@ export class CampaignEndingModal {
     actions.appendChild(sandboxBtn);
 
     const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
     closeBtn.className = 'campaign-ending-btn';
     closeBtn.textContent = 'CLOSE REPORT';
     closeBtn.addEventListener('click', () => this.hide());
@@ -105,9 +114,18 @@ export class CampaignEndingModal {
     this.scenarioEl.textContent =
       `Scenario: ${this.state.campaignScenarioLabel} | Target Year: ${this.state.campaignTargetYear}`;
     this.el.style.display = 'flex';
+    this.el.setAttribute('aria-hidden', 'false');
+    this.deactivateModal?.();
+    this.deactivateModal = activateModal(this.el, {
+      initialFocus: () => this.el.querySelector<HTMLButtonElement>('button:not(:disabled)'),
+      onEscape: () => this.hide(),
+    });
   }
 
   private hide(): void {
     this.el.style.display = 'none';
+    this.el.setAttribute('aria-hidden', 'true');
+    this.deactivateModal?.();
+    this.deactivateModal = null;
   }
 }

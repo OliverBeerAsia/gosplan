@@ -36,60 +36,65 @@ export class UndoManager {
   }
 
   undo(): boolean {
-    const action = this.undoStack.pop();
+    const action = this.undoStack[this.undoStack.length - 1];
     if (!action) return false;
 
     if (action.type === 'place') {
       // Undo place: remove building, refund full cost
-      this.placer.demolish(action.gx, action.gy);
+      if (!this.placer.demolish(action.gx, action.gy)) return false;
       this.state.budget += action.cost;
       this.events.emit('budget:changed', { budget: this.state.budget });
       this.events.emit('notification', { message: 'Undo: building removed', type: 'info' });
     } else if (action.type === 'demolish') {
-      // Undo demolish: re-place building, deduct the 50% refund that was given
+      // Compatibility restore preserves valid uneven legacy footprints.
       const def = this.registry.get(action.buildingDefId);
-      if (def) {
-        const building = this.placer.place(action.buildingDefId, action.gx, action.gy);
-        if (building) {
-          const refund = Math.floor(def.cost * 0.5);
-          this.state.budget -= refund;
-          this.events.emit('budget:changed', { budget: this.state.budget });
-          this.events.emit('notification', { message: 'Undo: building restored', type: 'info' });
-        }
+      if (!def) return false;
+      const building = this.placer.restore(action.buildingDefId, action.gx, action.gy, {
+        id: action.buildingId,
+      });
+      if (!building) {
+        this.events.emit('notification', {
+          message: 'Undo blocked: original building footprint is no longer clear',
+          type: 'warning',
+        });
+        return false;
       }
+      const refund = Math.floor(def.cost * 0.5);
+      this.state.budget -= refund;
+      this.events.emit('budget:changed', { budget: this.state.budget });
+      this.events.emit('notification', { message: 'Undo: building restored', type: 'info' });
     }
 
+    this.undoStack.pop();
     this.redoStack.push(action);
     return true;
   }
 
   redo(): boolean {
-    const action = this.redoStack.pop();
+    const action = this.redoStack[this.redoStack.length - 1];
     if (!action) return false;
 
     if (action.type === 'place') {
       // Redo place: place building, deduct cost
       const def = this.registry.get(action.buildingDefId);
-      if (def) {
-        const building = this.placer.place(action.buildingDefId, action.gx, action.gy);
-        if (building) {
-          this.state.budget -= action.cost;
-          this.events.emit('budget:changed', { budget: this.state.budget });
-          this.events.emit('notification', { message: 'Redo: building placed', type: 'info' });
-        }
-      }
+      if (!def) return false;
+      const building = this.placer.place(action.buildingDefId, action.gx, action.gy);
+      if (!building) return false;
+      this.state.budget -= action.cost;
+      this.events.emit('budget:changed', { budget: this.state.budget });
+      this.events.emit('notification', { message: 'Redo: building placed', type: 'info' });
     } else if (action.type === 'demolish') {
       // Redo demolish: remove building, give refund
       const def = this.registry.get(action.buildingDefId);
-      if (def) {
-        this.placer.demolish(action.gx, action.gy);
-        const refund = Math.floor(def.cost * 0.5);
-        this.state.budget += refund;
-        this.events.emit('budget:changed', { budget: this.state.budget });
-        this.events.emit('notification', { message: 'Redo: building demolished', type: 'info' });
-      }
+      if (!def) return false;
+      if (!this.placer.demolish(action.gx, action.gy)) return false;
+      const refund = Math.floor(def.cost * 0.5);
+      this.state.budget += refund;
+      this.events.emit('budget:changed', { budget: this.state.budget });
+      this.events.emit('notification', { message: 'Redo: building demolished', type: 'info' });
     }
 
+    this.redoStack.pop();
     this.undoStack.push(action);
     return true;
   }

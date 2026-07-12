@@ -78,6 +78,15 @@ export class SimulationManager {
     this.era.syncEra();
   }
 
+  /**
+   * Restore transient network state without advancing the calendar or RNG.
+   * Placed-building power flags are intentionally not serialized, so paused
+   * saves still need one deterministic network reconciliation on load.
+   */
+  reconcileLoadedInfrastructure(): void {
+    this.power.tick();
+  }
+
   start(): void {
     this.running = true;
     this.lastTime = performance.now();

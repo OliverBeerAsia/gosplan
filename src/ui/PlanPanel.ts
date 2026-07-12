@@ -15,7 +15,7 @@ type PanelMode = 'sandbox' | 'campaign-ended' | 'era1' | 'awaiting' | 'plan';
 
 export class PlanPanel {
   private el: HTMLDivElement;
-  private headerEl: HTMLDivElement;
+  private headerEl: HTMLButtonElement;
   private bodyEl: HTMLDivElement;
   private collapsed = false;
 
@@ -38,10 +38,16 @@ export class PlanPanel {
     this.el.id = 'plan-panel';
     this.el.className = 'panel-shell panel-shell--gold';
 
-    this.headerEl = document.createElement('div');
+    this.headerEl = document.createElement('button');
+    this.headerEl.type = 'button';
     this.headerEl.id = 'plan-panel-header';
     this.headerEl.className = 'panel-shell-header';
     this.headerEl.style.cursor = 'pointer';
+    this.headerEl.style.width = '100%';
+    this.headerEl.style.border = '0';
+    this.headerEl.style.textAlign = 'left';
+    this.headerEl.setAttribute('aria-controls', 'plan-panel-body');
+    this.headerEl.setAttribute('aria-expanded', 'true');
     this.headerEl.addEventListener('click', () => this.toggleCollapse());
     this.el.appendChild(this.headerEl);
 
@@ -54,16 +60,22 @@ export class PlanPanel {
 
     events.on('tick', () => this.update());
     events.on('era:changed', () => { this.currentMode = null; this.update(); });
+
+    // Build the panel immediately so paused games and visual benchmarks do not
+    // show an empty shell while waiting for the first simulation tick.
+    this.update();
   }
 
   toggleCollapse(): void {
     this.collapsed = !this.collapsed;
     this.bodyEl.style.display = this.collapsed ? 'none' : '';
+    this.headerEl.setAttribute('aria-expanded', String(!this.collapsed));
   }
 
   setCollapsed(collapsed: boolean): void {
     this.collapsed = collapsed;
     this.bodyEl.style.display = this.collapsed ? 'none' : '';
+    this.headerEl.setAttribute('aria-expanded', String(!this.collapsed));
   }
 
   private getMode(): PanelMode {

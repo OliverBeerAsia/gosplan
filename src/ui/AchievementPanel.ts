@@ -40,6 +40,9 @@ export class AchievementPanel {
     this.listEl = document.createElement('div');
     this.listEl.id = 'achievement-list';
     this.listEl.className = 'panel-shell-body';
+    this.listEl.tabIndex = 0;
+    this.listEl.setAttribute('role', 'region');
+    this.listEl.setAttribute('aria-label', 'State honors list');
     this.el.appendChild(this.listEl);
 
     events.on('achievement:unlocked', ({ id }) => this.update(id));

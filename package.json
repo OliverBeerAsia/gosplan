@@ -1,6 +1,6 @@
 {
   "name": "gosplan",
-  "version": "1.9.4",
+  "version": "1.10.0",
   "description": "Soviet City Builder - SimCity 2000 style",
   "type": "module",
   "scripts": {
@@ -8,12 +8,26 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "check:determinism": "node scripts/check-determinism.cjs",
-    "check:atlas": "node scripts/check-atlas-manifest.cjs"
+    "check:atlas": "node scripts/check-atlas-manifest.cjs",
+    "check:art": "node scripts/check-art-manifest.cjs",
+    "check:khrushchyovka": "node scripts/check-khrushchyovka-atlas.cjs",
+    "check:courtyard": "node scripts/check-courtyard-atlas.cjs",
+    "check:environment": "node scripts/check-environment-composition-planner.cjs",
+    "check:benchmark:pack4a": "node scripts/check-worker-housing-benchmark.cjs",
+    "check:benchmark:pack4a:production": "node scripts/check-worker-housing-benchmark.cjs --check-production-bundle",
+    "check:benchmark:pack4b": "node scripts/check-pack4b-courtyard-benchmark.cjs",
+    "check:benchmark:pack4b:production": "node scripts/check-pack4b-courtyard-benchmark.cjs --check-production-bundle",
+    "check:visual-evidence": "node scripts/check-visual-evidence.cjs",
+    "check:elevation": "node scripts/check-elevation-foundation.cjs",
+    "check:interaction": "node scripts/check-interaction-regressions.cjs",
+    "check:depth": "node scripts/check-world-depth.cjs",
+    "test:art": "node --test scripts/check-art-manifest.test.cjs"
   },
   "dependencies": {
     "pixi.js": "^8.16.0"
   },
   "devDependencies": {
+    "axe-core": "^4.12.1",
     "typescript": "^5.9.3",
     "vite": "^7.3.1"
   }
