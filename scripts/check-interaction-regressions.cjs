@@ -4,15 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const ts = require('typescript');
 
-// Pixi's browser adapter probes navigator during module initialization. Node 24
-// provides it, but the Node 20 CI runtime does not, so install the smallest
-// deterministic test-only shim before importing any renderer modules.
-if (!global.navigator) {
-  Object.defineProperty(global, 'navigator', {
-    value: { platform: 'node', userAgent: 'node.js' },
-    configurable: true,
-  });
-}
+require('./install-node-browser-globals.cjs');
 
 // Execute dependency-light project modules with the compiler already installed.
 require.extensions['.ts'] = (module, filename) => {
