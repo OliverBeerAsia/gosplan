@@ -2,7 +2,6 @@ import { Grid } from '../grid/Grid';
 import { DEFAULT_UI_SETTINGS, GameStateData, createInitialState } from './GameState';
 import { BuildingPlacer } from '../grid/BuildingPlacer';
 import { BuildingRegistry } from '../buildings/BuildingRegistry';
-import { PlacedBuilding } from '../buildings/BuildingTypes';
 import { TerrainType, ZoneType } from '../grid/Cell';
 import { deriveSeed, hashStringToSeed } from './Rng';
 import { ERA_THRESHOLDS, ERA_COUNT } from '../constants';
@@ -129,9 +128,12 @@ export function exportSaveArchive(): boolean {
 export function loadGame(
   grid: Grid,
   registry: BuildingRegistry,
-  placer: BuildingPlacer
+  placer: BuildingPlacer,
+  rawSave?: string
 ): GameStateData | null {
-  const raw = localStorage.getItem(SAVE_KEY);
+  // Development fixtures may supply an in-memory archive. Ordinary callers
+  // omit it and retain the exact localStorage behavior used by existing saves.
+  const raw = rawSave ?? localStorage.getItem(SAVE_KEY);
   if (!raw) return null;
 
   try {
@@ -144,8 +146,7 @@ export function loadGame(
     } else if (data.version === 2 || data.version === 3 || data.version === 4) {
       for (const t of data.terrainCells) {
         grid.setTerrain(t.gx, t.gy, t.terrain);
-        const cell = grid.getCell(t.gx, t.gy);
-        if (cell) cell.elevation = t.elevation;
+        grid.setElevation(t.gx, t.gy, t.elevation);
       }
 
       if (data.version === 3 || data.version === 4) {
@@ -161,16 +162,9 @@ export function loadGame(
     for (const b of data.buildings) {
       const def = registry.get(b.defId);
       if (!def) continue;
-      if (!grid.canPlace(b.gx, b.gy, def.width, def.height)) continue;
-
-      const building: PlacedBuilding = {
-        defId: b.defId,
-        gx: b.gx,
-        gy: b.gy,
-        powered: false,
-        id: b.id,
-      };
-      grid.placeBuilding(building, def.width, def.height);
+      // Restore through the same compatibility-safe path used by undo. v4 and
+      // earlier may contain otherwise-valid footprints across uneven terrain.
+      placer.restore(b.defId, b.gx, b.gy, { id: b.id, emitEvent: false });
     }
 
     // Merge with fresh defaults to support forward-compatible state extension.

@@ -1,14 +1,16 @@
 import { LoadingMusic } from '../audio/LoadingMusic';
+import { ArtRegistry } from '../graphics/ArtRegistry';
 import { assetPath } from '../utils/assetPath';
+import { activateModal } from './ModalFocus';
 
 export type LoadingMode = 'campaign' | 'sandbox' | 'load';
 
-interface InterstitialCard {
+interface InterstitialScene {
   title: string;
   caption: string;
-  ticker: string;
-  artAsset: string;
-  monoLine: string;
+  accent: string;
+  manifestId: string;
+  fallbackFile: string;
 }
 
 interface LoadingPlayOptions {
@@ -16,178 +18,228 @@ interface LoadingPlayOptions {
   skipAllowed?: boolean;
 }
 
-const INTERSTITIAL_CARDS: InterstitialCard[] = [
-  {
-    title: 'RED STAR ORBIT',
-    caption: 'Satellite relay confirms production telemetry in all districts.',
-    ticker: 'COSMODROME UPLINK',
-    artAsset: assetPath('assets/ui/loading-card-orbit.svg'),
-    monoLine: ':: ORBITAL RELAY LOCKED ::',
+const INTERSTITIAL_SCENES: Record<LoadingMode, InterstitialScene> = {
+  campaign: {
+    title: 'Industrial Mobilization',
+    caption: 'Factories, housing brigades, and transport offices prepare the next city directive.',
+    accent: 'Five-Year Development Office',
+    manifestId: 'loading.industrial_mobilization',
+    fallbackFile: 'assets/art/loading/industrial-mobilization.webp',
   },
-  {
-    title: 'TRACTOR COLUMN',
-    caption: 'Agrarian brigades cleared steel route for urban expansion.',
-    ticker: 'MOTOR POOL SYNC',
-    artAsset: assetPath('assets/ui/loading-card-tractor.svg'),
-    monoLine: ':: SUPPLY CONVOY IN MOTION ::',
+  sandbox: {
+    title: 'City Plan in Transit',
+    caption: 'Survey crews carry a new district plan from the drafting table to the winter frontier.',
+    accent: 'Ministry of Urban Development',
+    manifestId: 'loading.city_plan_in_transit',
+    fallbackFile: 'assets/art/loading/city-plan-in-transit.webp',
   },
-  {
-    title: 'FACTORY WHISTLE',
-    caption: 'Industrial output whistles ahead of current quarter projections.',
-    ticker: 'FOUNDRY SIGNAL',
-    artAsset: assetPath('assets/ui/loading-card-factory.svg'),
-    monoLine: ':: STACK PRESSURE NOMINAL ::',
+  load: {
+    title: 'Orbital Survey',
+    caption: 'State archives and satellite maps are reconciled before the planning office reopens.',
+    accent: 'Central Cartographic Bureau',
+    manifestId: 'loading.orbital_survey',
+    fallbackFile: 'assets/art/loading/orbital-survey.webp',
   },
-];
+};
 
 const MODE_LABEL: Record<LoadingMode, string> = {
-  campaign: 'CAMPAIGN BRIEFING',
-  sandbox: 'SANDBOX AUTONOMY',
-  load: 'STATE ARCHIVE RESTORE',
+  campaign: 'Campaign Directive',
+  sandbox: 'Planning Mandate',
+  load: 'City Archive',
 };
 
-const BOOT_LINES = [
-  'ALLOCATING WORKER CADRES',
-  'STAMPING FIVE-YEAR DIRECTIVES',
-  'SYNCHRONIZING MINISTRY TELETYPE',
-  'CALIBRATING CONCRETE ALLOCATION',
-  'VERIFYING DISTRICT BLUEPRINTS',
-  'ROUTING POWER GRID TOPOLOGY',
-  'INITIALIZING TERRAIN SURVEY',
-  'LOADING BUILDING SCHEMATICS',
-  'DISPATCHING SUPPLY CONVOYS',
-  'COMPILING HOUSING QUOTAS',
-  'CHECKING INDUSTRIAL PERMITS',
-  'MAPPING TRANSPORT CORRIDORS',
+const MODE_BRIEF: Record<LoadingMode, string> = {
+  campaign: 'The Committee has issued a new development assignment.',
+  sandbox: 'Full planning autonomy has been granted for this territory.',
+  load: 'The latest municipal record is being prepared for review.',
+};
+
+const PROGRESS_STAGES = [
+  { threshold: 72, label: 'Reviewing the district plan' },
+  { threshold: 94, label: 'Preparing the planning office' },
+  { threshold: 101, label: 'Opening the city dossier' },
 ];
-
-const MODE_INTRO: Record<LoadingMode, string[]> = {
-  campaign: [
-    'COMRADE PLANNER REPORTING:',
-    'The Central Committee has assigned you a critical mandate.',
-    'Build, sustain, and exceed the Five-Year Plan targets.',
-    'The people are counting on you, engineer.',
-  ],
-  sandbox: [
-    'COMRADE PLANNER REPORTING:',
-    'You have been granted full planning autonomy.',
-    'No quotas, no deadlines \u2014 build the city of your vision.',
-    'Resources await your command, engineer.',
-  ],
-  load: [
-    'COMRADE PLANNER REPORTING:',
-    'State archives located. Restoring city blueprints.',
-    'All prior construction data is being verified.',
-    'Resuming operations momentarily, engineer.',
-  ],
-};
 
 export class LoadingInterstitial {
   private el: HTMLDivElement;
   private modeEl: HTMLDivElement;
-  private titleEl: HTMLDivElement;
-  private captionEl: HTMLDivElement;
-  private tickerEl: HTMLDivElement;
+  private titleEl: HTMLHeadingElement;
+  private captionEl: HTMLParagraphElement;
+  private accentEl: HTMLDivElement;
+  private briefEl: HTMLParagraphElement;
+  private artEl: HTMLElement;
   private artImageEl: HTMLImageElement;
-  private artMonoEl: HTMLPreElement;
   private progressFillEl: HTMLDivElement;
-  private introEl: HTMLDivElement;
   private progressValueEl: HTMLDivElement;
+  private progressStatusEl: HTMLDivElement;
+  private skipButtonEl: HTMLButtonElement;
   private timeoutIds: number[] = [];
   private activeCleanup: (() => void) | null = null;
+  private deactivateModal: (() => void) | null = null;
   private music = new LoadingMusic();
 
-  constructor(container: HTMLElement) {
+  constructor(container: HTMLElement, private artRegistry?: ArtRegistry) {
     this.el = document.createElement('div');
     this.el.id = 'loading-interstitial';
+    this.el.setAttribute('role', 'dialog');
+    this.el.setAttribute('aria-modal', 'true');
+    this.el.setAttribute('aria-labelledby', 'loading-scene-title');
+    this.el.setAttribute('aria-hidden', 'true');
 
-    const panel = document.createElement('div');
-    panel.className = 'loading-panel';
+    const panel = document.createElement('section');
+    panel.className = 'loading-dossier';
     this.el.appendChild(panel);
+
+    const heading = document.createElement('header');
+    heading.className = 'loading-heading';
+    panel.appendChild(heading);
 
     this.modeEl = document.createElement('div');
     this.modeEl.className = 'loading-mode';
-    panel.appendChild(this.modeEl);
+    heading.appendChild(this.modeEl);
 
-    this.titleEl = document.createElement('div');
+    this.accentEl = document.createElement('div');
+    this.accentEl.className = 'loading-accent';
+    heading.appendChild(this.accentEl);
+
+    this.titleEl = document.createElement('h2');
+    this.titleEl.id = 'loading-scene-title';
     this.titleEl.className = 'loading-title';
-    panel.appendChild(this.titleEl);
+    heading.appendChild(this.titleEl);
 
-    const art = document.createElement('div');
-    art.className = 'loading-art';
-    panel.appendChild(art);
+    this.briefEl = document.createElement('p');
+    this.briefEl.className = 'loading-brief';
+    heading.appendChild(this.briefEl);
+
+    this.artEl = document.createElement('figure');
+    this.artEl.className = 'loading-art is-fallback';
+    panel.appendChild(this.artEl);
+
+    const fallback = document.createElement('div');
+    fallback.className = 'loading-art-fallback';
+    fallback.setAttribute('aria-hidden', 'true');
+    this.artEl.appendChild(fallback);
+
+    const fallbackSheet = document.createElement('div');
+    fallbackSheet.className = 'loading-fallback-sheet';
+    fallback.appendChild(fallbackSheet);
+
+    const fallbackHeader = document.createElement('div');
+    fallbackHeader.className = 'loading-fallback-header';
+    fallbackHeader.innerHTML = '<span>Form 17-B</span><strong>Municipal Development Dossier</strong><span>State Archive</span>';
+    fallbackSheet.appendChild(fallbackHeader);
+
+    const fallbackPlan = document.createElement('div');
+    fallbackPlan.className = 'loading-fallback-plan';
+    fallbackPlan.innerHTML = [
+      '<span class="loading-fallback-block block-a"></span>',
+      '<span class="loading-fallback-block block-b"></span>',
+      '<span class="loading-fallback-block block-c"></span>',
+      '<span class="loading-fallback-block block-d"></span>',
+      '<span class="loading-fallback-road road-a"></span>',
+      '<span class="loading-fallback-road road-b"></span>',
+      '<span class="loading-fallback-label">District plan under review</span>',
+    ].join('');
+    fallbackSheet.appendChild(fallbackPlan);
+
+    const fallbackFooter = document.createElement('div');
+    fallbackFooter.className = 'loading-fallback-footer';
+    fallbackFooter.innerHTML = '<span>Housing</span><span>Industry</span><span>Transit</span><strong>Approved</strong>';
+    fallbackSheet.appendChild(fallbackFooter);
 
     this.artImageEl = document.createElement('img');
     this.artImageEl.className = 'loading-art-image';
-    this.artImageEl.alt = '';
-    art.appendChild(this.artImageEl);
+    this.artImageEl.decoding = 'async';
+    this.artImageEl.draggable = false;
+    this.artImageEl.addEventListener('load', () => {
+      this.artEl.classList.remove('is-fallback');
+    });
+    this.artImageEl.addEventListener('error', () => {
+      this.artEl.classList.add('is-fallback');
+    });
+    this.artEl.appendChild(this.artImageEl);
 
-    this.artMonoEl = document.createElement('pre');
-    this.artMonoEl.className = 'loading-art-mono';
-    art.appendChild(this.artMonoEl);
-
-    this.captionEl = document.createElement('div');
+    this.captionEl = document.createElement('p');
     this.captionEl.className = 'loading-caption';
     panel.appendChild(this.captionEl);
 
+    const footer = document.createElement('footer');
+    footer.className = 'loading-footer';
+    panel.appendChild(footer);
+
+    const progress = document.createElement('div');
+    progress.className = 'loading-progress';
+    footer.appendChild(progress);
+
+    const progressMeta = document.createElement('div');
+    progressMeta.className = 'loading-progress-meta';
+    progress.appendChild(progressMeta);
+
+    this.progressStatusEl = document.createElement('div');
+    this.progressStatusEl.className = 'loading-progress-status';
+    this.progressStatusEl.setAttribute('aria-live', 'polite');
+    progressMeta.appendChild(this.progressStatusEl);
+
+    this.progressValueEl = document.createElement('div');
+    this.progressValueEl.className = 'loading-progress-value';
+    progressMeta.appendChild(this.progressValueEl);
+
     const progressTrack = document.createElement('div');
     progressTrack.className = 'loading-progress-track';
-    panel.appendChild(progressTrack);
+    progressTrack.setAttribute('role', 'progressbar');
+    progressTrack.setAttribute('aria-label', 'Preparing city');
+    progress.appendChild(progressTrack);
 
     this.progressFillEl = document.createElement('div');
     this.progressFillEl.className = 'loading-progress-fill';
     progressTrack.appendChild(this.progressFillEl);
 
-    this.progressValueEl = document.createElement('div');
-    this.progressValueEl.className = 'loading-progress-value';
-    panel.appendChild(this.progressValueEl);
-
-    this.tickerEl = document.createElement('div');
-    this.tickerEl.className = 'loading-ticker';
-    panel.appendChild(this.tickerEl);
-
-    this.introEl = document.createElement('div');
-    this.introEl.className = 'loading-intro-dialog';
-    this.el.appendChild(this.introEl);
+    this.skipButtonEl = document.createElement('button');
+    this.skipButtonEl.type = 'button';
+    this.skipButtonEl.className = 'loading-skip';
+    this.skipButtonEl.textContent = 'Press any key to skip';
+    footer.appendChild(this.skipButtonEl);
 
     container.appendChild(this.el);
+    this.preloadSceneArt();
   }
 
   async play(mode: LoadingMode, opts: LoadingPlayOptions = {}): Promise<void> {
     this.clearTimers();
+    this.deactivateModal?.();
+    this.deactivateModal = null;
     void this.music.play();
 
     const reduceMotion = this.prefersReducedMotion();
-    const cardIdx = Math.floor(Math.random() * INTERSTITIAL_CARDS.length);
+    const scene = INTERSTITIAL_SCENES[mode] ?? INTERSTITIAL_SCENES.campaign;
 
-    this.applyCard(INTERSTITIAL_CARDS[cardIdx], mode);
-    this.progressFillEl.style.width = '0%';
-    this.progressValueEl.textContent = '0%';
+    this.applyScene(scene, mode);
+    this.setProgress(0);
     this.el.classList.add('visible');
+    this.el.setAttribute('aria-hidden', 'false');
 
-    this.renderIntroMessage(mode);
-
-    const durationMs = Math.max(
-      opts.minDurationMs ?? 0,
-      reduceMotion ? 1200 : 3800 + Math.floor(Math.random() * 1200),
-    );
+    const durationMs = Math.max(opts.minDurationMs ?? 0, reduceMotion ? 1200 : 4200);
     const skipAllowed = Boolean(opts.skipAllowed);
     let skipRequested = false;
 
-    // Shuffle boot lines and cycle through them
-    const shuffled = [...BOOT_LINES].sort(() => Math.random() - 0.5);
-    let bootIdx = 0;
+    this.skipButtonEl.hidden = !skipAllowed;
+    this.skipButtonEl.disabled = !skipAllowed;
 
     const onSkip = (): void => {
       if (!skipAllowed) return;
       skipRequested = true;
     };
 
+    this.deactivateModal = activateModal(this.el, {
+      initialFocus: skipAllowed ? this.skipButtonEl : this.el,
+      onEscape: skipAllowed ? onSkip : null,
+      onKeyDown: skipAllowed ? onSkip : undefined,
+      restoreFocus: false,
+    });
+
     if (skipAllowed) {
-      window.addEventListener('keydown', onSkip);
       this.el.addEventListener('pointerdown', onSkip);
       this.activeCleanup = () => {
-        window.removeEventListener('keydown', onSkip);
         this.el.removeEventListener('pointerdown', onSkip);
         this.activeCleanup = null;
       };
@@ -195,37 +247,22 @@ export class LoadingInterstitial {
 
     await new Promise<void>((resolve) => {
       const started = performance.now();
-      let lastBootSwap = 0;
 
       const tick = (): void => {
         const elapsed = performance.now() - started;
-        const pct = skipRequested
-          ? 100
-          : Math.min(100, Math.floor((elapsed / durationMs) * 100));
-        this.progressFillEl.style.width = `${pct}%`;
-        this.progressValueEl.textContent = `${pct}%`;
-
-        // Cycle boot lines every ~12% progress
-        const bootStep = Math.floor(pct / 12);
-        if (bootStep > lastBootSwap) {
-          lastBootSwap = bootStep;
-          bootIdx = (bootIdx + 1) % shuffled.length;
-        }
-        const bootLine = shuffled[bootIdx];
-
-        this.tickerEl.textContent = `${bootLine} // ${this.currentTicker}${skipAllowed ? ' // PRESS ANY KEY TO SKIP' : ''}`;
+        const pct = skipRequested ? 100 : Math.min(100, Math.floor((elapsed / durationMs) * 100));
+        this.setProgress(pct);
 
         if (pct >= 100) {
           const doneId = window.setTimeout(() => {
             this.hide();
             resolve();
-          }, reduceMotion ? 80 : 350);
+          }, reduceMotion ? 80 : 300);
           this.timeoutIds.push(doneId);
           return;
         }
 
-        const waitMs = reduceMotion ? 60 : 55 + Math.floor(Math.random() * 45);
-        const id = window.setTimeout(tick, waitMs);
+        const id = window.setTimeout(tick, reduceMotion ? 80 : 50);
         this.timeoutIds.push(id);
       };
 
@@ -236,35 +273,43 @@ export class LoadingInterstitial {
   hide(): void {
     this.clearTimers();
     this.music.stop();
+    this.deactivateModal?.();
+    this.deactivateModal = null;
+    this.moveFocusOutsideInterstitial();
     this.el.classList.remove('visible');
+    this.el.setAttribute('aria-hidden', 'true');
   }
 
-  private currentTicker = '';
-
-  private applyCard(card: InterstitialCard, mode: LoadingMode): void {
+  private applyScene(scene: InterstitialScene, mode: LoadingMode): void {
     this.modeEl.textContent = MODE_LABEL[mode];
-    this.titleEl.textContent = card.title;
-    this.artImageEl.src = card.artAsset;
-    this.artMonoEl.textContent = card.monoLine;
-    this.captionEl.textContent = card.caption;
-    this.currentTicker = card.ticker;
-    this.tickerEl.textContent = card.ticker;
+    this.titleEl.textContent = scene.title;
+    this.briefEl.textContent = MODE_BRIEF[mode];
+    this.captionEl.textContent = scene.caption;
+    this.accentEl.textContent = scene.accent;
+    this.artEl.classList.add('is-fallback');
+    this.artImageEl.alt = `${scene.title}: ${scene.caption}`;
+    this.artImageEl.src = this.resolveSceneArt(scene);
   }
 
-  private renderIntroMessage(mode: LoadingMode): void {
-    const lines = MODE_INTRO[mode];
-    // Build DOM safely without innerHTML
-    while (this.introEl.firstChild) {
-      this.introEl.removeChild(this.introEl.firstChild);
+  private setProgress(pct: number): void {
+    this.progressFillEl.style.width = `${pct}%`;
+    this.progressValueEl.textContent = `${pct}%`;
+    this.progressFillEl.parentElement?.setAttribute('aria-valuenow', String(pct));
+    this.progressStatusEl.textContent = PROGRESS_STAGES.find(stage => pct < stage.threshold)?.label
+      ?? PROGRESS_STAGES[PROGRESS_STAGES.length - 1].label;
+  }
+
+  private preloadSceneArt(): void {
+    for (const scene of Object.values(INTERSTITIAL_SCENES)) {
+      const image = new Image();
+      image.decoding = 'async';
+      image.src = this.resolveSceneArt(scene);
     }
-    for (let i = 0; i < lines.length; i++) {
-      const span = document.createElement('span');
-      span.textContent = lines[i];
-      this.introEl.appendChild(span);
-      if (i < lines.length - 1) {
-        this.introEl.appendChild(document.createElement('br'));
-      }
-    }
+  }
+
+  private resolveSceneArt(scene: InterstitialScene): string {
+    const manifestFile = this.artRegistry?.getLoading(scene.manifestId)?.file;
+    return assetPath(manifestFile ?? scene.fallbackFile);
   }
 
   private clearTimers(): void {
@@ -273,6 +318,29 @@ export class LoadingInterstitial {
     }
     this.timeoutIds.length = 0;
     this.activeCleanup?.();
+  }
+
+  private moveFocusOutsideInterstitial(): void {
+    const activeElement = document.activeElement;
+    if (!(activeElement instanceof HTMLElement) || !this.el.contains(activeElement)) return;
+
+    const gameContainer = this.el.closest<HTMLElement>('#game-container');
+    const focusable = gameContainer
+      ? Array.from(gameContainer.querySelectorAll<HTMLElement>(
+        'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])'
+      )).find((candidate) => (
+        !this.el.contains(candidate)
+        && candidate.getClientRects().length > 0
+        && !candidate.closest('[inert]')
+        && candidate.getAttribute('aria-hidden') !== 'true'
+      ))
+      : undefined;
+    const target = focusable ?? gameContainer ?? document.body;
+
+    if (!target.hasAttribute('tabindex') && target !== document.body) {
+      target.tabIndex = -1;
+    }
+    target.focus({ preventScroll: true });
   }
 
   private prefersReducedMotion(): boolean {

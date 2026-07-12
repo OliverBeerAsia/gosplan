@@ -39,8 +39,15 @@ export class MapGenerator {
     // Pass 3: Smooth lakes - expand tiny water clusters, remove single-tile artifacts
     this.smoothWater(grid, size);
 
-    // Pass 4: Clear starting zone near center
+    // Pass 4: Put every water tile on one shared water plane.
+    this.normalizeWaterElevation(grid, size);
+
+    // Pass 5: Clear and fully flatten the starting zone near center.
     this.clearStartingZone(grid, size);
+
+    // Pass 6: Relax surrounding generated land down toward water and the
+    // starting plateau so cardinal neighbors never jump by more than one step.
+    this.smoothLandElevation(grid, size);
   }
 
   private generateElevation(size: number): number[][] {
@@ -197,9 +204,59 @@ export class MapGenerator {
         if (!cell) continue;
         if (cell.terrain === 'water' || cell.terrain === 'hill' || cell.terrain === 'forest') {
           grid.setTerrain(gx, gy, 'ground');
-          cell.elevation = 0;
+        }
+        cell.elevation = 0;
+      }
+    }
+  }
+
+  private normalizeWaterElevation(grid: Grid, size: number): void {
+    for (let gx = 0; gx < size; gx++) {
+      for (let gy = 0; gy < size; gy++) {
+        const cell = grid.getCell(gx, gy);
+        if (cell?.terrain === 'water') cell.elevation = 0;
+      }
+    }
+  }
+
+  private smoothLandElevation(grid: Grid, size: number): void {
+    const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]] as const;
+
+    // Only lower generated peaks. This converges deterministically, preserves
+    // the flat start area, and never creates a new step next to the water plane.
+    for (let pass = 0; pass < size; pass++) {
+      let changed = false;
+      const next: number[][] = Array.from({ length: size }, () => Array<number>(size).fill(0));
+
+      for (let gx = 0; gx < size; gx++) {
+        for (let gy = 0; gy < size; gy++) {
+          const cell = grid.getCell(gx, gy)!;
+          if (cell.terrain === 'water') {
+            next[gx][gy] = 0;
+            continue;
+          }
+
+          const current = Math.max(0, Math.floor(Number.isFinite(cell.elevation) ? cell.elevation : 0));
+          let allowed = current;
+          for (const [dx, dy] of dirs) {
+            const neighbor = grid.getCell(gx + dx, gy + dy);
+            if (!neighbor) continue;
+            const neighborElevation = neighbor.terrain === 'water'
+              ? 0
+              : Math.max(0, Math.floor(Number.isFinite(neighbor.elevation) ? neighbor.elevation : 0));
+            allowed = Math.min(allowed, neighborElevation + 1);
+          }
+          next[gx][gy] = allowed;
+          if (allowed !== current) changed = true;
         }
       }
+
+      for (let gx = 0; gx < size; gx++) {
+        for (let gy = 0; gy < size; gy++) {
+          grid.getCell(gx, gy)!.elevation = next[gx][gy];
+        }
+      }
+      if (!changed) break;
     }
   }
 }

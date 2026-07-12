@@ -194,6 +194,10 @@ export class DistrictService {
   }
 
   private hasAdjacentRoad(gx: number, gy: number): boolean {
+    const master = this.grid.getMasterBuilding(gx, gy);
+    const accessElevation = master
+      ? this.grid.getElevation(master.gx, master.gy)
+      : this.grid.getElevation(gx, gy);
     const neighbors = [
       [gx, gy - 1],
       [gx + 1, gy],
@@ -205,7 +209,7 @@ export class DistrictService {
       const building = this.grid.getMasterBuilding(nx, ny);
       if (!building) continue;
       const def = this.registry.get(building.defId);
-      if (def?.isRoad) return true;
+      if (def?.isRoad && this.grid.getElevation(nx, ny) === accessElevation) return true;
     }
     return false;
   }

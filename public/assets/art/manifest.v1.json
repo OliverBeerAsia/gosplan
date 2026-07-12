@@ -1,0 +1,552 @@
+{
+  "schemaVersion": 1,
+  "metadata": {
+    "title": "Gosplan authored art manifest",
+    "generatedBy": "Pack 0 graphics architecture",
+    "migrationNotes": "The legacy pixel-city atlas remains supported for untouched families. Khrushchyovka opts into the Pack 4 authored atlas with deterministic mass and LOD selection; its procedural texture remains the recovery fallback."
+  },
+  "atlases": [
+    {
+      "id": "legacy.pixel_city",
+      "image": "assets/atlas/pixel-city.svg",
+      "framesFile": "assets/atlas/pixel-city.json",
+      "pixelRatio": 1
+    },
+    {
+      "id": "buildings.khrushchyovka_1x",
+      "image": "assets/art/atlases/buildings-khrushchyovka-1x.svg",
+      "framesFile": "assets/art/atlases/buildings-khrushchyovka-1x.json",
+      "pixelRatio": 1
+    },
+    {
+      "id": "environment.worker_housing_1x",
+      "image": "assets/art/atlases/environment-worker-housing-1x.svg",
+      "framesFile": "assets/art/atlases/environment-worker-housing-1x.json",
+      "pixelRatio": 1
+    }
+  ],
+  "buildings": [
+    {
+      "id": "building.kommunalka.legacy",
+      "buildingId": "kommunalka",
+      "footprint": [1, 1],
+      "anchor": [64, 159],
+      "iconFrame": "legacy.pixel_city:kommunalka",
+      "lod": {
+        "far": "legacy.pixel_city:kommunalka",
+        "mid": "legacy.pixel_city:kommunalka",
+        "near": "legacy.pixel_city:kommunalka"
+      },
+      "variants": [
+        {
+          "id": "legacy",
+          "frame": "legacy.pixel_city:kommunalka",
+          "allowedDistricts": ["worker_housing", "heavy_industry", "scientific_city", "historic_core"],
+          "minimumEra": 1,
+          "weight": 1
+        }
+      ],
+      "proceduralFallback": "kommunalka",
+      "entrances": [[64, 146]],
+      "windowAnchors": [[42, 96], [58, 104], [74, 104], [90, 96]]
+    },
+    {
+      "id": "building.khrushchyovka.authored.v1",
+      "buildingId": "khrushchyovka",
+      "footprint": [2, 1],
+      "anchor": [80, 168],
+      "iconFrame": "buildings.khrushchyovka_1x:short-near",
+      "lod": {
+        "far": "buildings.khrushchyovka_1x:short-far",
+        "mid": "buildings.khrushchyovka_1x:short-mid",
+        "near": "buildings.khrushchyovka_1x:short-near"
+      },
+      "variants": [
+        {
+          "id": "linked_return",
+          "frame": "buildings.khrushchyovka_1x:linked-near",
+          "lod": {
+            "far": "buildings.khrushchyovka_1x:linked-far",
+            "mid": "buildings.khrushchyovka_1x:linked-mid",
+            "near": "buildings.khrushchyovka_1x:linked-near"
+          },
+          "allowedDistricts": ["worker_housing", "heavy_industry", "scientific_city", "historic_core"],
+          "minimumEra": 2,
+          "weight": 1,
+          "entrances": [[44, 137], [70, 145]],
+          "queueAnchors": [[44, 142], [70, 150]],
+          "windowAnchors": [
+            [32, 101], [45, 101], [60, 101], [73, 101],
+            [32, 109], [45, 109], [60, 109], [73, 109],
+            [32, 117], [45, 117], [60, 117], [73, 117],
+            [32, 124], [45, 124], [60, 124], [73, 124],
+            [32, 132], [45, 132], [60, 132], [73, 132]
+          ]
+        },
+        {
+          "id": "long_slab",
+          "frame": "buildings.khrushchyovka_1x:long-near",
+          "lod": {
+            "far": "buildings.khrushchyovka_1x:long-far",
+            "mid": "buildings.khrushchyovka_1x:long-mid",
+            "near": "buildings.khrushchyovka_1x:long-near"
+          },
+          "allowedDistricts": ["worker_housing", "heavy_industry", "scientific_city", "historic_core"],
+          "minimumEra": 2,
+          "weight": 1,
+          "entrances": [[40, 140], [61, 147], [83, 154]],
+          "queueAnchors": [[40, 144], [61, 151], [83, 158]],
+          "windowAnchors": [
+            [32, 93], [44, 93], [56, 93], [68, 93], [80, 93], [91, 93],
+            [32, 102], [44, 102], [56, 102], [68, 102], [80, 102], [91, 102],
+            [32, 111], [44, 111], [56, 111], [68, 111], [80, 111], [91, 111],
+            [32, 120], [44, 120], [56, 120], [68, 120], [80, 120], [91, 120],
+            [32, 129], [44, 129], [56, 129], [68, 129], [80, 129], [91, 129]
+          ]
+        },
+        {
+          "id": "short_slab",
+          "frame": "buildings.khrushchyovka_1x:short-near",
+          "lod": {
+            "far": "buildings.khrushchyovka_1x:short-far",
+            "mid": "buildings.khrushchyovka_1x:short-mid",
+            "near": "buildings.khrushchyovka_1x:short-near"
+          },
+          "allowedDistricts": ["worker_housing", "heavy_industry", "scientific_city", "historic_core"],
+          "minimumEra": 2,
+          "weight": 1,
+          "entrances": [[52, 144], [77, 153]],
+          "queueAnchors": [[52, 147], [77, 155]],
+          "windowAnchors": [
+            [45, 102], [56, 102], [72, 102], [84, 102],
+            [45, 109], [56, 109], [72, 109], [84, 109],
+            [45, 117], [56, 117], [72, 117], [84, 117],
+            [45, 124], [56, 124], [72, 124], [84, 124],
+            [45, 132], [56, 132], [72, 132], [84, 132]
+          ]
+        }
+      ],
+      "proceduralFallback": "khrushchyovka"
+    },
+    {
+      "id": "building.panelak.legacy",
+      "buildingId": "panelak",
+      "footprint": [2, 2],
+      "anchor": [64, 159],
+      "iconFrame": "legacy.pixel_city:panelak",
+      "lod": {
+        "far": "legacy.pixel_city:panelak",
+        "mid": "legacy.pixel_city:panelak",
+        "near": "legacy.pixel_city:panelak"
+      },
+      "variants": [
+        {
+          "id": "legacy",
+          "frame": "legacy.pixel_city:panelak",
+          "allowedDistricts": ["worker_housing", "heavy_industry", "scientific_city", "historic_core"],
+          "minimumEra": 3,
+          "weight": 1
+        }
+      ],
+      "proceduralFallback": "panelak",
+      "entrances": [[64, 149]],
+      "windowAnchors": [[38, 72], [52, 80], [66, 88], [80, 80], [94, 72]]
+    },
+    {
+      "id": "building.factory.legacy",
+      "buildingId": "factory",
+      "footprint": [3, 2],
+      "anchor": [64, 159],
+      "iconFrame": "legacy.pixel_city:factory",
+      "lod": {
+        "far": "legacy.pixel_city:factory",
+        "mid": "legacy.pixel_city:factory",
+        "near": "legacy.pixel_city:factory"
+      },
+      "variants": [
+        {
+          "id": "legacy",
+          "frame": "legacy.pixel_city:factory",
+          "allowedDistricts": ["worker_housing", "heavy_industry", "scientific_city", "historic_core"],
+          "minimumEra": 2,
+          "weight": 1
+        }
+      ],
+      "proceduralFallback": "factory",
+      "entrances": [[43, 145]],
+      "emitters": [{"kind": "smoke", "position": [91, 52]}]
+    },
+    {
+      "id": "building.coal_power_plant.legacy",
+      "buildingId": "coal_power_plant",
+      "footprint": [3, 3],
+      "anchor": [64, 159],
+      "iconFrame": "legacy.pixel_city:coal_power_plant",
+      "lod": {
+        "far": "legacy.pixel_city:coal_power_plant",
+        "mid": "legacy.pixel_city:coal_power_plant",
+        "near": "legacy.pixel_city:coal_power_plant"
+      },
+      "variants": [
+        {
+          "id": "legacy",
+          "frame": "legacy.pixel_city:coal_power_plant",
+          "allowedDistricts": ["worker_housing", "heavy_industry", "scientific_city", "historic_core"],
+          "minimumEra": 1,
+          "weight": 1
+        }
+      ],
+      "proceduralFallback": "coal_power_plant",
+      "entrances": [[41, 146]],
+      "emitters": [
+        {"kind": "smoke", "position": [78, 42]},
+        {"kind": "steam", "position": [98, 58]}
+      ]
+    },
+    {
+      "id": "building.park.legacy",
+      "buildingId": "park",
+      "footprint": [1, 1],
+      "anchor": [64, 159],
+      "iconFrame": "legacy.pixel_city:park",
+      "lod": {
+        "far": "legacy.pixel_city:park",
+        "mid": "legacy.pixel_city:park",
+        "near": "legacy.pixel_city:park"
+      },
+      "variants": [
+        {
+          "id": "legacy",
+          "frame": "legacy.pixel_city:park",
+          "allowedDistricts": ["worker_housing", "heavy_industry", "scientific_city", "historic_core"],
+          "minimumEra": 1,
+          "weight": 1
+        }
+      ],
+      "proceduralFallback": "park"
+    },
+    {
+      "id": "building.monument.legacy",
+      "buildingId": "monument",
+      "footprint": [1, 1],
+      "anchor": [64, 159],
+      "iconFrame": "legacy.pixel_city:monument",
+      "lod": {
+        "far": "legacy.pixel_city:monument",
+        "mid": "legacy.pixel_city:monument",
+        "near": "legacy.pixel_city:monument"
+      },
+      "variants": [
+        {
+          "id": "legacy",
+          "frame": "legacy.pixel_city:monument",
+          "allowedDistricts": ["worker_housing", "heavy_industry", "scientific_city", "historic_core"],
+          "minimumEra": 2,
+          "weight": 1
+        }
+      ],
+      "proceduralFallback": "monument"
+    },
+    {
+      "id": "building.road.legacy",
+      "buildingId": "road",
+      "footprint": [1, 1],
+      "anchor": [32, 31],
+      "iconFrame": "legacy.pixel_city:road",
+      "lod": {
+        "far": "legacy.pixel_city:road",
+        "mid": "legacy.pixel_city:road",
+        "near": "legacy.pixel_city:road"
+      },
+      "variants": [
+        {
+          "id": "legacy",
+          "frame": "legacy.pixel_city:road",
+          "allowedDistricts": ["worker_housing", "heavy_industry", "scientific_city", "historic_core"],
+          "minimumEra": 1,
+          "weight": 1
+        }
+      ],
+      "proceduralFallback": "road"
+    },
+    {
+      "id": "building.power_line.legacy",
+      "buildingId": "power_line",
+      "footprint": [1, 1],
+      "anchor": [32, 31],
+      "iconFrame": "legacy.pixel_city:power_line",
+      "lod": {
+        "far": "legacy.pixel_city:power_line",
+        "mid": "legacy.pixel_city:power_line",
+        "near": "legacy.pixel_city:power_line"
+      },
+      "variants": [
+        {
+          "id": "legacy",
+          "frame": "legacy.pixel_city:power_line",
+          "allowedDistricts": ["worker_housing", "heavy_industry", "scientific_city", "historic_core"],
+          "minimumEra": 1,
+          "weight": 1
+        }
+      ],
+      "proceduralFallback": "power_line"
+    }
+  ],
+  "environment": [
+    {
+      "id": "environment.worker_housing.play_square",
+      "ownerBuildingIds": ["khrushchyovka", "panelak", "kommunalka", "stalinka"],
+      "footprint": [2, 2],
+      "placements": [
+        {"id": "east_court", "offset": [2, 0]},
+        {"id": "west_court", "offset": [-2, 0]},
+        {"id": "south_court", "offset": [0, 2]}
+      ],
+      "variants": [
+        {
+          "id": "oxide_climber",
+          "weight": 1,
+          "parts": [
+            {
+              "id": "path_north_west", "offset": [0, 0], "layer": "ground_decal", "anchor": [32, 72],
+              "lod": {"far": "environment.worker_housing_1x:walkway-base-far", "mid": "environment.worker_housing_1x:walkway-base-mid", "near": "environment.worker_housing_1x:walkway-base-near"},
+              "winterLod": {"far": "environment.worker_housing_1x:walkway-winter-far", "mid": "environment.worker_housing_1x:walkway-winter-mid", "near": "environment.worker_housing_1x:walkway-winter-near"},
+              "proceduralFallback": "prop_none", "minimumQuality": "high"
+            },
+            {
+              "id": "climbing_frame", "offset": [0, 0], "layer": "prop", "anchor": [32, 72],
+              "lod": {"far": "environment.worker_housing_1x:play-frame-base-far", "mid": "environment.worker_housing_1x:play-frame-base-mid", "near": "environment.worker_housing_1x:play-frame-base-near"},
+              "winterLod": {"far": "environment.worker_housing_1x:play-frame-winter-far", "mid": "environment.worker_housing_1x:play-frame-winter-mid", "near": "environment.worker_housing_1x:play-frame-winter-near"},
+              "proceduralFallback": "prop_courtyard", "minimumQuality": "medium"
+            },
+            {
+              "id": "path_north_east", "offset": [1, 0], "layer": "ground_decal", "anchor": [32, 72],
+              "lod": {"far": "environment.worker_housing_1x:walkway-base-far", "mid": "environment.worker_housing_1x:walkway-base-mid", "near": "environment.worker_housing_1x:walkway-base-near"},
+              "winterLod": {"far": "environment.worker_housing_1x:walkway-winter-far", "mid": "environment.worker_housing_1x:walkway-winter-mid", "near": "environment.worker_housing_1x:walkway-winter-near"},
+              "proceduralFallback": "prop_none", "minimumQuality": "high"
+            },
+            {
+              "id": "sandpit", "offset": [1, 0], "layer": "prop", "anchor": [32, 72],
+              "lod": {"far": "environment.worker_housing_1x:sandpit-base-far", "mid": "environment.worker_housing_1x:sandpit-base-mid", "near": "environment.worker_housing_1x:sandpit-base-near"},
+              "winterLod": {"far": "environment.worker_housing_1x:sandpit-winter-far", "mid": "environment.worker_housing_1x:sandpit-winter-mid", "near": "environment.worker_housing_1x:sandpit-winter-near"},
+              "proceduralFallback": "prop_courtyard", "minimumQuality": "medium"
+            },
+            {
+              "id": "path_south_west", "offset": [0, 1], "layer": "ground_decal", "anchor": [32, 72],
+              "lod": {"far": "environment.worker_housing_1x:walkway-base-far", "mid": "environment.worker_housing_1x:walkway-base-mid", "near": "environment.worker_housing_1x:walkway-base-near"},
+              "winterLod": {"far": "environment.worker_housing_1x:walkway-winter-far", "mid": "environment.worker_housing_1x:walkway-winter-mid", "near": "environment.worker_housing_1x:walkway-winter-near"},
+              "proceduralFallback": "prop_none", "minimumQuality": "high"
+            },
+            {
+              "id": "bench_tree", "offset": [0, 1], "layer": "prop", "anchor": [32, 72],
+              "lod": {"far": "environment.worker_housing_1x:bench-tree-base-far", "mid": "environment.worker_housing_1x:bench-tree-base-mid", "near": "environment.worker_housing_1x:bench-tree-base-near"},
+              "winterLod": {"far": "environment.worker_housing_1x:bench-tree-winter-far", "mid": "environment.worker_housing_1x:bench-tree-winter-mid", "near": "environment.worker_housing_1x:bench-tree-winter-near"},
+              "proceduralFallback": "prop_bench", "minimumQuality": "medium"
+            },
+            {
+              "id": "path_south_east", "offset": [1, 1], "layer": "ground_decal", "anchor": [32, 72],
+              "lod": {"far": "environment.worker_housing_1x:walkway-base-far", "mid": "environment.worker_housing_1x:walkway-base-mid", "near": "environment.worker_housing_1x:walkway-base-near"},
+              "winterLod": {"far": "environment.worker_housing_1x:walkway-winter-far", "mid": "environment.worker_housing_1x:walkway-winter-mid", "near": "environment.worker_housing_1x:walkway-winter-near"},
+              "proceduralFallback": "prop_none", "minimumQuality": "high"
+            },
+            {
+              "id": "courtyard_bench", "offset": [1, 1], "layer": "prop", "anchor": [32, 72],
+              "lod": {"far": "environment.worker_housing_1x:bench-base-far", "mid": "environment.worker_housing_1x:bench-base-mid", "near": "environment.worker_housing_1x:bench-base-near"},
+              "winterLod": {"far": "environment.worker_housing_1x:bench-winter-far", "mid": "environment.worker_housing_1x:bench-winter-mid", "near": "environment.worker_housing_1x:bench-winter-near"},
+              "proceduralFallback": "prop_bench", "minimumQuality": "medium"
+            }
+          ]
+        }
+      ],
+      "powerSource": "none"
+    },
+    {
+      "id": "environment.worker_housing.laundry_green",
+      "ownerBuildingIds": ["khrushchyovka", "panelak", "kommunalka", "stalinka"],
+      "footprint": [2, 1],
+      "placements": [
+        {"id": "east_green", "offset": [2, 0]},
+        {"id": "west_green", "offset": [-2, 0]},
+        {"id": "south_green", "offset": [0, 2]}
+      ],
+      "variants": [
+        {
+          "id": "shared_wash_green",
+          "weight": 1,
+          "parts": [
+            {
+              "id": "path_line", "offset": [0, 0], "layer": "ground_decal", "anchor": [32, 72],
+              "lod": {"far": "environment.worker_housing_1x:walkway-base-far", "mid": "environment.worker_housing_1x:walkway-base-mid", "near": "environment.worker_housing_1x:walkway-base-near"},
+              "winterLod": {"far": "environment.worker_housing_1x:walkway-winter-far", "mid": "environment.worker_housing_1x:walkway-winter-mid", "near": "environment.worker_housing_1x:walkway-winter-near"},
+              "proceduralFallback": "prop_none", "minimumQuality": "high"
+            },
+            {
+              "id": "laundry_lines", "offset": [0, 0], "layer": "prop", "anchor": [32, 72],
+              "lod": {"far": "environment.worker_housing_1x:laundry-lines-base-far", "mid": "environment.worker_housing_1x:laundry-lines-base-mid", "near": "environment.worker_housing_1x:laundry-lines-base-near"},
+              "winterLod": {"far": "environment.worker_housing_1x:laundry-lines-winter-far", "mid": "environment.worker_housing_1x:laundry-lines-winter-mid", "near": "environment.worker_housing_1x:laundry-lines-winter-near"},
+              "proceduralFallback": "prop_courtyard", "minimumQuality": "medium"
+            },
+            {
+              "id": "path_wash_post", "offset": [1, 0], "layer": "ground_decal", "anchor": [32, 72],
+              "lod": {"far": "environment.worker_housing_1x:walkway-base-far", "mid": "environment.worker_housing_1x:walkway-base-mid", "near": "environment.worker_housing_1x:walkway-base-near"},
+              "winterLod": {"far": "environment.worker_housing_1x:walkway-winter-far", "mid": "environment.worker_housing_1x:walkway-winter-mid", "near": "environment.worker_housing_1x:walkway-winter-near"},
+              "proceduralFallback": "prop_none", "minimumQuality": "high"
+            },
+            {
+              "id": "washing_post", "offset": [1, 0], "layer": "prop", "anchor": [32, 72],
+              "lod": {"far": "environment.worker_housing_1x:washing-post-base-far", "mid": "environment.worker_housing_1x:washing-post-base-mid", "near": "environment.worker_housing_1x:washing-post-base-near"},
+              "winterLod": {"far": "environment.worker_housing_1x:washing-post-winter-far", "mid": "environment.worker_housing_1x:washing-post-winter-mid", "near": "environment.worker_housing_1x:washing-post-winter-near"},
+              "proceduralFallback": "prop_courtyard", "minimumQuality": "medium"
+            }
+          ]
+        }
+      ],
+      "powerSource": "none"
+    },
+    {
+      "id": "environment.worker_housing.service_edge",
+      "ownerBuildingIds": ["khrushchyovka", "panelak", "kommunalka", "stalinka"],
+      "footprint": [2, 1],
+      "placements": [
+        {"id": "north_east_road_edge", "offset": [2, 0], "requiresRoadWithin": 1, "roadEdge": "north_east", "variantIds": ["north_east_service"]},
+        {"id": "north_west_road_edge", "offset": [0, 2], "requiresRoadWithin": 1, "roadEdge": "north_west", "variantIds": ["north_west_service"]}
+      ],
+      "variants": [
+        {
+          "id": "north_east_service",
+          "weight": 1,
+          "parts": [
+            {
+              "id": "path_shelter_ne", "offset": [0, 0], "layer": "ground_decal", "anchor": [32, 72],
+              "lod": {"far": "environment.worker_housing_1x:walkway-base-far", "mid": "environment.worker_housing_1x:walkway-base-mid", "near": "environment.worker_housing_1x:walkway-base-near"},
+              "winterLod": {"far": "environment.worker_housing_1x:walkway-winter-far", "mid": "environment.worker_housing_1x:walkway-winter-mid", "near": "environment.worker_housing_1x:walkway-winter-near"},
+              "proceduralFallback": "prop_none", "minimumQuality": "high"
+            },
+            {
+              "id": "refuse_shelter_ne", "offset": [0, 0], "layer": "prop", "anchor": [32, 72],
+              "lod": {"far": "environment.worker_housing_1x:service-shelter-ne-base-far", "mid": "environment.worker_housing_1x:service-shelter-ne-base-mid", "near": "environment.worker_housing_1x:service-shelter-ne-base-near"},
+              "winterLod": {"far": "environment.worker_housing_1x:service-shelter-ne-winter-far", "mid": "environment.worker_housing_1x:service-shelter-ne-winter-mid", "near": "environment.worker_housing_1x:service-shelter-ne-winter-near"},
+              "proceduralFallback": "prop_bus_stop", "minimumQuality": "medium"
+            },
+            {
+              "id": "path_kiosk_ne", "offset": [1, 0], "layer": "ground_decal", "anchor": [32, 72],
+              "lod": {"far": "environment.worker_housing_1x:walkway-base-far", "mid": "environment.worker_housing_1x:walkway-base-mid", "near": "environment.worker_housing_1x:walkway-base-near"},
+              "winterLod": {"far": "environment.worker_housing_1x:walkway-winter-far", "mid": "environment.worker_housing_1x:walkway-winter-mid", "near": "environment.worker_housing_1x:walkway-winter-near"},
+              "proceduralFallback": "prop_none", "minimumQuality": "high"
+            },
+            {
+              "id": "kiosk_queue_ne", "offset": [1, 0], "layer": "prop", "anchor": [32, 72],
+              "lod": {"far": "environment.worker_housing_1x:service-kiosk-ne-base-far", "mid": "environment.worker_housing_1x:service-kiosk-ne-base-mid", "near": "environment.worker_housing_1x:service-kiosk-ne-base-near"},
+              "winterLod": {"far": "environment.worker_housing_1x:service-kiosk-ne-winter-far", "mid": "environment.worker_housing_1x:service-kiosk-ne-winter-mid", "near": "environment.worker_housing_1x:service-kiosk-ne-winter-near"},
+              "proceduralFallback": "prop_kiosk", "minimumQuality": "medium"
+            }
+          ]
+        },
+        {
+          "id": "north_west_service",
+          "weight": 1,
+          "parts": [
+            {
+              "id": "path_shelter_nw", "offset": [0, 0], "layer": "ground_decal", "anchor": [32, 72],
+              "lod": {"far": "environment.worker_housing_1x:walkway-base-far", "mid": "environment.worker_housing_1x:walkway-base-mid", "near": "environment.worker_housing_1x:walkway-base-near"},
+              "winterLod": {"far": "environment.worker_housing_1x:walkway-winter-far", "mid": "environment.worker_housing_1x:walkway-winter-mid", "near": "environment.worker_housing_1x:walkway-winter-near"},
+              "proceduralFallback": "prop_none", "minimumQuality": "high"
+            },
+            {
+              "id": "refuse_shelter_nw", "offset": [0, 0], "layer": "prop", "anchor": [32, 72],
+              "lod": {"far": "environment.worker_housing_1x:service-shelter-nw-base-far", "mid": "environment.worker_housing_1x:service-shelter-nw-base-mid", "near": "environment.worker_housing_1x:service-shelter-nw-base-near"},
+              "winterLod": {"far": "environment.worker_housing_1x:service-shelter-nw-winter-far", "mid": "environment.worker_housing_1x:service-shelter-nw-winter-mid", "near": "environment.worker_housing_1x:service-shelter-nw-winter-near"},
+              "proceduralFallback": "prop_bus_stop", "minimumQuality": "medium"
+            },
+            {
+              "id": "path_kiosk_nw", "offset": [1, 0], "layer": "ground_decal", "anchor": [32, 72],
+              "lod": {"far": "environment.worker_housing_1x:walkway-base-far", "mid": "environment.worker_housing_1x:walkway-base-mid", "near": "environment.worker_housing_1x:walkway-base-near"},
+              "winterLod": {"far": "environment.worker_housing_1x:walkway-winter-far", "mid": "environment.worker_housing_1x:walkway-winter-mid", "near": "environment.worker_housing_1x:walkway-winter-near"},
+              "proceduralFallback": "prop_none", "minimumQuality": "high"
+            },
+            {
+              "id": "kiosk_queue_nw", "offset": [1, 0], "layer": "prop", "anchor": [32, 72],
+              "lod": {"far": "environment.worker_housing_1x:service-kiosk-nw-base-far", "mid": "environment.worker_housing_1x:service-kiosk-nw-base-mid", "near": "environment.worker_housing_1x:service-kiosk-nw-base-near"},
+              "winterLod": {"far": "environment.worker_housing_1x:service-kiosk-nw-winter-far", "mid": "environment.worker_housing_1x:service-kiosk-nw-winter-mid", "near": "environment.worker_housing_1x:service-kiosk-nw-winter-near"},
+              "proceduralFallback": "prop_kiosk", "minimumQuality": "medium"
+            }
+          ]
+        }
+      ],
+      "powerSource": "none"
+    }
+  ],
+  "terrain": [
+    {
+      "id": "terrain.ground.base",
+      "material": "ground",
+      "lod": {"far": "legacy.pixel_city:ground", "mid": "legacy.pixel_city:ground", "near": "legacy.pixel_city:ground"},
+      "seasonFrames": {"summer": "legacy.pixel_city:ground"}
+    },
+    {
+      "id": "terrain.water.base",
+      "material": "water",
+      "lod": {"far": "legacy.pixel_city:water", "mid": "legacy.pixel_city:water", "near": "legacy.pixel_city:water"},
+      "seasonFrames": {"summer": "legacy.pixel_city:water"}
+    },
+    {
+      "id": "terrain.forest.base",
+      "material": "forest",
+      "lod": {"far": "legacy.pixel_city:forest", "mid": "legacy.pixel_city:forest", "near": "legacy.pixel_city:forest"},
+      "seasonFrames": {"summer": "legacy.pixel_city:forest"}
+    },
+    {
+      "id": "terrain.hill.base",
+      "material": "hill",
+      "lod": {"far": "legacy.pixel_city:hill", "mid": "legacy.pixel_city:hill", "near": "legacy.pixel_city:hill"},
+      "seasonFrames": {"summer": "legacy.pixel_city:hill"}
+    },
+    {
+      "id": "terrain.dirt.base",
+      "material": "dirt",
+      "lod": {"far": "legacy.pixel_city:dirt", "mid": "legacy.pixel_city:dirt", "near": "legacy.pixel_city:dirt"},
+      "seasonFrames": {"summer": "legacy.pixel_city:dirt"}
+    },
+    {
+      "id": "terrain.road.legacy",
+      "material": "road",
+      "lod": {"far": "legacy.pixel_city:road", "mid": "legacy.pixel_city:road", "near": "legacy.pixel_city:road"},
+      "roadMasks": {"default": "legacy.pixel_city:road"}
+    },
+    {
+      "id": "terrain.power_line.legacy",
+      "material": "power_line",
+      "lod": {"far": "legacy.pixel_city:power_line", "mid": "legacy.pixel_city:power_line", "near": "legacy.pixel_city:power_line"},
+      "roadMasks": {"default": "legacy.pixel_city:power_line"}
+    }
+  ],
+  "loading": [
+    {
+      "id": "loading.industrial_mobilization",
+      "file": "assets/art/loading/industrial-mobilization.webp",
+      "contexts": ["new_game", "city_load", "scenario_transition"],
+      "altText": "Night-shift industrial district mobilizing under floodlights"
+    },
+    {
+      "id": "loading.orbital_survey",
+      "file": "assets/art/loading/orbital-survey.webp",
+      "contexts": ["city_load", "scenario_transition"],
+      "altText": "Orbital survey satellite above a night city"
+    },
+    {
+      "id": "loading.city_plan_in_transit",
+      "file": "assets/art/loading/city-plan-in-transit.webp",
+      "contexts": ["new_game", "scenario_transition"],
+      "altText": "Snowbound planning convoy carrying a city plan"
+    }
+  ],
+  "ui": [
+    {"id": "ui.desk.background", "file": "assets/ui/desk-bg.webp", "kind": "background"},
+    {"id": "ui.opening.home", "file": "assets/ui/opening-home.webp", "fallbackFile": "assets/ui/opening-home.png", "kind": "background"},
+    {"id": "ui.splash.emblem", "file": "assets/ui/splash-emblem.svg", "kind": "emblem", "altText": "Gosplan emblem"},
+    {"id": "ui.scenario.reconstruction", "file": "assets/ui/scenario-reconstruction.svg", "kind": "scenario_card", "altText": "Reconstruction scenario"},
+    {"id": "ui.scenario.industrial", "file": "assets/ui/scenario-industrial.svg", "kind": "scenario_card", "altText": "Industrial scenario"},
+    {"id": "ui.scenario.stagnation", "file": "assets/ui/scenario-stagnation.svg", "kind": "scenario_card", "altText": "Stagnation scenario"},
+    {"id": "ui.title.grain", "file": "assets/ui/title-grain.svg", "kind": "texture"}
+  ]
+}

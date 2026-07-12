@@ -57,6 +57,12 @@ export class Minimap {
     events.on('building:demolished', () => this.render());
     events.on('camera:moved', () => this.render());
     events.on('terrain:changed', () => this.render());
+    events.on('zone:changed', () => this.render());
+    events.on('power:updated', () => this.render());
+    events.on('service:updated', () => this.render());
+    events.on('game:loaded', () => this.render());
+
+    this.render();
   }
 
   private navigateToMinimapPos(e: MouseEvent): void {

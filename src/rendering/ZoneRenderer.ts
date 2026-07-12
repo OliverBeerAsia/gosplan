@@ -4,6 +4,7 @@ import { TextureFactory } from '../graphics/TextureFactory';
 import { Grid } from '../grid/Grid';
 import { ZoneType } from '../grid/Cell';
 import { gridToWorld } from './IsometricRenderer';
+import { tileDepth, WorldDepthPhase, type WorldDepthLayer } from './WorldDepth';
 import { TILE_HALF_H, TILE_HALF_W } from '../constants';
 import { GraphicsQuality } from '../core/GameState';
 
@@ -15,10 +16,12 @@ export class ZoneRenderer {
   constructor(
     private grid: Grid,
     private textures: TextureFactory,
-    private events: EventBus
+    private events: EventBus,
+    private worldDepth: WorldDepthLayer
   ) {
     this.container = new Container();
     this.container.zIndex = 2;
+    this.container.sortableChildren = true;
     this.buildSprites();
 
     events.on('zone:changed', ({ gx, gy }) => this.updateCell(gx, gy));
@@ -35,13 +38,16 @@ export class ZoneRenderer {
       this.sprites[gx] = [];
       for (let gy = 0; gy < size; gy++) {
         const sprite = new Sprite(this.textures.get('zone_housing'));
-        const pos = gridToWorld(gx, gy, 0);
+        const elevation = this.grid.getElevation(gx, gy);
+        const pos = gridToWorld(gx, gy, elevation);
         sprite.x = pos.x - TILE_HALF_W;
         sprite.y = pos.y - TILE_HALF_H;
+        sprite.zIndex = tileDepth(gx, gy, WorldDepthPhase.ZONE);
         sprite.alpha = 1;
         sprite.visible = false;
         this.sprites[gx][gy] = sprite;
         this.container.addChild(sprite);
+        this.worldDepth.attach(sprite);
       }
     }
 
@@ -67,6 +73,12 @@ export class ZoneRenderer {
       sprite.visible = false;
       return;
     }
+
+    const elevation = this.grid.getElevation(gx, gy);
+    const pos = gridToWorld(gx, gy, elevation);
+    sprite.x = pos.x - TILE_HALF_W;
+    sprite.y = pos.y - TILE_HALF_H;
+    sprite.zIndex = tileDepth(gx, gy, WorldDepthPhase.ZONE);
 
     const canShow =
       cell.zone !== 'none' &&

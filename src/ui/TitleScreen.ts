@@ -1,5 +1,6 @@
 import { CampaignScenarioId } from '../core/GameState';
 import { CAMPAIGN_SCENARIOS } from '../simulation/CampaignScenarios';
+import { activateModal } from './ModalFocus';
 
 type LaunchAction<TArgs extends unknown[]> = (...args: TArgs) => void | Promise<void>;
 type StatusLevel = 'info' | 'success' | 'warning' | 'error';
@@ -14,9 +15,11 @@ export class TitleScreen {
   private mainMenuEl: HTMLDivElement;
   private startMenuEl: HTMLDivElement;
   private creditsEl: HTMLDivElement;
+  private creditsCloseEl: HTMLButtonElement;
   private statusEl: HTMLDivElement;
   private actionButtons: HTMLButtonElement[] = [];
   private actionLocked = false;
+  private deactivateCreditsModal: (() => void) | null = null;
 
   constructor(
     container: HTMLElement,
@@ -35,59 +38,68 @@ export class TitleScreen {
     this.el = document.createElement('div');
     this.el.id = 'title-screen';
 
-    const frame = document.createElement('div');
-    frame.className = 'title-command-frame';
+    const frame = document.createElement('main');
+    frame.className = 'title-dossier-frame';
     this.el.appendChild(frame);
+
+    const heading = document.createElement('header');
+    heading.className = 'title-bureau-header';
+    frame.appendChild(heading);
+
+    const headingCopy = document.createElement('div');
+    headingCopy.className = 'title-bureau-heading';
+    heading.appendChild(headingCopy);
+
+    const eyebrow = document.createElement('div');
+    eyebrow.className = 'title-bureau-eyebrow';
+    eyebrow.textContent = 'State Committee for Urban Development';
+    headingCopy.appendChild(eyebrow);
 
     const h1 = document.createElement('h1');
     h1.textContent = 'GOSPLAN';
-    frame.appendChild(h1);
+    headingCopy.appendChild(h1);
 
     const h2 = document.createElement('h2');
-    h2.textContent = 'CITY BUILDER';
-    frame.appendChild(h2);
+    h2.textContent = 'Municipal Planning Dossier';
+    headingCopy.appendChild(h2);
 
-    const desk = document.createElement('div');
-    desk.className = 'title-briefing-desk';
-    frame.appendChild(desk);
-
-    const dossier = document.createElement('div');
-    dossier.className = 'title-briefing-dossier';
-    desk.appendChild(dossier);
-
-    const map = document.createElement('div');
-    map.className = 'title-briefing-map';
-    desk.appendChild(map);
-
-    const portrait = document.createElement('div');
-    portrait.className = 'title-briefing-portrait';
-    desk.appendChild(portrait);
-
-    const seal = document.createElement('div');
-    seal.className = 'title-briefing-seal';
-    desk.appendChild(seal);
+    const stamp = document.createElement('div');
+    stamp.className = 'title-bureau-stamp';
+    stamp.setAttribute('aria-hidden', 'true');
+    stamp.textContent = 'Approved for Planning';
+    heading.appendChild(stamp);
 
     this.mainMenuEl = document.createElement('div');
-    this.mainMenuEl.className = 'title-menu is-visible';
+    this.mainMenuEl.className = 'title-menu title-main-menu is-visible';
+    this.mainMenuEl.setAttribute('aria-hidden', 'false');
 
-    const startBtn = this.createCommandButton('START GAME', 'primary');
+    const mainLead = document.createElement('div');
+    mainLead.className = 'title-menu-lead';
+    mainLead.textContent = 'Choose a bureau service to begin your session.';
+    this.mainMenuEl.appendChild(mainLead);
+
+    const actionGrid = document.createElement('div');
+    actionGrid.className = 'title-action-grid';
+    this.mainMenuEl.appendChild(actionGrid);
+
+    const startBtn = this.createActionButton('Open planning dossier', 'primary');
     startBtn.addEventListener('click', () => this.openStartMenu());
-    this.mainMenuEl.appendChild(startBtn);
+    actionGrid.appendChild(startBtn);
 
     if (this.onLoadGame) {
-      const continueBtn = this.createCommandButton('CONTINUE', 'secondary');
+      const continueBtn = this.createActionButton('Restore archived city', 'secondary');
       continueBtn.addEventListener('click', () => {
         void this.runAction(() => this.onLoadGame?.());
       });
-      this.mainMenuEl.appendChild(continueBtn);
+      actionGrid.appendChild(continueBtn);
     } else {
-      const continueBtn = this.createCommandButton('CONTINUE (NO SAVE)', 'muted');
+      const continueBtn = this.createActionButton('No archived city found', 'muted');
       continueBtn.disabled = true;
       continueBtn.dataset.fixedDisabled = 'true';
-      this.mainMenuEl.appendChild(continueBtn);
+      actionGrid.appendChild(continueBtn);
     }
 
-    const saveBtn = this.createCommandButton('SAVE GAME', 'warning');
+    const saveBtn = this.createActionButton('Export local city archive', 'warning');
     saveBtn.addEventListener('click', () => {
       if (!this.onSaveArchive) {
         this.setStatus('Archive service unavailable.', 'warning');
@@ -96,24 +108,25 @@ export class TitleScreen {
       const exported = this.onSaveArchive();
       this.setStatus(
         exported
-          ? 'Save archive exported to your downloads folder.'
-          : 'No local save detected. Use Ctrl+S in-game first.',
+          ? 'City archive exported to your downloads folder.'
+          : 'No local city record found. Save in-game first.',
         exported ? 'success' : 'warning'
       );
     });
-    this.mainMenuEl.appendChild(saveBtn);
+    actionGrid.appendChild(saveBtn);
 
-    const creditsBtn = this.createCommandButton('CREDITS', 'secondary');
+    const creditsBtn = this.createActionButton('Production credits', 'secondary');
     creditsBtn.addEventListener('click', () => this.toggleCredits(true));
-    this.mainMenuEl.appendChild(creditsBtn);
+    actionGrid.appendChild(creditsBtn);
     frame.appendChild(this.mainMenuEl);
 
     this.startMenuEl = document.createElement('div');
-    this.startMenuEl.className = 'title-menu';
+    this.startMenuEl.className = 'title-menu title-start-menu';
+    this.startMenuEl.setAttribute('aria-hidden', 'true');
 
     const startLead = document.createElement('div');
     startLead.className = 'title-menu-lead';
-    startLead.textContent = 'Choose a scenario or launch sandbox mode.';
+    startLead.textContent = 'Select a development mandate or request unrestricted planning authority.';
     this.startMenuEl.appendChild(startLead);
 
     const scenarioWrap = document.createElement('div');
@@ -121,18 +134,49 @@ export class TitleScreen {
 
     for (const scenario of CAMPAIGN_SCENARIOS) {
       const btn = document.createElement('button');
-      btn.className = 'title-btn title-scenario-btn';
+      btn.type = 'button';
+      btn.className = 'title-scenario-card';
       btn.title = scenario.label;
+      btn.setAttribute(
+        'aria-label',
+        `${scenario.label}. ${scenario.subtitle} Target year ${scenario.targetYear}.`
+      );
+      this.actionButtons.push(btn);
+
+      const art = document.createElement('div');
+      art.className = 'title-scenario-art';
+      btn.appendChild(art);
+
+      if (scenario.cardArt) {
+        const image = document.createElement('img');
+        image.src = scenario.cardArt;
+        image.alt = '';
+        image.decoding = 'async';
+        image.draggable = false;
+        image.addEventListener('error', () => art.classList.add('is-fallback'));
+        art.appendChild(image);
+      } else {
+        art.classList.add('is-fallback');
+      }
+
+      const copy = document.createElement('div');
+      copy.className = 'title-scenario-copy';
+      btn.appendChild(copy);
 
       const label = document.createElement('div');
       label.className = 'title-scenario-label';
-      label.textContent = scenario.label.toUpperCase();
-      btn.appendChild(label);
+      label.textContent = scenario.label;
+      copy.appendChild(label);
+
+      const subtitle = document.createElement('div');
+      subtitle.className = 'title-scenario-subtitle';
+      subtitle.textContent = scenario.subtitle;
+      copy.appendChild(subtitle);
 
       const target = document.createElement('div');
       target.className = 'title-scenario-target';
-      target.textContent = `Target Year ${scenario.targetYear}`;
-      btn.appendChild(target);
+      target.textContent = `Planning horizon ${scenario.targetYear}`;
+      copy.appendChild(target);
 
       btn.addEventListener('click', () => {
         void this.runAction(() => this.onNewCampaign(scenario.id));
@@ -144,58 +188,75 @@ export class TitleScreen {
     const startRow = document.createElement('div');
     startRow.className = 'title-start-row';
 
-    const sandboxBtn = this.createCommandButton('SANDBOX AUTONOMY', 'primary');
+    const sandboxBtn = this.createActionButton('Begin unrestricted survey', 'primary');
     sandboxBtn.addEventListener('click', () => {
       void this.runAction(() => this.onNewSandbox());
     });
     startRow.appendChild(sandboxBtn);
 
-    const backBtn = this.createCommandButton('BACK TO COMMANDS', 'muted');
-    backBtn.addEventListener('click', () => this.openMainMenu());
+    const backBtn = this.createActionButton('Return to bureau desk', 'muted');
+    backBtn.addEventListener('click', () => this.openMainMenu(true));
     startRow.appendChild(backBtn);
     this.startMenuEl.appendChild(startRow);
     frame.appendChild(this.startMenuEl);
 
     this.statusEl = document.createElement('div');
     this.statusEl.className = 'title-status';
+    this.statusEl.setAttribute('aria-live', 'polite');
     frame.appendChild(this.statusEl);
-    this.setStatus('Select START GAME to continue.', 'info');
+    this.setStatus('Choose an assignment to begin.', 'info');
 
     this.creditsEl = document.createElement('div');
     this.creditsEl.id = 'title-credits';
+    this.creditsEl.setAttribute('role', 'dialog');
+    this.creditsEl.setAttribute('aria-modal', 'true');
+    this.creditsEl.setAttribute('aria-labelledby', 'title-credits-heading');
+    this.creditsEl.setAttribute('aria-hidden', 'true');
 
     const creditsPanel = document.createElement('div');
     creditsPanel.className = 'title-credits-panel';
     this.creditsEl.appendChild(creditsPanel);
 
     const creditsTitle = document.createElement('h3');
-    creditsTitle.textContent = 'Credits';
+    creditsTitle.id = 'title-credits-heading';
+    creditsTitle.textContent = 'Production Credits';
     creditsPanel.appendChild(creditsTitle);
 
     const creditsBody = document.createElement('div');
     creditsBody.className = 'title-credits-body';
     creditsBody.innerHTML = [
-      '<p>DESIGN BUREAU: Gosplan Interactive Works</p>',
-      '<p>VISUAL PROPAGANDA: Pixel District Art Collective</p>',
-      '<p>SIMULATION COMMAND: Central Planning Algorithms Unit</p>',
-      '<p>THANK YOU FOR BUILDING THE FUTURE COMRADE CITY.</p>',
+      '<p>Design Bureau: Gosplan Interactive Works</p>',
+      '<p>Visual Art: Pixel District Art Collective</p>',
+      '<p>Simulation Office: Central Planning Algorithms Unit</p>',
+      '<p>Thank you for building the future city.</p>',
     ].join('');
     creditsPanel.appendChild(creditsBody);
 
-    const creditsClose = this.createCommandButton('RETURN', 'secondary');
-    creditsClose.addEventListener('click', () => this.toggleCredits(false));
-    creditsPanel.appendChild(creditsClose);
+    this.creditsCloseEl = this.createActionButton('Return to bureau', 'secondary');
+    this.creditsCloseEl.addEventListener('click', () => this.toggleCredits(false));
+    creditsPanel.appendChild(this.creditsCloseEl);
     this.el.appendChild(this.creditsEl);
+
+    this.el.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      if (
+        !this.creditsEl.classList.contains('is-visible')
+        && this.startMenuEl.classList.contains('is-visible')
+      ) {
+        this.openMainMenu(true);
+      }
+    });
 
     container.appendChild(this.el);
   }
 
-  private createCommandButton(
+  private createActionButton(
     label: string,
     kind: 'primary' | 'secondary' | 'warning' | 'muted'
   ): HTMLButtonElement {
     const btn = document.createElement('button');
-    btn.className = `title-command-btn ${kind}`;
+    btn.type = 'button';
+    btn.className = `title-action-btn ${kind}`;
     btn.textContent = label;
     this.actionButtons.push(btn);
     return btn;
@@ -206,25 +267,43 @@ export class TitleScreen {
     this.statusEl.dataset.level = level;
   }
 
-  private openMainMenu(): void {
+  private openMainMenu(moveFocus = false): void {
     this.mainMenuEl.classList.add('is-visible');
+    this.mainMenuEl.setAttribute('aria-hidden', 'false');
     this.startMenuEl.classList.remove('is-visible');
-    this.setStatus('Select START GAME to continue.', 'info');
+    this.startMenuEl.setAttribute('aria-hidden', 'true');
+    this.setStatus('Choose an assignment to begin.', 'info');
+    if (moveFocus) this.focusFirstButton(this.mainMenuEl);
   }
 
   private openStartMenu(): void {
     this.mainMenuEl.classList.remove('is-visible');
+    this.mainMenuEl.setAttribute('aria-hidden', 'true');
     this.startMenuEl.classList.add('is-visible');
-    this.setStatus('Choose a scenario and launch.', 'info');
+    this.startMenuEl.setAttribute('aria-hidden', 'false');
+    this.setStatus('Choose a development mandate.', 'info');
+    this.focusFirstButton(this.startMenuEl);
   }
 
   private toggleCredits(show: boolean): void {
+    if (this.creditsEl.classList.contains('is-visible') === show) return;
     this.creditsEl.classList.toggle('is-visible', show);
+    this.creditsEl.setAttribute('aria-hidden', String(!show));
     if (show) {
-      this.setStatus('Credits open.', 'info');
+      this.setStatus('Production credits open.', 'info');
+      this.deactivateCreditsModal = activateModal(this.creditsEl, {
+        initialFocus: this.creditsCloseEl,
+        onEscape: () => this.toggleCredits(false),
+      });
     } else {
-      this.setStatus('Credits closed.', 'info');
+      this.setStatus('Production credits closed.', 'info');
+      this.deactivateCreditsModal?.();
+      this.deactivateCreditsModal = null;
     }
+  }
+
+  private focusFirstButton(container: HTMLElement): void {
+    container.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
   }
 
   private setActionAvailability(enabled: boolean): void {
@@ -241,7 +320,7 @@ export class TitleScreen {
     if (this.actionLocked) return;
     this.actionLocked = true;
     this.setActionAvailability(false);
-    this.setStatus('Launching...', 'info');
+    this.setStatus('Preparing the planning office...', 'info');
 
     try {
       if (this.onBeforeLaunch) {
@@ -249,7 +328,7 @@ export class TitleScreen {
       }
       await action();
     } catch {
-      this.setStatus('Launch failed. Check console logs and retry.', 'error');
+      this.setStatus('The planning office could not open. Please try again.', 'error');
     } finally {
       this.actionLocked = false;
       this.setActionAvailability(true);
@@ -257,6 +336,7 @@ export class TitleScreen {
   }
 
   hide(): void {
+    this.toggleCredits(false);
     this.el.style.display = 'none';
   }
 

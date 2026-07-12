@@ -5,6 +5,7 @@ import { GameStateData } from '../core/GameState';
 import { PlacedBuilding } from '../buildings/BuildingTypes';
 import { ZoneType } from '../grid/Cell';
 import { computeQueuePressure, queuePressureBand } from '../simulation/QueuePressureModel';
+import { hasEqualElevationRoadAccess } from '../simulation/ZoneGrowthService';
 
 export class InfoPanel {
   private el: HTMLDivElement;
@@ -106,6 +107,17 @@ export class InfoPanel {
 
     if (def.happinessBonus) rows.push(['Happiness', `+${def.happinessBonus}`]);
     if (def.serviceRadius) rows.push(['Radius', `${def.serviceRadius} tiles`]);
+    if (!def.isRoad && !def.powerGeneration && def.roadAccessRequired !== false) {
+      const roadAccess = hasEqualElevationRoadAccess(
+        this.grid,
+        this.registry,
+        building.gx,
+        building.gy,
+        def.width,
+        def.height
+      );
+      rows.push(['Road Access', roadAccess ? 'YES' : 'NO', !roadAccess, !roadAccess]);
+    }
     rows.push(['Powered', building.powered ? 'YES' : 'NO', def.powerConsumption ? !building.powered : false, def.powerConsumption ? !building.powered : false]);
 
     for (const [label, value, warning, critical] of rows) {
@@ -127,7 +139,7 @@ export class InfoPanel {
     const zoneLabel = cell.zone === 'none' ? 'NONE' : cell.zone.toUpperCase();
     const demandValue = this.getZoneDemand(cell.zone);
     const demandLabel = this.describeDemand(demandValue);
-    const roadAccess = this.hasAdjacentRoad(gx, gy);
+    const roadAccess = hasEqualElevationRoadAccess(this.grid, this.registry, gx, gy, 1, 1);
     const district = this.state.districtStats.find(d => d.id === cell.districtId);
 
     this.appendParagraph('Tile status and growth diagnostics for Soviet planning bureau.', 'info-intro');
@@ -226,24 +238,6 @@ export class InfoPanel {
     this.bodyEl.appendChild(row);
   }
 
-  private hasAdjacentRoad(gx: number, gy: number): boolean {
-    const neighbors = [
-      [gx, gy - 1],
-      [gx + 1, gy],
-      [gx, gy + 1],
-      [gx - 1, gy],
-    ];
-
-    for (const [nx, ny] of neighbors) {
-      const building = this.grid.getMasterBuilding(nx, ny);
-      if (!building) continue;
-      const def = this.registry.get(building.defId);
-      if (def?.isRoad) return true;
-    }
-
-    return false;
-  }
-
   private getZoneDemand(zone: ZoneType): number {
     switch (zone) {
       case 'housing': return this.state.residentialDemand;
@@ -288,7 +282,7 @@ export class InfoPanel {
       blockers.push(`Demand too low for ${cell.zone} (${demand}).`);
     }
 
-    if (!this.hasAdjacentRoad(gx, gy)) {
+    if (!hasEqualElevationRoadAccess(this.grid, this.registry, gx, gy, 1, 1)) {
       blockers.push('No adjacent road access.');
     }
 

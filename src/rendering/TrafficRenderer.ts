@@ -3,10 +3,12 @@ import { Grid } from '../grid/Grid';
 import { BuildingRegistry } from '../buildings/BuildingRegistry';
 import { EventBus } from '../core/EventBus';
 import { GameStateData, GraphicsQuality } from '../core/GameState';
-import { gridToWorld, depthKey } from './IsometricRenderer';
+import { gridToWorld } from './IsometricRenderer';
+import { movingDepth, WorldDepthPhase, type WorldDepthLayer } from './WorldDepth';
 
 
 interface TrafficDot {
+  id: number;
   sprite: Sprite;
   fromX: number;
   fromY: number;
@@ -23,6 +25,17 @@ interface TrafficDot {
 // Soviet car colors
 const CAR_COLORS = [0x8B2020, 0x2A3A5A, 0x6A6A6A, 0x4A5A3A, 0x7A4A2A];
 
+export function canTraverseRoadEdge(
+  grid: Grid,
+  fromGx: number,
+  fromGy: number,
+  toGx: number,
+  toGy: number
+): boolean {
+  return Math.abs(fromGx - toGx) + Math.abs(fromGy - toGy) === 1
+    && grid.canConnectAtEqualElevation(fromGx, fromGy, toGx, toGy);
+}
+
 export class TrafficRenderer {
   readonly container: Container;
   private dots: TrafficDot[] = [];
@@ -33,13 +46,15 @@ export class TrafficRenderer {
   private maxDots = 40;
   private spawnTimer = 0;
   private spawnInterval = 800;
+  private nextDotId = 1;
 
   constructor(
     renderer: Renderer,
     private grid: Grid,
     private registry: BuildingRegistry,
     private events: EventBus,
-    private state: GameStateData
+    private state: GameStateData,
+    private worldDepth: WorldDepthLayer
   ) {
     this.container = new Container();
     this.container.sortableChildren = true;
@@ -133,7 +148,11 @@ export class TrafficRenderer {
         if (nextRoad) {
           dot.fromX = dot.toX;
           dot.fromY = dot.toY;
-          const nextPos = gridToWorld(nextRoad.gx, nextRoad.gy, 0);
+          const nextPos = gridToWorld(
+            nextRoad.gx,
+            nextRoad.gy,
+            this.grid.getElevation(nextRoad.gx, nextRoad.gy)
+          );
           dot.toX = nextPos.x;
           dot.toY = nextPos.y;
           dot.prevGx = dot.currentGx;
@@ -156,7 +175,15 @@ export class TrafficRenderer {
       const t = dot.progress;
       dot.sprite.x = dot.fromX + (dot.toX - dot.fromX) * t;
       dot.sprite.y = dot.fromY + (dot.toY - dot.fromY) * t;
-      dot.sprite.zIndex = depthKey(dot.currentGx, dot.currentGy) + 0.5;
+      dot.sprite.zIndex = movingDepth(
+        dot.prevGx,
+        dot.prevGy,
+        dot.currentGx,
+        dot.currentGy,
+        t,
+        WorldDepthPhase.VEHICLE,
+        dot.id
+      );
     }
   }
 
@@ -171,8 +198,10 @@ export class TrafficRenderer {
     const target = this.findAdjacentRoad(road.gx, road.gy, null);
     if (!target) return;
 
-    const fromPos = gridToWorld(road.gx, road.gy, 0);
-    const toPos = gridToWorld(target.gx, target.gy, 0);
+    const roadElevation = this.grid.getElevation(road.gx, road.gy);
+    const targetElevation = this.grid.getElevation(target.gx, target.gy);
+    const fromPos = gridToWorld(road.gx, road.gy, roadElevation);
+    const toPos = gridToWorld(target.gx, target.gy, targetElevation);
 
     const texIdx = Math.floor(Math.random() * this.carTextures.length);
     let sprite: Sprite;
@@ -186,9 +215,19 @@ export class TrafficRenderer {
     }
     sprite.x = fromPos.x;
     sprite.y = fromPos.y;
-    sprite.zIndex = depthKey(road.gx, road.gy) + 0.5;
+    const dotId = this.nextDotId++;
+    sprite.zIndex = movingDepth(
+      road.gx,
+      road.gy,
+      target.gx,
+      target.gy,
+      0,
+      WorldDepthPhase.VEHICLE,
+      dotId
+    );
 
     const dot: TrafficDot = {
+      id: dotId,
       sprite,
       fromX: fromPos.x,
       fromY: fromPos.y,
@@ -204,6 +243,9 @@ export class TrafficRenderer {
 
     this.dots.push(dot);
     this.container.addChild(sprite);
+    // removeChild() automatically detaches pooled sprites from a RenderLayer.
+    // Every add, including pool reuse, must therefore attach again.
+    this.worldDepth.attach(sprite);
   }
 
   private findAdjacentRoad(
@@ -223,6 +265,7 @@ export class TrafficRenderer {
       if (!building) continue;
       const def = this.registry.get(building.defId);
       if (!def?.isRoad) continue;
+      if (!canTraverseRoadEdge(this.grid, gx, gy, n.gx, n.gy)) continue;
       // Avoid going back to where we came from
       if (exclude && n.gx === exclude.prevGx && n.gy === exclude.prevGy) continue;
       valid.push(n);

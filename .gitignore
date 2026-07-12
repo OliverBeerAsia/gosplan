@@ -2,4 +2,7 @@ node_modules
 dist
 .DS_Store
 *.local
+.backups/
+.playwright-cli/
+output/playwright/
 public/assets/ui/desk-bg.png

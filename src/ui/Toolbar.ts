@@ -2,12 +2,17 @@ import { BuildingRegistry } from '../buildings/BuildingRegistry';
 import { BuildingDef, BuildingCategory } from '../buildings/BuildingTypes';
 import { EventBus } from '../core/EventBus';
 import { GameStateData } from '../core/GameState';
-import { ToolType } from '../input/ToolController';
+import { ToolSnapshot, ToolType } from '../input/ToolController';
 import { ZoneType } from '../grid/Cell';
 import { audioManager } from '../audio/AudioManager';
 import { ERA_TOOLBAR_CATEGORIES } from './UIProgressionManager';
 
-type ToolCallback = (tool: ToolType, buildingId?: string, zone?: ZoneType) => void;
+type ToolCallback = (
+  tool: ToolType,
+  buildingId?: string,
+  zone?: ZoneType,
+  category?: BuildingCategory
+) => void;
 
 interface CategoryDef {
   id: BuildingCategory;
@@ -46,10 +51,13 @@ export class Toolbar {
   private el: HTMLDivElement;
   private buildingPanel: HTMLDivElement;
   private activeCategory: string | null = null;
-  private selectedBuildingBtn: HTMLElement | null = null;
   private quickToolBar: HTMLDivElement;
+  private demolishBtn: HTMLButtonElement;
+  private inspectBtn: HTMLButtonElement;
+  private helpEl: HTMLDivElement;
   private catBar!: HTMLDivElement;
   private lastEra = 0;
+  private snapshot: ToolSnapshot | null = null;
 
   constructor(
     container: HTMLElement,
@@ -72,7 +80,7 @@ export class Toolbar {
       btn.addEventListener('click', () => {
         if (btn.classList.contains('category-btn--locked')) return;
         audioManager.playSfx('ui_click');
-        this.selectCategory(cat.id, this.catBar);
+        this.requestCategory(cat.id);
       });
       this.catBar.appendChild(btn);
     }
@@ -90,29 +98,38 @@ export class Toolbar {
     this.quickToolBar = document.createElement('div');
     this.quickToolBar.id = 'quick-tool-bar';
 
-    const demBtn = document.createElement('button');
-    demBtn.className = 'quick-tool-btn destructive';
-    demBtn.textContent = '\u2716 DEMOLISH';
-    demBtn.title = 'Demolish (X)';
-    demBtn.addEventListener('click', () => {
+    this.demolishBtn = document.createElement('button');
+    this.demolishBtn.className = 'quick-tool-btn destructive';
+    this.demolishBtn.textContent = '\u2716 DEMOLISH';
+    this.demolishBtn.title = 'Demolish (X)';
+    this.demolishBtn.addEventListener('click', () => {
       audioManager.playSfx('ui_click');
       this.onToolSelect('demolish');
     });
-    this.quickToolBar.appendChild(demBtn);
+    this.quickToolBar.appendChild(this.demolishBtn);
 
-    const insBtn = document.createElement('button');
-    insBtn.className = 'quick-tool-btn';
-    insBtn.textContent = '\u{1F50D} INSPECT';
-    insBtn.title = 'Inspect (V)';
-    insBtn.addEventListener('click', () => {
+    this.inspectBtn = document.createElement('button');
+    this.inspectBtn.className = 'quick-tool-btn';
+    this.inspectBtn.textContent = '\u{1F50D} INSPECT';
+    this.inspectBtn.title = 'Inspect (V)';
+    this.inspectBtn.addEventListener('click', () => {
       audioManager.playSfx('ui_click');
       this.onToolSelect('select');
     });
-    this.quickToolBar.appendChild(insBtn);
+    this.quickToolBar.appendChild(this.inspectBtn);
 
     this.el.appendChild(this.quickToolBar);
 
+    this.helpEl = document.createElement('div');
+    this.helpEl.className = 'help-text';
+    this.helpEl.setAttribute('role', 'status');
+    this.helpEl.setAttribute('aria-live', 'polite');
+    this.el.appendChild(this.helpEl);
+
     container.appendChild(this.el);
+
+    // All visible selection state is a projection of ToolController's snapshot.
+    this.events.on('tool:selected', snapshot => this.renderToolState(snapshot));
 
     // Initial category visibility
     this.updateCategoryVisibility();
@@ -143,37 +160,29 @@ export class Toolbar {
 
     // If active category just got locked, close it
     if (this.activeCategory && !visible.has(this.activeCategory)) {
-      this.clearSelection();
+      this.onToolSelect('select');
+      return;
     }
 
     // Refresh building panel if open (buildings may have been added)
     if (this.activeCategory) {
       this.showBuildingPanel(this.activeCategory);
+      if (this.snapshot) this.renderSelectedTool(this.snapshot);
     }
   }
 
-  private selectCategory(catId: string, catBar: HTMLElement): void {
+  private requestCategory(catId: BuildingCategory): void {
     if (this.activeCategory === catId) {
-      this.activeCategory = null;
-      this.buildingPanel.classList.remove('visible');
-      catBar.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
       this.onToolSelect('select');
       return;
     }
-
-    this.activeCategory = catId;
-    catBar.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
-    catBar.querySelector(`[data-cat="${catId}"]`)?.classList.add('active');
-
-    this.showBuildingPanel(catId);
+    this.onToolSelect('select', undefined, undefined, catId);
   }
 
   private showBuildingPanel(catId: string): void {
     while (this.buildingPanel.firstChild) {
       this.buildingPanel.removeChild(this.buildingPanel.firstChild);
     }
-    this.selectedBuildingBtn = null;
-
     // Show buildings for this category (era-filtered)
     const era = this.state?.currentEra ?? 4;
     const buildings = this.registry.getAvailableByCategory(catId, era);
@@ -197,6 +206,7 @@ export class Toolbar {
   private createZoneButton(label: string, hint: string, zone: ZoneType): HTMLElement {
     const btn = document.createElement('button');
     btn.className = 'building-btn zone-btn';
+    btn.dataset.zone = zone;
 
     const nameSpan = document.createElement('span');
     nameSpan.className = 'building-name';
@@ -209,23 +219,24 @@ export class Toolbar {
     btn.appendChild(costSpan);
 
     btn.addEventListener('click', () => {
-      if (this.selectedBuildingBtn) this.selectedBuildingBtn.classList.remove('selected');
-      this.selectedBuildingBtn = btn;
-      btn.classList.add('selected');
-      this.onToolSelect('zone', undefined, zone);
+      this.onToolSelect('zone', undefined, zone, this.activeCategory as BuildingCategory | undefined);
     });
 
     return btn;
   }
 
   cycleCategory(dir: number): void {
-    const catBar = this.el.querySelector('#toolbar-categories') as HTMLElement;
-    if (!catBar) return;
-    const idx = CATEGORIES.findIndex(c => c.id === this.activeCategory);
-    let next = idx + dir;
-    if (next < 0) next = CATEGORIES.length - 1;
-    if (next >= CATEGORIES.length) next = 0;
-    this.selectCategory(CATEGORIES[next].id, catBar);
+    const era = this.state?.currentEra ?? 4;
+    const visible = new Set(ERA_TOOLBAR_CATEGORIES[era] ?? ERA_TOOLBAR_CATEGORIES[4]);
+    const available = CATEGORIES.filter(cat => visible.has(cat.id));
+    if (available.length === 0) return;
+
+    const activeIndex = available.findIndex(cat => cat.id === this.activeCategory);
+    const normalizedDir = dir < 0 ? -1 : 1;
+    const nextIndex = activeIndex < 0
+      ? (normalizedDir < 0 ? available.length - 1 : 0)
+      : (activeIndex + normalizedDir + available.length) % available.length;
+    this.requestCategory(available[nextIndex].id);
   }
 
   selectToolByName(name: string): void {
@@ -236,27 +247,19 @@ export class Toolbar {
     } else {
       const def = this.registry.get(name);
       if (def) {
-        this.onToolSelect('build', def.id);
+        this.onToolSelect('build', def.id, undefined, def.category);
       }
     }
   }
 
   clearSelection(): void {
-    if (this.selectedBuildingBtn) {
-      this.selectedBuildingBtn.classList.remove('selected');
-      this.selectedBuildingBtn = null;
-    }
-    const catBar = this.el.querySelector('#toolbar-categories') as HTMLElement;
-    if (catBar) {
-      catBar.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
-    }
-    this.activeCategory = null;
-    this.buildingPanel.classList.remove('visible');
+    this.onToolSelect('select');
   }
 
   private createBuildingButton(def: BuildingDef): HTMLElement {
     const btn = document.createElement('button');
     btn.className = 'building-btn';
+    btn.dataset.buildingId = def.id;
 
     const nameSpan = document.createElement('span');
     nameSpan.className = 'building-name';
@@ -275,13 +278,49 @@ export class Toolbar {
     btn.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
 
     btn.addEventListener('click', () => {
-      if (this.selectedBuildingBtn) this.selectedBuildingBtn.classList.remove('selected');
-      this.selectedBuildingBtn = btn;
-      btn.classList.add('selected');
-      this.onToolSelect('build', def.id);
+      this.onToolSelect('build', def.id, undefined, def.category);
     });
 
     return btn;
+  }
+
+  private renderToolState(snapshot: ToolSnapshot): void {
+    this.snapshot = snapshot;
+
+    if (this.activeCategory !== snapshot.category) {
+      this.activeCategory = snapshot.category;
+      if (snapshot.category) {
+        this.showBuildingPanel(snapshot.category);
+      } else {
+        this.buildingPanel.classList.remove('visible');
+      }
+    }
+
+    this.catBar.querySelectorAll<HTMLElement>('.category-btn').forEach(btn => {
+      const active = btn.dataset.cat === snapshot.category;
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-pressed', String(active));
+    });
+
+    this.renderSelectedTool(snapshot);
+    this.helpEl.textContent = snapshot.helpText;
+  }
+
+  private renderSelectedTool(snapshot: ToolSnapshot): void {
+    this.buildingPanel.querySelectorAll<HTMLElement>('.building-btn').forEach(btn => {
+      const selected = snapshot.tool === 'build'
+        ? btn.dataset.buildingId === snapshot.buildingId
+        : snapshot.tool === 'zone' && btn.dataset.zone === snapshot.zone;
+      btn.classList.toggle('selected', selected);
+      btn.setAttribute('aria-pressed', String(selected));
+    });
+
+    const demolishActive = snapshot.tool === 'demolish';
+    const inspectActive = snapshot.tool === 'select';
+    this.demolishBtn.classList.toggle('active', demolishActive);
+    this.inspectBtn.classList.toggle('active', inspectActive);
+    this.demolishBtn.setAttribute('aria-pressed', String(demolishActive));
+    this.inspectBtn.setAttribute('aria-pressed', String(inspectActive));
   }
 
   private createRichTooltip(def: BuildingDef): HTMLDivElement {

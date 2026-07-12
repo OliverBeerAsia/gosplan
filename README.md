@@ -8,10 +8,34 @@ https://oliverbeerasia.github.io/gosplan/
 
 Every push to `main` auto-deploys to GitHub Pages via the Actions workflow in `.github/workflows/deploy-pages.yml`.
 
-## Current Release
+## Release Status
 
-- Version: `1.9.4`
-- Status: playable, desktop-first, production build passing
+- Production version: `1.9.4`
+- Production rollback reference: commit `fafaedb`, tag `v1.9.4`, GitHub Pages run `25995410642`
+- Candidate version: `1.10.0`
+- Candidate status: graphics foundation release candidate, not yet committed, tagged, pushed, deployed, or live-verified
+
+Production remains on v1.9.4 until the v1.10.0 candidate SHA passes CI, deploys through the Pages workflow, and passes live verification.
+
+## What Is In The v1.10.0 Candidate
+
+v1.10.0 packages a graphics foundation, not a completed game-wide graphics overhaul.
+
+- **Authored-art foundation**: typed manifest, runtime registry, deterministic variants, multi-atlas loading, validation gates, and procedural or legacy fallbacks.
+- **Illustrated front door**: a consistent planning-dossier treatment across opening, scenario selection, loading, pause, and event surfaces.
+- **Interaction and elevation foundation**: authoritative tool state, footprint previews, safer drag cancellation, semantic Low-quality overlays, deterministic elevation, exposed terrain faces, and shared world-depth ordering.
+- **Worker-housing vertical slices**: an authored Khrushchyovka family with deterministic LOD and a deterministic courtyard composition system with owner-aware interaction.
+- **Recovery and evidence**: checksum-verified checkpoints, restore rehearsals, asset provenance, visual evidence, and release gates.
+
+Still outside this release are the complete industrial, civic, and scientific-city authored families; final terrain, road, slope, bridge, and shoreline atlases; the Ministry Console overhaul; living-city animation; full keyboard focus containment; complete browser and performance matrices; and other later graphics packs.
+
+Release documentation:
+
+- `docs/IMPLEMENTATION_NOTES_v1.10.0.md`
+- `docs/MULTI_AGENT_REVIEW_v1.10.0.md`
+- `docs/TEST_REPORT_v1.10.0.md`
+- `docs/BUG_CHECK_v1.10.0.md`
+- `docs/RELEASE_NOTES_v1.10.0.md`
 
 ## What Is In 1.9.4
 
@@ -251,7 +275,7 @@ The game is hosted on GitHub Pages at `https://oliverbeerasia.github.io/gosplan/
 - **Process:** checkout, `npm ci`, `npm run build`, upload `./dist` artifact, deploy via `actions/deploy-pages@v4`
 - **Pages source:** GitHub Actions workflow (not legacy branch deploy)
 
-No manual steps are needed — merging to `main` is a production deploy.
+Merging to `main` starts a production deploy. A release is not complete until the workflow result, deployed SHA, and live smoke checks are recorded.
 
 ## Game Analytics (GoatCounter)
 

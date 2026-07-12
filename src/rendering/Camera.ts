@@ -1,5 +1,6 @@
-import { MIN_ZOOM, MAX_ZOOM, ZOOM_SPEED } from '../constants';
+import { ELEVATION_HEIGHT, MIN_ZOOM, MAX_ZOOM, ZOOM_SPEED } from '../constants';
 import { EventBus } from '../core/EventBus';
+import { MAX_RENDER_ELEVATION } from '../grid/Grid';
 
 export class Camera {
   x: number = 0;
@@ -23,7 +24,9 @@ export class Camera {
 
   setWorldBounds(left: number, top: number, right: number, bottom: number): void {
     this.worldLeft = left;
-    this.worldTop = top;
+    // Reserve headroom for safely clamped elevation from archived maps. The
+    // caller's flat-map bounds remain the source of truth for every other edge.
+    this.worldTop = top - MAX_RENDER_ELEVATION * ELEVATION_HEIGHT;
     this.worldRight = right;
     this.worldBottom = bottom;
     this.hasWorldBounds = true;

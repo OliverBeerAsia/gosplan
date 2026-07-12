@@ -1,9 +1,53 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 120">
-  <rect width="320" height="120" fill="#171312"/>
-  <rect x="14" y="66" width="88" height="32" fill="#5a4d49"/>
-  <rect x="108" y="58" width="78" height="40" fill="#74665f"/>
-  <rect x="192" y="48" width="56" height="50" fill="#8d7b71"/>
-  <rect x="252" y="40" width="54" height="58" fill="#9e8e83"/>
-  <path d="M12 92l60-26M104 90l58-24M188 82l44-20M248 76l48-22" stroke="#ba9c75" stroke-width="3" opacity="0.45"/>
-  <path d="M0 108h320" stroke="#f0d08a" stroke-width="3"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 140" shape-rendering="crispEdges">
+  <rect width="320" height="140" fill="#566568"/>
+  <rect y="72" width="320" height="68" fill="#5f625d"/>
+  <polygon points="146,74 174,74 270,140 48,140" fill="#3e4545"/>
+  <polygon points="155,75 165,75 214,140 103,140" fill="#667071"/>
+  <rect x="155" y="88" width="10" height="3" fill="#b9aa7d"/>
+  <rect x="146" y="105" width="28" height="3" fill="#b9aa7d"/>
+  <rect x="132" y="126" width="56" height="3" fill="#b9aa7d"/>
+
+  <g stroke="#302824" stroke-width="2">
+    <polygon points="14,44 46,29 95,44 63,60" fill="#746f63"/>
+    <polygon points="14,44 63,60 63,119 14,103" fill="#565650"/>
+    <polygon points="63,60 95,44 95,103 63,119" fill="#67645b"/>
+    <polygon points="20,58 31,62 31,70 20,66" fill="#26363c"/>
+    <polygon points="38,64 49,68 49,76 38,72" fill="#2f3d42"/>
+    <polygon points="20,76 31,80 31,88 20,84" fill="#2f3d42"/>
+    <polygon points="38,82 49,86 49,94 38,90" fill="#4c443c"/>
+    <polygon points="69,64 80,59 80,67 69,72" fill="#29383d"/>
+    <polygon points="82,58 91,54 91,62 82,66" fill="#4c443c"/>
+    <polygon points="69,82 80,77 80,85 69,90" fill="#26363c"/>
+    <rect x="50" y="62" width="3" height="15" fill="#302824"/>
+    <rect x="47" y="75" width="5" height="3" fill="#302824"/>
+    <rect x="46" y="78" width="3" height="18" fill="#302824"/>
+    <polygon points="2,94 15,88 27,92 14,99" fill="#454844"/>
+  </g>
+
+  <g stroke="#302824" stroke-width="2">
+    <polygon points="224,35 251,22 300,38 273,52" fill="#777166"/>
+    <polygon points="224,35 273,52 273,115 224,99" fill="#555650"/>
+    <polygon points="273,52 300,38 300,101 273,115" fill="#68655d"/>
+    <polygon points="230,51 241,55 241,63 230,59" fill="#26363c"/>
+    <polygon points="248,57 259,61 259,69 248,65" fill="#4b443d"/>
+    <polygon points="230,69 241,73 241,81 230,77" fill="#2f3d42"/>
+    <polygon points="248,75 259,79 259,87 248,83" fill="#26363c"/>
+    <polygon points="279,57 289,52 289,60 279,65" fill="#2b393e"/>
+    <polygon points="279,75 289,70 289,78 279,83" fill="#4c443c"/>
+    <polygon points="279,93 289,88 289,96 279,101" fill="#26363c"/>
+    <rect x="262" y="48" width="3" height="18" fill="#302824"/>
+    <rect x="258" y="64" width="6" height="3" fill="#302824"/>
+    <rect x="257" y="67" width="3" height="20" fill="#302824"/>
+  </g>
+
+  <g fill="#302824">
+    <rect x="112" y="73" width="4" height="43"/>
+    <rect x="105" y="73" width="18" height="3"/>
+    <rect x="204" y="70" width="4" height="48"/>
+    <rect x="197" y="70" width="18" height="3"/>
+    <rect x="111" y="116" width="6" height="4"/>
+    <rect x="203" y="118" width="6" height="4"/>
+  </g>
+  <rect x="102" y="132" width="18" height="4" fill="#9d3025"/>
+  <rect x="199" y="132" width="18" height="4" fill="#9d3025"/>
 </svg>

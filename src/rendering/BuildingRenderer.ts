@@ -1,9 +1,17 @@
 import { Container, Sprite, Text, TextStyle } from 'pixi.js';
 import { Grid } from '../grid/Grid';
 import { BuildingRegistry } from '../buildings/BuildingRegistry';
-import { TextureFactory } from '../graphics/TextureFactory';
+import { AuthoredBuildingTexture, TextureFactory } from '../graphics/TextureFactory';
+import { ArtEra, ArtLod } from '../graphics/ArtManifest';
+import { resolveArtLodForZoom } from '../graphics/ArtVariantResolver';
 import { PlacedBuilding } from '../buildings/BuildingTypes';
-import { gridToWorld, depthKey } from './IsometricRenderer';
+import { gridToWorld } from './IsometricRenderer';
+import {
+  footprintDepth,
+  tileDepth,
+  WorldDepthPhase,
+  type WorldDepthLayer,
+} from './WorldDepth';
 import { TILE_HALF_H, TILE_HALF_W } from '../constants';
 import { EventBus } from '../core/EventBus';
 import { GameStateData, GraphicsQuality } from '../core/GameState';
@@ -18,13 +26,45 @@ interface ConstructionTween {
   duration: number;
 }
 
+export function computeNetworkConnectionMask(
+  grid: Grid,
+  gx: number,
+  gy: number,
+  defId: 'road' | 'power_line'
+): number {
+  let mask = 0;
+  const neighbors = [
+    { bit: 1, x: gx, y: gy - 1 },
+    { bit: 2, x: gx + 1, y: gy },
+    { bit: 4, x: gx, y: gy + 1 },
+    { bit: 8, x: gx - 1, y: gy },
+  ];
+
+  for (const neighbor of neighbors) {
+    const building = grid.getMasterBuilding(neighbor.x, neighbor.y);
+    if (!building || building.defId !== defId) continue;
+    if (!grid.canConnectAtEqualElevation(gx, gy, neighbor.x, neighbor.y)) continue;
+    mask |= neighbor.bit;
+  }
+
+  return mask;
+}
+
 export class BuildingRenderer {
   readonly container: Container;
   private spriteMap: Map<number, Sprite> = new Map();
+  private authoredSpriteIds: Set<number> = new Set();
+  /**
+   * The exact authored frame and variant currently shown for each building.
+   * Effect renderers consume this instead of independently re-running visual
+   * selection and risking a different mass, district, or LOD.
+   */
+  private authoredVisualMap: Map<number, AuthoredBuildingTexture> = new Map();
   private queueMap: Map<number, { sprite: Sprite; baseY: number }[]> = new Map();
   private unpoweredIconMap: Map<number, Text> = new Map();
   private constructionTweens: ConstructionTween[] = [];
   private quality: GraphicsQuality = 'high';
+  private artLod: ArtLod = 'near';
   private queueRefreshTick = 0;
 
   constructor(
@@ -32,7 +72,8 @@ export class BuildingRenderer {
     private registry: BuildingRegistry,
     private textures: TextureFactory,
     private events: EventBus,
-    private state: GameStateData
+    private state: GameStateData,
+    private worldDepth: WorldDepthLayer
   ) {
     this.container = new Container();
     this.container.sortableChildren = true;
@@ -56,6 +97,7 @@ export class BuildingRenderer {
     events.on('service:updated', () => this.refreshBuildingLooksAndQueues());
     events.on('demand:updated', () => this.refreshBuildingLooksAndQueues());
     events.on('graphics:quality:changed', ({ quality }) => this.setQuality(quality));
+    events.on('camera:moved', ({ zoom }) => this.setArtLod(resolveArtLodForZoom(zoom, this.artLod)));
     events.on('tick', () => {
       this.queueRefreshTick++;
       if (this.queueRefreshTick % 4 === 0) {
@@ -70,6 +112,8 @@ export class BuildingRenderer {
       sprite.destroy();
     }
     this.spriteMap.clear();
+    this.authoredSpriteIds.clear();
+    this.authoredVisualMap.clear();
 
     for (const queueSprites of this.queueMap.values()) {
       for (const q of queueSprites) {
@@ -87,12 +131,13 @@ export class BuildingRenderer {
 
     const buildings = this.grid.getAllBuildings();
 
-    // Sort by depth (diagonal sweep: gx + gy ascending)
+    // Sort by each footprint's visible baseline. Building id is the stable tie
+    // breaker so load order cannot change overlap results.
     buildings.sort((a, b) => {
-      const da = depthKey(a.gx, a.gy);
-      const db = depthKey(b.gx, b.gy);
+      const da = this.getBuildingDepth(a);
+      const db = this.getBuildingDepth(b);
       if (da !== db) return da - db;
-      return a.gy - b.gy;
+      return a.id - b.id;
     });
 
     for (const building of buildings) {
@@ -116,10 +161,43 @@ export class BuildingRenderer {
     this.refreshBuildingLooksAndQueues();
   }
 
+  /** Runtime hook for camera/QA tooling. LOD is visual-only and never saved. */
+  setArtLod(lod: ArtLod): void {
+    if (lod === this.artLod) return;
+    this.artLod = lod;
+    this.refreshBuildingLooksAndQueues();
+  }
+
   private tileHash(seed: number): number {
     let v = seed * 1103515245 + 12345;
     v = (v ^ (v >>> 13)) * 1274126177;
     return Math.abs(v);
+  }
+
+  private getBuildingElevation(building: PlacedBuilding): number {
+    return this.grid.getElevation(building.gx, building.gy);
+  }
+
+  private getBuildingDepth(
+    building: PlacedBuilding,
+    phaseOverride?: WorldDepthPhase,
+    stableId = building.id
+  ): number {
+    const def = this.registry.get(building.defId);
+    const phase = phaseOverride ?? (
+      def?.id === 'road' || def?.id === 'power_line'
+        ? WorldDepthPhase.SURFACE_INFRASTRUCTURE
+        : WorldDepthPhase.STRUCTURE
+    );
+    if (!def) return tileDepth(building.gx, building.gy, phase, stableId);
+    return footprintDepth(
+      building.gx,
+      building.gy,
+      def.width,
+      def.height,
+      phase,
+      stableId
+    );
   }
 
   private addBuildingSprite(building: PlacedBuilding, animate = true): void {
@@ -128,22 +206,28 @@ export class BuildingRenderer {
     const def = this.registry.get(building.defId);
     if (!def) return;
 
-    const texKey = this.getTextureKey(building);
-    if (!this.textures.has(texKey)) return;
+    const authored = this.resolveAuthoredBuildingTexture(building);
+    const texKey = authored ? undefined : this.getTextureKey(building);
+    if (!authored && (!texKey || !this.textures.has(texKey))) return;
 
-    const sprite = new Sprite(this.textures.get(texKey));
+    const sprite = new Sprite(authored?.texture ?? this.textures.get(texKey!));
 
     const centerGx = building.gx + def.width / 2;
     const centerGy = building.gy + def.height / 2;
-    const pos = gridToWorld(centerGx, centerGy, 0);
+    const pos = gridToWorld(centerGx, centerGy, this.getBuildingElevation(building));
 
-    sprite.anchor.set(0.5, 1);
+    this.applyTextureAnchor(sprite, authored);
     sprite.x = pos.x;
     sprite.y = pos.y + TILE_HALF_H;
-    sprite.zIndex = depthKey(building.gx + def.width - 1, building.gy + def.height - 1);
+    sprite.zIndex = this.getBuildingDepth(building);
 
     this.spriteMap.set(building.id, sprite);
+    if (authored) {
+      this.authoredSpriteIds.add(building.id);
+      this.authoredVisualMap.set(building.id, authored);
+    }
     this.container.addChild(sprite);
+    this.worldDepth.attach(sprite);
     this.applySpriteLook(building, sprite);
     this.refreshQueueForBuilding(building);
 
@@ -188,6 +272,8 @@ export class BuildingRenderer {
       sprite.destroy();
       this.spriteMap.delete(buildingId);
     }
+    this.authoredSpriteIds.delete(buildingId);
+    this.authoredVisualMap.delete(buildingId);
     this.clearQueueForBuilding(buildingId);
     const icon = this.unpoweredIconMap.get(buildingId);
     if (icon) {
@@ -219,7 +305,9 @@ export class BuildingRenderer {
       return `power_line_${this.getConnectionMask(building.gx, building.gy, 'power_line')}`;
     }
 
-    const baseKey = this.resolveVariantKey(building);
+    const fallbackKey = this.textures.getProceduralBuildingFallback(building.defId)
+      ?? building.defId;
+    const baseKey = this.resolveVariantKey(building, fallbackKey);
 
     if (def.powerConsumption && !building.powered) {
       const unpoweredVariant = `${baseKey}_unpowered`;
@@ -232,11 +320,11 @@ export class BuildingRenderer {
     return baseKey;
   }
 
-  private resolveVariantKey(building: PlacedBuilding): string {
+  private resolveVariantKey(building: PlacedBuilding, fallbackKey = building.defId): string {
     const variant = this.tileHash(building.id) % 3;
-    let base = building.defId;
-    if (variant === 1 && this.textures.has(`${building.defId}_var1`)) base = `${building.defId}_var1`;
-    if (variant === 2 && this.textures.has(`${building.defId}_var2`)) base = `${building.defId}_var2`;
+    let base = fallbackKey;
+    if (variant === 1 && this.textures.has(`${fallbackKey}_var1`)) base = `${fallbackKey}_var1`;
+    if (variant === 2 && this.textures.has(`${fallbackKey}_var2`)) base = `${fallbackKey}_var2`;
 
     if (this.quality !== 'low') {
       const style = this.resolveDistrictStyle(building);
@@ -247,6 +335,35 @@ export class BuildingRenderer {
     }
 
     return base;
+  }
+
+  private resolveAuthoredBuildingTexture(building: PlacedBuilding): AuthoredBuildingTexture | undefined {
+    const era = Math.max(1, Math.min(4, Math.floor(this.state.currentEra))) as ArtEra;
+    return this.textures.resolveAuthoredBuildingTexture(building.defId, this.artLod, {
+      mapSeed: this.state.mapSeed,
+      building,
+      districtStyle: this.resolveDistrictStyle(building),
+      era,
+    });
+  }
+
+  private applyTextureAnchor(sprite: Sprite, authored?: AuthoredBuildingTexture): void {
+    if (!authored) {
+      sprite.anchor.set(0.5, 1);
+      return;
+    }
+
+    const width = Number(sprite.texture.width);
+    const height = Number(sprite.texture.height);
+    if (!(width > 0) || !(height > 0)) {
+      sprite.anchor.set(0.5, 1);
+      return;
+    }
+
+    sprite.anchor.set(
+      Math.max(0, Math.min(1, authored.anchor[0] / width)),
+      Math.max(0, Math.min(1, authored.anchor[1] / height)),
+    );
   }
 
   private resolveDistrictStyle(building: PlacedBuilding): DistrictStyle {
@@ -299,23 +416,7 @@ export class BuildingRenderer {
   }
 
   private getConnectionMask(gx: number, gy: number, defId: 'road' | 'power_line'): number {
-    let mask = 0;
-    const neighbors = [
-      { bit: 1, x: gx, y: gy - 1 },
-      { bit: 2, x: gx + 1, y: gy },
-      { bit: 4, x: gx, y: gy + 1 },
-      { bit: 8, x: gx - 1, y: gy },
-    ];
-
-    for (const n of neighbors) {
-      const building = this.grid.getMasterBuilding(n.x, n.y);
-      if (!building) continue;
-      if (building.defId === defId) {
-        mask |= n.bit;
-      }
-    }
-
-    return mask;
+    return computeNetworkConnectionMask(this.grid, gx, gy, defId);
   }
 
   private refreshNetworkAround(gx: number, gy: number, radius: number = 2): void {
@@ -340,9 +441,18 @@ export class BuildingRenderer {
     const sprite = this.spriteMap.get(building.id);
     if (!sprite) return;
 
-    const texKey = this.getTextureKey(building);
-    if (this.textures.has(texKey)) {
-      sprite.texture = this.textures.get(texKey);
+    const authored = this.resolveAuthoredBuildingTexture(building);
+    if (authored) {
+      sprite.texture = authored.texture;
+      this.applyTextureAnchor(sprite, authored);
+      this.authoredSpriteIds.add(building.id);
+      this.authoredVisualMap.set(building.id, authored);
+    } else {
+      const texKey = this.getTextureKey(building);
+      if (this.textures.has(texKey)) sprite.texture = this.textures.get(texKey);
+      this.applyTextureAnchor(sprite);
+      this.authoredSpriteIds.delete(building.id);
+      this.authoredVisualMap.delete(building.id);
     }
     this.applySpriteLook(building, sprite);
     this.refreshQueueForBuilding(building);
@@ -386,16 +496,21 @@ export class BuildingRenderer {
 
     const centerGx = building.gx + def.width / 2;
     const centerGy = building.gy + def.height / 2;
-    const pos = gridToWorld(centerGx, centerGy, 0);
+    const pos = gridToWorld(centerGx, centerGy, this.getBuildingElevation(building));
 
     icon.anchor.set(0.5, 1);
     icon.x = pos.x + TILE_HALF_W * 0.3;
     icon.y = pos.y - TILE_HALF_H * 0.5;
-    icon.zIndex = depthKey(building.gx + def.width, building.gy + def.height) + 2;
+    icon.zIndex = this.getBuildingDepth(
+      building,
+      WorldDepthPhase.BUILDING_EFFECT,
+      building.id * 32 + 31
+    );
     icon.alpha = 0.85;
 
     this.unpoweredIconMap.set(building.id, icon);
     this.container.addChild(icon);
+    this.worldDepth.attach(icon);
   }
 
   private refreshBuildingLooksAndQueues(): void {
@@ -418,11 +533,14 @@ export class BuildingRenderer {
 
     let tint = 0xFFFFFF;
     const unpowered = Boolean(def.powerConsumption && !building.powered);
+    const authored = this.authoredSpriteIds.has(building.id);
     const coverage = this.getBuildingCoverage(building.id);
 
     // Unpowered textures already include a dedicated darkening pass.
     // Skip extra tinting here to avoid over-dark industrial silhouettes.
-    if (!unpowered && (def.category === 'residential' || def.category === 'government')) {
+    if (unpowered && authored) {
+      tint = 0xB0B0B0;
+    } else if (!unpowered && (def.category === 'residential' || def.category === 'government')) {
       if (coverage < 20) {
         tint = 0xC9B596;
       }
@@ -469,8 +587,10 @@ export class BuildingRenderer {
 
     const centerGx = building.gx + def.width / 2;
     const centerGy = building.gy + def.height / 2;
-    const pos = gridToWorld(centerGx, centerGy, 0);
+    const pos = gridToWorld(centerGx, centerGy, this.getBuildingElevation(building));
 
+    const authored = this.authoredVisualMap.get(building.id);
+    const authoredQueueAnchors = authored?.queueAnchors ?? [];
     const baseX = pos.x - TILE_HALF_W * 0.55;
     const baseY = pos.y + TILE_HALF_H - 4;
     const entries: { sprite: Sprite; baseY: number }[] = [];
@@ -487,12 +607,29 @@ export class BuildingRenderer {
       sprite.alpha = 0.78 + (i % 2) * 0.1;
 
       const jitter = (this.tileHash(building.id * 89 + i * 17) % 5) - 2;
-      const spriteBaseY = baseY + i * 3 + (i % 2);
-      sprite.x = baseX + i * 6 + jitter * 0.35;
+      const authoredAnchor = authoredQueueAnchors.length > 0
+        ? authoredQueueAnchors[i % authoredQueueAnchors.length]
+        : undefined;
+      const queueRow = authoredAnchor
+        ? Math.floor(i / authoredQueueAnchors.length)
+        : i;
+      const authoredBaseX = authoredAnchor
+        ? pos.x + authoredAnchor[0] - authored!.anchor[0]
+        : baseX;
+      const authoredBaseY = authoredAnchor
+        ? pos.y + TILE_HALF_H + authoredAnchor[1] - authored!.anchor[1]
+        : baseY;
+      const spriteBaseY = authoredBaseY + queueRow * 3 + (queueRow % 2);
+      sprite.x = authoredBaseX + queueRow * 6 + jitter * 0.35;
       sprite.y = spriteBaseY;
-      sprite.zIndex = depthKey(building.gx + def.width, building.gy + def.height) + 1;
+      sprite.zIndex = this.getBuildingDepth(
+        building,
+        WorldDepthPhase.BUILDING_EFFECT,
+        building.id * 32 + i
+      );
 
       this.container.addChild(sprite);
+      this.worldDepth.attach(sprite);
       entries.push({ sprite, baseY: spriteBaseY });
     }
 
@@ -540,5 +677,10 @@ export class BuildingRenderer {
 
   getBuildingSpriteAt(buildingId: number): Sprite | undefined {
     return this.spriteMap.get(buildingId);
+  }
+
+  /** Exact authored visual currently assigned to the building sprite, if any. */
+  getAuthoredBuildingVisual(buildingId: number): AuthoredBuildingTexture | undefined {
+    return this.authoredVisualMap.get(buildingId);
   }
 }

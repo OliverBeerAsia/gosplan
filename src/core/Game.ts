@@ -1,4 +1,4 @@
-import { Application, Container } from 'pixi.js';
+import { Application, Container, RenderLayer } from 'pixi.js';
 import { EventBus } from './EventBus';
 import {
   CampaignScenarioId,
@@ -28,7 +28,6 @@ import { Toolbar } from '../ui/Toolbar';
 import { InfoPanel } from '../ui/InfoPanel';
 import { PlanPanel } from '../ui/PlanPanel';
 import { NotificationManager } from '../ui/NotificationManager';
-import { BuildingTooltip } from '../ui/BuildingPanel';
 import { Minimap } from '../ui/Minimap';
 import { TutorialManager } from '../ui/TutorialManager';
 import { TitleScreen } from '../ui/TitleScreen';
@@ -38,12 +37,12 @@ import { AmbienceOverlay } from '../ui/AmbienceOverlay';
 import { AdvisorPanel } from '../ui/AdvisorPanel';
 import { StatsPanel } from '../ui/StatsPanel';
 import { CampaignEndingModal } from '../ui/CampaignEndingModal';
-import { PauseMenu } from '../ui/PauseMenu';
+import { PauseMenu, shouldSuppressGameplayShortcut } from '../ui/PauseMenu';
 import { UIProgressionManager } from '../ui/UIProgressionManager';
 import { EraUnlockOverlay } from '../ui/EraUnlockOverlay';
 import { hasSave, saveGame, loadGame, exportSaveArchive } from './SaveLoad';
 import { gridToWorld } from '../rendering/IsometricRenderer';
-import { MAP_SIZE, TILE_HALF_H, TILE_HALF_W } from '../constants';
+import { MAP_SIZE, MAX_ZOOM, MIN_ZOOM, TILE_HALF_H, TILE_HALF_W } from '../constants';
 import { MapGenerator } from './MapGenerator';
 import { getSeason, getSeasonalTerrainTint, isWinter, Season } from '../rendering/SeasonalEffects';
 import { WeatherEffects } from '../rendering/WeatherEffects';
@@ -58,6 +57,45 @@ import { GoatCounterAnalytics } from '../analytics/GoatCounterAnalytics';
 import { WindowLightRenderer } from '../rendering/WindowLightRenderer';
 import { TrafficRenderer } from '../rendering/TrafficRenderer';
 
+type VisualBenchmarkLight = 'day' | 'night' | 'live';
+
+interface VisualBenchmarkControl {
+  readonly version: 1;
+  setCamera(gx: number, gy: number, zoom: number): void;
+  setQuality(quality: GraphicsQuality): void;
+  setLighting(light: VisualBenchmarkLight): void;
+  setWeatherParticles(enabled: boolean): void;
+  snapshot(): {
+    fixtureId: string | null;
+    mapSeed: number;
+    season: Season;
+    center: { gx: number; gy: number };
+    zoom: number;
+    quality: GraphicsQuality;
+    light: VisualBenchmarkLight;
+    week: number;
+    buildingCount: number;
+    visibleWindowLightCount: number;
+    environmentCompositions: Array<{
+      definitionId: string;
+      variantId: string;
+      placementId: string;
+      ownerBuildingId: number;
+      gx: number;
+      gy: number;
+      elevation: number;
+      partCount: number;
+    }>;
+  };
+}
+
+declare global {
+  interface Window {
+    /** Development-only capture control installed by ?visual-benchmark=1. */
+    __gosplanVisualBenchmark?: Readonly<VisualBenchmarkControl>;
+  }
+}
+
 export class Game {
   private app!: Application;
   private events: EventBus;
@@ -71,6 +109,7 @@ export class Game {
   private toolController!: ToolController;
   private simulation!: SimulationManager;
   private worldContainer!: Container;
+  private worldDepthLayer!: RenderLayer;
 
   private terrainRenderer!: TerrainRenderer;
   private propRenderer!: EnvironmentPropRenderer;
@@ -89,7 +128,6 @@ export class Game {
   private infoPanel!: InfoPanel;
   private planPanel!: PlanPanel;
   private notifications!: NotificationManager;
-  private tooltip!: BuildingTooltip;
   private minimap!: Minimap;
   private tutorial!: TutorialManager;
   private districtPanel?: DistrictPanel;
@@ -107,6 +145,11 @@ export class Game {
   private eraOverlay!: EraUnlockOverlay;
   private advancedPanelsVisible = false;
   private bootInProgress = false;
+  private visualBenchmarkSaveRaw: string | null = null;
+  private visualBenchmarkFixtureId: string | null = null;
+  private visualBenchmarkClockMs: number | null = null;
+  private visualBenchmarkWeatherParticles = true;
+  private visualBenchmarkCenter = { gx: MAP_SIZE / 2, gy: MAP_SIZE / 2 };
 
   private uiContainer!: HTMLDivElement;
 
@@ -157,10 +200,59 @@ export class Game {
       requireStartButton: true,
     });
 
-    this.loadingInterstitial = new LoadingInterstitial(this.uiContainer);
+    this.loadingInterstitial = new LoadingInterstitial(
+      this.uiContainer,
+      this.textures.getArtRegistry()
+    );
+
+    if (import.meta.env.DEV) {
+      const params = new URLSearchParams(window.location.search);
+      const fixtureId = params.get('benchmark-fixture');
+      const fixtureFiles: Record<string, string> = {
+        'pack4-worker-housing-v1': 'tests/fixtures/visual/pack4-worker-housing-v1.json',
+        'pack4-worker-housing-courtyards-v2': 'tests/fixtures/visual/pack4-worker-housing-courtyards-v2.json',
+      };
+      if (
+        params.get('visual-benchmark') === '1'
+        && fixtureId !== null
+        && fixtureFiles[fixtureId]
+      ) {
+        try {
+          const response = await fetch(
+            assetPath(fixtureFiles[fixtureId]),
+            { cache: 'no-store' }
+          );
+          if (!response.ok) {
+            throw new Error(`Fixture request failed with HTTP ${response.status}.`);
+          }
+          const raw = await response.text();
+          const decoded: unknown = JSON.parse(raw);
+          const candidate = decoded as {
+            version?: unknown;
+            benchmark?: { id?: unknown };
+          };
+          if (
+            candidate?.version !== 4
+            || candidate?.benchmark?.id !== fixtureId
+          ) {
+            throw new Error('Fixture identity or save version is invalid.');
+          }
+          this.visualBenchmarkSaveRaw = raw;
+          this.visualBenchmarkFixtureId = fixtureId;
+        } catch (error) {
+          this.visualBenchmarkSaveRaw = null;
+          this.visualBenchmarkFixtureId = null;
+          console.error(
+            'Graphics visual benchmark fixture could not be loaded; using ordinary title behavior.',
+            error
+          );
+        }
+      }
+    }
 
     // Show title screen
-    const canLoad = hasSave();
+    const canLoad = hasSave()
+      || (import.meta.env.DEV && this.visualBenchmarkSaveRaw !== null);
     this.titleScreen = new TitleScreen(
       this.uiContainer,
       (scenario) => this.launchFromTitle(false, 'campaign', scenario),
@@ -228,7 +320,12 @@ export class Game {
     this.placer = new BuildingPlacer(this.grid, this.registry, this.events);
 
     if (loadSave) {
-      const loaded = loadGame(this.grid, this.registry, this.placer);
+      const loaded = loadGame(
+        this.grid,
+        this.registry,
+        this.placer,
+        import.meta.env.DEV ? this.visualBenchmarkSaveRaw ?? undefined : undefined
+      );
       if (loaded) {
         Object.assign(this.state, loaded);
         loadedFromSave = true;
@@ -268,17 +365,46 @@ export class Game {
     this.camera.centerOn(centerPos.x, centerPos.y);
 
     // Renderers
-    this.terrainRenderer = new TerrainRenderer(this.grid, this.textures, this.events);
-    this.propRenderer = new EnvironmentPropRenderer(this.grid, this.registry, this.textures, this.events);
-    this.zoneRenderer = new ZoneRenderer(this.grid, this.textures, this.events);
-    this.buildingRenderer = new BuildingRenderer(this.grid, this.registry, this.textures, this.events, this.state);
+    this.worldDepthLayer = new RenderLayer({ sortableChildren: true });
+    this.terrainRenderer = new TerrainRenderer(this.grid, this.textures, this.worldDepthLayer, this.events);
+    this.propRenderer = new EnvironmentPropRenderer(
+      this.grid,
+      this.registry,
+      this.textures,
+      this.events,
+      this.worldDepthLayer,
+      { mapSeed: this.state.mapSeed, season: getSeason(this.state.week) }
+    );
+    this.zoneRenderer = new ZoneRenderer(this.grid, this.textures, this.events, this.worldDepthLayer);
+    this.buildingRenderer = new BuildingRenderer(
+      this.grid,
+      this.registry,
+      this.textures,
+      this.events,
+      this.state,
+      this.worldDepthLayer
+    );
     this.overlayRenderer = new OverlayRenderer(this.grid, this.registry, this.textures, this.events);
 
     this.smokeParticles = new SmokeParticles(this.app.renderer, this.grid, this.registry, this.events);
     this.weatherEffects = new WeatherEffects(this.app.renderer);
     this.weatherEffects.setScreenSize(this.app.screen.width, this.app.screen.height);
-    this.windowLights = new WindowLightRenderer(this.app.renderer, this.grid, this.registry, this.events);
-    this.trafficRenderer = new TrafficRenderer(this.app.renderer, this.grid, this.registry, this.events, this.state);
+    this.windowLights = new WindowLightRenderer(
+      this.app.renderer,
+      this.grid,
+      this.registry,
+      this.events,
+      this.worldDepthLayer,
+      (buildingId) => this.buildingRenderer.getAuthoredBuildingVisual(buildingId),
+    );
+    this.trafficRenderer = new TrafficRenderer(
+      this.app.renderer,
+      this.grid,
+      this.registry,
+      this.events,
+      this.state,
+      this.worldDepthLayer
+    );
 
     this.worldContainer.addChild(this.terrainRenderer.container);
     this.worldContainer.addChild(this.propRenderer.container);
@@ -286,6 +412,7 @@ export class Game {
     this.worldContainer.addChild(this.buildingRenderer.container);
     this.worldContainer.addChild(this.trafficRenderer.container);
     this.worldContainer.addChild(this.windowLights.container);
+    this.worldContainer.addChild(this.worldDepthLayer);
     this.worldContainer.addChild(this.smokeParticles.container);
     this.worldContainer.addChild(this.overlayRenderer.container);
 
@@ -311,7 +438,8 @@ export class Game {
     this.toolController = new ToolController(
       this.events, this.camera, this.cameraController,
       this.grid, this.placer, this.registry,
-      this.overlayRenderer, this.state, this.app.canvas
+      this.overlayRenderer, this.state, this.app.canvas,
+      (gx, gy) => this.propRenderer.getCompositionAt(gx, gy),
     );
 
     // Rebuild buildings if loaded
@@ -329,6 +457,7 @@ export class Game {
     this.simulation.syncEra();
 
     if (loadedFromSave) {
+      this.simulation.reconcileLoadedInfrastructure();
       this.events.emit('game:loaded', {});
     }
 
@@ -370,6 +499,8 @@ export class Game {
     // Sync UI controls with current graphics quality (including loaded saves).
     this.events.emit('graphics:quality:changed', { quality: this.state.graphicsQuality });
 
+    this.installVisualBenchmarkControl();
+
     // Initialize audio (user has already interacted via splash/title)
     audioManager.init();
     audioManager.connectEvents(this.events);
@@ -392,6 +523,7 @@ export class Game {
 
     // Auto-save every 60 seconds
     setInterval(() => {
+      if (import.meta.env.DEV && this.visualBenchmarkSaveRaw !== null) return;
       saveGame(this.grid, this.state, this.placer);
     }, 60000);
 
@@ -419,23 +551,151 @@ export class Game {
     );
   }
 
+  /**
+   * Narrow, opt-in capture controls for deterministic local visual QA. Vite
+   * replaces import.meta.env.DEV with false in production, so this branch and
+   * its window installation are dead-code eliminated from release bundles.
+   */
+  private installVisualBenchmarkControl(): void {
+    if (!import.meta.env.DEV) return;
+
+    // HMR or a second local launch must never retain controls bound to an old
+    // Game instance. A normal reload also clears the property with the window.
+    delete window.__gosplanVisualBenchmark;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('visual-benchmark') !== '1') return;
+
+    const control: VisualBenchmarkControl = {
+      version: 1,
+      setCamera: (gx, gy, zoom) => {
+        if (![gx, gy, zoom].every(Number.isFinite)) {
+          throw new TypeError('Benchmark camera values must be finite numbers.');
+        }
+        if (!this.grid.inBounds(Math.floor(gx), Math.floor(gy))) {
+          throw new RangeError('Benchmark camera center must be inside the map.');
+        }
+        this.visualBenchmarkCenter = { gx, gy };
+        this.camera.zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom));
+        const world = gridToWorld(gx, gy, this.grid.getElevation(Math.floor(gx), Math.floor(gy)));
+        this.camera.centerOn(world.x, world.y);
+      },
+      setQuality: (quality) => {
+        if (!(['low', 'medium', 'high'] as GraphicsQuality[]).includes(quality)) {
+          throw new TypeError(`Unsupported benchmark quality: ${String(quality)}`);
+        }
+        this.events.emit('graphics:quality:changed', { quality });
+      },
+      setLighting: (light) => {
+        if (!(['day', 'night', 'live'] as VisualBenchmarkLight[]).includes(light)) {
+          throw new TypeError(`Unsupported benchmark lighting: ${String(light)}`);
+        }
+        this.visualBenchmarkClockMs = light === 'day'
+          ? Math.PI / (2 * 0.000045)
+          : light === 'night'
+            ? 3 * Math.PI / (2 * 0.000045)
+            : null;
+        this.lastFrameTime = this.visualBenchmarkClockMs ?? performance.now();
+      },
+      setWeatherParticles: (enabled) => {
+        if (typeof enabled !== 'boolean') {
+          throw new TypeError('Benchmark weather-particle state must be boolean.');
+        }
+        this.visualBenchmarkWeatherParticles = enabled;
+        if (!enabled) {
+          this.weatherEffects.setWeatherType('none');
+          return;
+        }
+        const season = getSeason(this.state.week);
+        this.weatherEffects.setWeatherType(
+          isWinter(season)
+            ? 'snow'
+            : season === 'autumn' || (season === 'spring' && this.state.week % 4 < 2)
+              ? 'rain'
+              : 'none'
+        );
+      },
+      snapshot: () => ({
+        fixtureId: this.visualBenchmarkFixtureId,
+        mapSeed: this.state.mapSeed,
+        season: getSeason(this.state.week),
+        center: { ...this.visualBenchmarkCenter },
+        zoom: this.camera.zoom,
+        quality: this.state.graphicsQuality,
+        light: this.visualBenchmarkClockMs === null
+          ? 'live'
+          : this.visualBenchmarkClockMs < 70000
+            ? 'day'
+            : 'night',
+        week: this.state.week,
+        buildingCount: this.grid.getAllBuildings().length,
+        visibleWindowLightCount: this.windowLights.getVisibleLightCount(),
+        environmentCompositions: this.propRenderer.getPlannedCompositions().map((composition) => ({
+          definitionId: composition.definitionId,
+          variantId: composition.variantId,
+          placementId: composition.placementId,
+          ownerBuildingId: composition.ownerBuildingId,
+          gx: composition.gx,
+          gy: composition.gy,
+          elevation: composition.elevation,
+          partCount: composition.parts.length,
+        })),
+      }),
+    };
+
+    Object.defineProperty(window, '__gosplanVisualBenchmark', {
+      configurable: true,
+      enumerable: false,
+      writable: false,
+      value: Object.freeze(control),
+    });
+
+    if (this.visualBenchmarkFixtureId !== null) {
+      let center = this.visualBenchmarkFixtureId === 'pack4-worker-housing-courtyards-v2'
+        ? { gx: 16, gy: 11 }
+        : { gx: 17, gy: 14 };
+      const requestedCenter = params.get('benchmark-center');
+      if (requestedCenter !== null) {
+        const parts = requestedCenter.split(',').map(Number);
+        if (
+          parts.length === 2
+          && parts.every(Number.isInteger)
+          && this.grid.inBounds(parts[0], parts[1])
+        ) {
+          center = { gx: parts[0], gy: parts[1] };
+        }
+      }
+
+      const requestedZoom = Number(params.get('benchmark-zoom') ?? 1);
+      const zoom = [0.25, 0.5, 1, 2].includes(requestedZoom) ? requestedZoom : 1;
+
+      const requestedQuality = params.get('benchmark-quality');
+      const quality: GraphicsQuality = requestedQuality === 'low'
+        || requestedQuality === 'medium'
+        || requestedQuality === 'high'
+        ? requestedQuality
+        : 'high';
+
+      const requestedLight = params.get('benchmark-light');
+      const light: VisualBenchmarkLight = requestedLight === 'night' ? 'night' : 'day';
+
+      control.setCamera(center.gx, center.gy, zoom);
+      control.setQuality(quality);
+      control.setLighting(light);
+      control.setWeatherParticles(params.get('benchmark-weather') !== 'off');
+    }
+  }
+
   private setupUI(): void {
     this.ambienceOverlay = new AmbienceOverlay(this.uiContainer, this.state, this.events);
     this.uiProgression = new UIProgressionManager(this.state, this.events);
     this.eraOverlay = new EraUnlockOverlay(this.uiContainer, this.state, this.registry, this.events);
     this.resourceBar = new ResourceBar(this.uiContainer, this.state, this.events);
-    this.toolbar = new Toolbar(this.uiContainer, this.registry, this.events, (tool, buildingId, zone) => {
-      this.toolController.setTool(tool, buildingId, zone);
-      if (buildingId) {
-        this.tooltip.show(buildingId);
-      } else {
-        this.tooltip.hide();
-      }
+    this.toolbar = new Toolbar(this.uiContainer, this.registry, this.events, (tool, buildingId, zone, category) => {
+      this.toolController.setTool(tool, buildingId, zone, category);
     }, this.state);
     this.infoPanel = new InfoPanel(this.uiContainer, this.grid, this.registry, this.state, this.events);
     this.planPanel = new PlanPanel(this.uiContainer, this.state, this.events);
     this.notifications = new NotificationManager(this.uiContainer, this.events, this.state);
-    this.tooltip = new BuildingTooltip(this.uiContainer, this.registry);
     this.minimap = new Minimap(this.uiContainer, this.grid, this.registry, this.camera, this.events);
     this.tutorial = new TutorialManager(this.uiContainer, this.state, this.grid, this.registry, this.events);
     this.districtPanel = new DistrictPanel(this.uiContainer, this.state, this.events);
@@ -445,6 +705,10 @@ export class Game {
     this.campaignEndingModal = new CampaignEndingModal(this.uiContainer, this.state, this.events);
     this.pauseMenu = new PauseMenu(this.uiContainer, this.state, this.events, () => {
       window.location.reload();
+    });
+
+    this.uiContainer.querySelector('#plan-panel-header')?.addEventListener('click', () => {
+      this.events.emit('plan:viewed', {});
     });
     // Era-driven: hide advanced panels initially (era < 3)
     this.setAdvancedPanelsVisible(this.state.currentEra >= 3);
@@ -477,10 +741,20 @@ export class Game {
     });
 
     this.districtPanel?.update();
+    this.toolController.syncState();
   }
 
   private setupKeyboard(): void {
     window.addEventListener('keydown', (e) => {
+      // While the modal is open, Escape closes it and all other keys remain
+      // native to the dialog. In particular, do not intercept Tab or undo.
+      if (shouldSuppressGameplayShortcut(this.pauseMenu.isOpen(), e.key)) return;
+      if (this.pauseMenu.isOpen() && e.key === 'Escape') {
+        e.preventDefault();
+        this.pauseMenu.hide();
+        return;
+      }
+
       // Undo/Redo (check first since they use modifiers)
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
         e.preventDefault();
@@ -504,9 +778,10 @@ export class Game {
 
       switch (e.key) {
         case 'Escape':
-          if (this.pauseMenu.isVisible()) {
-            this.pauseMenu.hide();
-          } else if (this.toolController.currentTool !== 'select') {
+          if (
+            this.toolController.currentTool !== 'select'
+            || this.toolController.currentCategory !== null
+          ) {
             this.toolController.setTool('select');
             this.infoPanel.hide();
           } else {
@@ -604,6 +879,13 @@ export class Game {
   }
 
   private saveCurrentGame(): void {
+    if (import.meta.env.DEV && this.visualBenchmarkSaveRaw !== null) {
+      this.events.emit('notification', {
+        message: 'Visual benchmark sessions are read-only.',
+        type: 'info',
+      });
+      return;
+    }
     saveGame(this.grid, this.state, this.placer);
     this.events.emit('notification', { message: 'Game saved!', type: 'success' });
     this.events.emit('game:saved', {});
@@ -650,9 +932,15 @@ export class Game {
   private lastFrameTime = 0;
 
   private update(): void {
-    const now = performance.now();
+    const now = import.meta.env.DEV && this.visualBenchmarkClockMs !== null
+      ? this.visualBenchmarkClockMs
+      : performance.now();
     const dt = this.lastFrameTime ? now - this.lastFrameTime : 16;
     this.lastFrameTime = now;
+
+    // Coalesce zone-drag composition invalidations before Pixi renders this
+    // frame. The ticker continues to run when simulation speed is paused.
+    this.propRenderer.flushPendingUpdates();
 
     // Update camera (WASD/arrow key panning)
     this.cameraController.update(dt);
@@ -679,6 +967,7 @@ export class Game {
 
     // Update window lights (day/night cycle)
     this.windowLights.update(now);
+    this.propRenderer.updateLighting(now);
 
     // Update traffic dots on roads
     if (this.state.speed > 0) {
@@ -695,7 +984,12 @@ export class Game {
       this.currentSeason = season;
       const tint = getSeasonalTerrainTint(season);
       this.terrainRenderer.updateSeason(tint, season);
-      if (isWinter(season)) {
+      this.propRenderer.setSeason(season);
+      if (!this.visualBenchmarkWeatherParticles) {
+        this.weatherEffects.setWeatherType('none');
+        this.smokeParticles.windX = 3;
+        this.weatherEffects.windX = 0;
+      } else if (isWinter(season)) {
         this.weatherEffects.setWeatherType('snow');
         this.smokeParticles.windX = 6;
         this.weatherEffects.windX = 8;
@@ -718,5 +1012,12 @@ export class Game {
     this.worldContainer.x = Math.round(this.camera.x);
     this.worldContainer.y = Math.round(this.camera.y);
     this.worldContainer.scale.set(this.camera.zoom);
+
+    if (import.meta.env.DEV && this.visualBenchmarkFixtureId !== null) {
+      const snapshot = window.__gosplanVisualBenchmark?.snapshot();
+      if (snapshot) {
+        this.uiContainer.dataset.visualBenchmarkSnapshot = JSON.stringify(snapshot);
+      }
+    }
   }
 }

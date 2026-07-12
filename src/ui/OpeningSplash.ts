@@ -1,4 +1,5 @@
 import { assetPath } from '../utils/assetPath';
+import { activateModal } from './ModalFocus';
 
 export interface OpeningSplashOptions {
   durationMs?: number;
@@ -13,10 +14,15 @@ export class OpeningSplash {
   private startButtonEl: HTMLButtonElement;
   private timeoutIds: number[] = [];
   private cleanupHandlers: Array<() => void> = [];
+  private deactivateModal: (() => void) | null = null;
 
   constructor(container: HTMLElement) {
     this.el = document.createElement('div');
     this.el.id = 'opening-splash';
+    this.el.setAttribute('role', 'dialog');
+    this.el.setAttribute('aria-modal', 'true');
+    this.el.setAttribute('aria-labelledby', 'opening-splash-title');
+    this.el.setAttribute('aria-hidden', 'true');
 
     const panel = document.createElement('div');
     panel.className = 'opening-splash-panel';
@@ -32,30 +38,35 @@ export class OpeningSplash {
     hero.alt = 'Gosplan opening home screen artwork';
     panel.appendChild(hero);
 
-    const commandDeck = document.createElement('div');
-    commandDeck.className = 'opening-splash-command-deck';
-    panel.appendChild(commandDeck);
+    const dossier = document.createElement('div');
+    dossier.className = 'opening-splash-dossier';
+    panel.appendChild(dossier);
 
     const heading = document.createElement('div');
     heading.className = 'opening-splash-heading';
-    commandDeck.appendChild(heading);
+    dossier.appendChild(heading);
 
-    const title = document.createElement('div');
+    const title = document.createElement('h1');
+    title.id = 'opening-splash-title';
     title.className = 'opening-splash-title';
-    title.textContent = 'GOSPLAN CENTRAL DIRECTIVE';
+    title.textContent = 'State Committee for Urban Development';
     heading.appendChild(title);
 
     const line = document.createElement('div');
     line.className = 'opening-splash-line';
-    line.textContent = 'AUTHENTICATING DISTRICT TELEMETRY RELAY';
+    line.textContent = 'Municipal planning dossier prepared for review';
     heading.appendChild(line);
 
     const controls = document.createElement('div');
     controls.className = 'opening-splash-controls';
-    commandDeck.appendChild(controls);
+    dossier.appendChild(controls);
 
     const progressTrack = document.createElement('div');
     progressTrack.className = 'opening-splash-progress-track';
+    progressTrack.setAttribute('role', 'progressbar');
+    progressTrack.setAttribute('aria-label', 'Preparing planning dossier');
+    progressTrack.setAttribute('aria-valuemin', '0');
+    progressTrack.setAttribute('aria-valuemax', '100');
     controls.appendChild(progressTrack);
 
     this.progressEl = document.createElement('div');
@@ -64,13 +75,16 @@ export class OpeningSplash {
 
     this.statusEl = document.createElement('div');
     this.statusEl.className = 'opening-splash-status';
+    this.statusEl.id = 'opening-splash-status';
+    this.statusEl.setAttribute('aria-live', 'polite');
     controls.appendChild(this.statusEl);
 
     this.startButtonEl = document.createElement('button');
     this.startButtonEl.className = 'opening-splash-start-btn';
     this.startButtonEl.type = 'button';
-    this.startButtonEl.textContent = 'SYNCING...';
+    this.startButtonEl.textContent = 'Preparing dossier...';
     this.startButtonEl.disabled = true;
+    this.startButtonEl.setAttribute('aria-describedby', 'opening-splash-status');
     controls.appendChild(this.startButtonEl);
 
     container.appendChild(this.el);
@@ -83,23 +97,30 @@ export class OpeningSplash {
     const skipAllowed = Boolean(options.skipAllowed);
     const requireStartButton = options.requireStartButton ?? true;
     let skipRequested = false;
+    const onSkip = (): void => {
+      if (skipAllowed) skipRequested = true;
+    };
 
     this.clearTimers();
     this.progressEl.style.width = '0%';
     this.startButtonEl.disabled = true;
     this.startButtonEl.classList.remove('ready');
-    this.startButtonEl.textContent = 'SYNCING...';
-    this.statusEl.textContent = skipAllowed ? 'PRESS ANY KEY TO FAST-FORWARD' : 'ESTABLISHING LINK';
+    this.startButtonEl.textContent = 'Preparing dossier...';
+    this.statusEl.textContent = skipAllowed
+      ? 'Press any key to advance the briefing'
+      : 'Reviewing district plans';
     this.el.classList.add('visible');
+    this.el.setAttribute('aria-hidden', 'false');
+    this.deactivateModal?.();
+    this.deactivateModal = activateModal(this.el, {
+      initialFocus: this.el,
+      onEscape: skipAllowed ? onSkip : null,
+      onKeyDown: skipAllowed ? onSkip : undefined,
+    });
 
     if (skipAllowed) {
-      const onSkip = (): void => {
-        skipRequested = true;
-      };
-      window.addEventListener('keydown', onSkip);
       this.el.addEventListener('pointerdown', onSkip);
       this.cleanupHandlers.push(() => {
-        window.removeEventListener('keydown', onSkip);
         this.el.removeEventListener('pointerdown', onSkip);
       });
     }
@@ -110,9 +131,10 @@ export class OpeningSplash {
         const elapsed = performance.now() - startedAt;
         const pct = skipRequested ? 100 : Math.min(100, Math.floor((elapsed / durationMs) * 100));
         this.progressEl.style.width = `${pct}%`;
+        this.progressEl.parentElement?.setAttribute('aria-valuenow', String(pct));
         this.statusEl.textContent = pct < 100
-          ? (skipAllowed ? 'PRESS ANY KEY TO FAST-FORWARD' : 'ESTABLISHING LINK')
-          : (requireStartButton ? 'PRESS START TO CONTINUE' : 'LINK CONFIRMED');
+          ? (skipAllowed ? 'Press any key to advance the briefing' : 'Reviewing district plans')
+          : (requireStartButton ? 'Planning dossier ready for review' : 'Planning bureau open');
 
         if (pct >= 100) {
           const doneId = window.setTimeout(() => {
@@ -132,7 +154,7 @@ export class OpeningSplash {
     if (requireStartButton) {
       this.startButtonEl.disabled = false;
       this.startButtonEl.classList.add('ready');
-      this.startButtonEl.textContent = 'ENTER COMMAND TERMINAL';
+      this.startButtonEl.textContent = 'Open planning bureau';
 
       await new Promise<void>((resolve) => {
         let settled = false;
@@ -142,17 +164,10 @@ export class OpeningSplash {
           resolve();
         };
         const onClick = (): void => finish();
-        const onKey = (event: KeyboardEvent): void => {
-          if (event.key !== 'Enter' && event.key !== ' ') return;
-          event.preventDefault();
-          finish();
-        };
 
         this.startButtonEl.addEventListener('click', onClick);
-        window.addEventListener('keydown', onKey);
         this.cleanupHandlers.push(() => {
           this.startButtonEl.removeEventListener('click', onClick);
-          window.removeEventListener('keydown', onKey);
         });
 
         const focusId = window.setTimeout(() => {
@@ -168,6 +183,9 @@ export class OpeningSplash {
   hide(): void {
     this.clearTimers();
     this.el.classList.remove('visible');
+    this.el.setAttribute('aria-hidden', 'true');
+    this.deactivateModal?.();
+    this.deactivateModal = null;
   }
 
   private clearTimers(): void {

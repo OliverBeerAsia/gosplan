@@ -6,9 +6,15 @@ import { EventBus } from '../core/EventBus';
 interface TutorialStep {
   id: string;
   message: string;
-  /** Return true when the step goal is achieved */
-  completed: () => boolean;
+  /** Match only the explicit action taught by this step. */
+  completedBy: (action: TutorialAction) => boolean;
 }
+
+type TutorialAction =
+  | { type: 'building:placed'; defId: string }
+  | { type: 'zone:changed'; zone: import('../grid/Cell').ZoneType }
+  | { type: 'population:changed'; population: number }
+  | { type: 'plan:viewed' };
 
 const TUTORIAL_COMPLETE_KEY = 'gosplan_tutorial_complete';
 
@@ -22,6 +28,7 @@ export class TutorialManager {
   private tutorialComplete: boolean;
   private tutorialActive = false;
   private steps: TutorialStep[];
+  private roadsPlacedDuringTutorial = 0;
 
   constructor(
     private container: HTMLElement,
@@ -63,49 +70,37 @@ export class TutorialManager {
     this.steps = [
       {
         id: 'place_power',
-        message: 'Step 1: Open INDUSTRY and place a Coal Power Plant.',
-        completed: () => {
-          return this.grid.getAllBuildings().some(b => {
-            const def = this.registry.get(b.defId);
-            return !!def?.powerGeneration;
-          });
-        },
+        message: 'Step 1: Open INDUSTRY and select COAL POWER PLANT, then place it.',
+        completedBy: action => action.type === 'building:placed'
+          && !!this.registry.get(action.defId)?.powerGeneration,
       },
       {
         id: 'build_road',
-        message: 'Step 2: Open INFRA and place Roads to connect power.',
-        completed: () => {
-          return this.grid.getAllBuildings().filter(b => b.defId === 'road').length >= 3;
-        },
+        message: 'Step 2: Open INFRA and select ROAD. Place three roads to connect power.',
+        completedBy: action => action.type === 'building:placed'
+          && action.defId === 'road'
+          && this.roadsPlacedDuringTutorial >= 3,
       },
       {
         id: 'paint_housing',
-        message: 'Step 3: Open ZONING and paint Housing near roads.',
-        completed: () => {
-          return this.state.population > 60;
-        },
+        message: 'Step 3: Open HOUSING and select HOUSING ZONE. Paint near the roads.',
+        completedBy: action => action.type === 'zone:changed' && action.zone === 'housing',
       },
       {
         id: 'watch_growth',
-        message: 'Step 4: Let the city grow past 100 population.',
-        completed: () => {
-          return this.state.population > 100;
-        },
+        message: 'Step 4: Grow to 200 population to unlock SERVICES and the FIVE-YEAR PLAN.',
+        completedBy: action => action.type === 'population:changed' && action.population >= 200,
       },
       {
         id: 'build_service',
-        message: 'Step 5: Open SERVICES and place a School or Hospital.',
-        completed: () => {
-          return this.grid.getAllBuildings().some(b => {
-            const def = this.registry.get(b.defId);
-            return def?.category === 'government' && !!def.serviceRadius;
-          });
-        },
+        message: 'Step 5: Open SERVICES and select SCHOOL or HOSPITAL, then place it.',
+        completedBy: action => action.type === 'building:placed'
+          && (action.defId === 'school' || action.defId === 'hospital'),
       },
       {
         id: 'open_plan',
-        message: 'Well done, Comrade! Check the Plan Panel for Five-Year goals.',
-        completed: () => false, // Timer-based: auto-completes after 6s in showStep()
+        message: 'Step 6: Select the FIVE-YEAR PLAN header to review your goals.',
+        completedBy: action => action.type === 'plan:viewed',
       },
     ];
 
@@ -114,10 +109,15 @@ export class TutorialManager {
       this.startTutorial();
     }
 
-    events.on('tick', () => this.check());
-    events.on('building:placed', () => this.check());
-    events.on('zone:changed', () => this.check());
-    events.on('population:changed', () => this.check());
+    events.on('building:placed', ({ defId }) => {
+      if (defId === 'road') this.roadsPlacedDuringTutorial++;
+      this.handleAction({ type: 'building:placed', defId });
+    });
+    events.on('zone:changed', ({ zone }) => this.handleAction({ type: 'zone:changed', zone }));
+    events.on('population:changed', ({ population }) => {
+      this.handleAction({ type: 'population:changed', population });
+    });
+    events.on('plan:viewed', () => this.handleAction({ type: 'plan:viewed' }));
   }
 
   private startTutorial(): void {
@@ -139,22 +139,14 @@ export class TutorialManager {
     this.el.style.display = 'flex';
     this.overlay.style.display = 'block';
 
-    // If last step, auto-advance after a delay
-    if (step.id === 'open_plan') {
-      window.setTimeout(() => {
-        if (this.currentStep === this.steps.length - 1) {
-          this.completeTutorial();
-        }
-      }, 6000);
-    }
   }
 
-  private check(): void {
+  private handleAction(action: TutorialAction): void {
     if (!this.tutorialActive) return;
     if (this.currentStep >= this.steps.length) return;
 
     const step = this.steps[this.currentStep];
-    if (step.completed()) {
+    if (step.completedBy(action)) {
       this.currentStep++;
       this.showStep();
     }
