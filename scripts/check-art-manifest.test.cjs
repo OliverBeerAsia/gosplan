@@ -135,7 +135,7 @@ test('validator rejects schema, duplicate IDs, unknown buildings, and footprint 
 });
 
 test('validator rejects missing frames, bad anchors, districts, eras, and fallbacks', () => {
-  expectError((manifest) => { manifest.buildings[0].lod.near = 'legacy.pixel_city:not_a_frame'; }, /references missing frame/);
+  expectError((manifest) => { manifest.buildings[0].lod.near = 'buildings.khrushchyovka_1x:not_a_frame'; }, /references missing frame/);
   expectError((manifest) => { manifest.buildings[0].anchor = [1000, 1000]; }, /outside logical sprite bounds/);
   expectError((manifest) => { manifest.buildings[0].variants[0].allowedDistricts = ['moon_base']; }, /unknown district/);
   expectError((manifest) => { manifest.buildings[0].variants[0].minimumEra = 5; }, /unknown minimumEra/);
@@ -143,9 +143,9 @@ test('validator rejects missing frames, bad anchors, districts, eras, and fallba
   expectError((manifest) => {
     manifest.buildings[0].variants[0].lod = {
       ...manifest.buildings[0].lod,
-      mid: 'legacy.pixel_city:not_a_variant_lod_frame',
+      mid: 'buildings.khrushchyovka_1x:not_a_variant_lod_frame',
     };
-  }, /variant "legacy" lod\.mid references missing frame/);
+  }, /variant "linked_return" lod\.mid references missing frame/);
 });
 
 test('validator accepts backward-compatible variant-specific LOD frames', () => {
@@ -274,7 +274,9 @@ test('TextureFactory retains the authored registry without changing legacy textu
 
   assert.equal(requestedUrl, '/base/assets/art/manifest.v1.json');
   assert.equal(factory.getArtRegistry(), registry);
-  assert.equal(factory.get('ground').source, 'legacy-atlas-terrain');
+  // The legacy pixel-city override was removed 2026-07-18; procedural terrain
+  // is canonical and the migration atlas must never be fetched at runtime.
+  assert.equal(factory.get('ground').source, 'procedural-terrain');
   assert.equal(factory.get('factory').source, 'procedural-building');
 });
 
@@ -555,7 +557,7 @@ test('TextureFactory catches registry failures and completes the legacy texture 
   }
 
   assert.equal(factory.getArtRegistry(), undefined);
-  assert.equal(factory.get('ground').source, 'legacy-atlas-terrain');
+  assert.equal(factory.get('ground').source, 'procedural-terrain');
   assert.equal(factory.get('factory').source, 'procedural-building');
   assert.match(warning[0], /continuing with legacy textures/);
   assert.match(warning[1].message, /bad manifest/);

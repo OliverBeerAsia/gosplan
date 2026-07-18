@@ -96,13 +96,11 @@ export class TextureFactory {
     for (const [k, v] of terrain) this.textures.set(k, v);
     for (const [k, v] of buildings) this.textures.set(k, v);
 
-    // Optional authored atlas overrides terrain/overlay textures.
-    // Building sprites are kept procedural so district variants and detail packs stay coherent.
-    const atlas = await loadSpriteAtlasTextures(assetPath('assets/atlas/pixel-city.json'));
-    for (const [k, v] of atlas) {
-      if (!isNonBuildingTextureKey(k)) continue;
-      this.textures.set(k, v);
-    }
+    // The legacy pixel-city migration atlas is intentionally not loaded here.
+    // Its SVG was unparseable from 2026-02 to 2026-07, so the override path
+    // never took effect on any shipped build; the procedural terrain, zone,
+    // road, and overlay textures below are the canonical production art.
+    // Authored art now enters exclusively through the versioned manifest.
 
     // Procedural style variants keep districts from looking copy-pasted.
     this.generateStylisticBuildingVariants(renderer);
