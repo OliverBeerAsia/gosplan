@@ -38,6 +38,14 @@ if (!fs.existsSync(resolvedImagePath)) {
   fail(`manifest image file does not exist: ${resolvedImagePath}`);
 }
 
+if (path.extname(resolvedImagePath).toLowerCase() === '.svg') {
+  const { findSvgParseError } = require('./check-art-manifest.cjs');
+  const parseError = findSvgParseError(fs.readFileSync(resolvedImagePath, 'utf8'));
+  if (parseError) {
+    fail(`manifest image is not well-formed XML (${manifest.image}): ${parseError}`);
+  }
+}
+
 if (!manifest.frames || typeof manifest.frames !== 'object') {
   fail('manifest.frames must be an object');
 }

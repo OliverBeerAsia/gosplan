@@ -5,6 +5,7 @@ const test = require('node:test');
 const ts = require('typescript');
 
 const {
+  findSvgParseError,
   parseRuntimeLoadingAssets,
   validateArtManifest,
   validateManifestFile,
@@ -206,6 +207,61 @@ test('validator checks atlas frame bounds against source image dimensions', () =
     publicDir: FIXTURE_DIR,
   });
   assert.match(invalidErrors.join('\n'), /lies outside 64x64 image bounds/);
+});
+
+test('validator accepts current-style well-formed SVG atlas images', () => {
+  const errors = validateArtManifest({
+    manifest: minimalAtlasManifest('valid-frames.json'),
+    rootDir: ROOT,
+    publicDir: FIXTURE_DIR,
+  });
+  assert.deepEqual(errors, []);
+});
+
+test('validator reports SVG atlas images that are not well-formed XML', () => {
+  const manifest = minimalAtlasManifest('valid-frames.json');
+  manifest.atlases[0].image = 'duplicate-attribute-atlas.svg';
+  const errors = validateArtManifest({ manifest, rootDir: ROOT, publicDir: FIXTURE_DIR });
+  const joined = errors.join('\n');
+  assert.match(joined, /not well-formed XML/);
+  assert.match(joined, /duplicate-attribute-atlas\.svg/);
+  assert.match(joined, /duplicate attribute "width"/);
+});
+
+test('SVG well-formedness checker catches the historical failure classes', () => {
+  assert.equal(
+    findSvgParseError('<svg width="64">\n  <!-- ok -->\n  <g fill="#fff"><rect w="1"/></g>\n</svg>'),
+    undefined,
+  );
+  assert.match(
+    findSvgParseError('<svg width="64" height="64" width="64"></svg>'),
+    /duplicate attribute "width" on <svg>/,
+  );
+  assert.match(findSvgParseError('<svg><g><rect/></svg>'), /expected <\/g> but found <\/svg>/);
+  assert.match(findSvgParseError('<svg><g/>'), /unclosed <svg>/);
+  assert.match(findSvgParseError('<svg width=64></svg>'), /unquoted value/);
+  assert.match(findSvgParseError('<svg><g></g></svg><svg/>'), /multiple root elements/);
+});
+
+test('every shipped SVG asset is well-formed XML', () => {
+  const roots = [path.join(ROOT, 'public/assets')];
+  const svgFiles = [];
+  while (roots.length > 0) {
+    const dir = roots.pop();
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const entryPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) roots.push(entryPath);
+      else if (entry.name.endsWith('.svg')) svgFiles.push(entryPath);
+    }
+  }
+  assert.ok(svgFiles.length >= 11, `expected shipped SVG assets, found ${svgFiles.length}`);
+  for (const svgFile of svgFiles) {
+    assert.equal(
+      findSvgParseError(fs.readFileSync(svgFile, 'utf8')),
+      undefined,
+      `expected well-formed XML: ${path.relative(ROOT, svgFile)}`,
+    );
+  }
 });
 
 test('visual variant hashing is deterministic and independent of manifest order', () => {
