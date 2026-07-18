@@ -89,6 +89,7 @@ export function generateTerrainTextures(renderer: Renderer): Map<string, Texture
   textures.set('zone_green', generateZoneTile(renderer, 0x8BC34A, 'dots'));
 
   textures.set('lamp_pool', generateLampPoolTexture(renderer));
+  textures.set('building_shadow', generateBuildingShadowTexture(renderer));
 
   textures.set('prop_none', generateEmptyOverlay(renderer));
   textures.set('prop_lamp', generatePropTexture(renderer, 'lamp'));
@@ -749,6 +750,32 @@ function generateLampPoolTexture(renderer: Renderer): Texture {
   g.fill({ color: 0xFFDFAC, alpha: 0.14 });
   g.ellipse(cx, cy, 5.5, 2.8);
   g.fill({ color: 0xFFE9C4, alpha: 0.20 });
+  const texture = renderer.generateTexture(g);
+  g.destroy();
+  return texture;
+}
+
+/**
+ * Soft diamond contact shadow under buildings. BuildingRenderer scales it to
+ * the footprint's base diamond; layered fills give a feathered edge.
+ */
+function generateBuildingShadowTexture(renderer: Renderer): Texture {
+  const g = new Graphics();
+  normalizeMaskBounds(g);
+  const cx = TILE_HALF_W;
+  const cy = TILE_HALF_H;
+  const diamond = (scale: number): { x: number; y: number }[] => [
+    { x: cx, y: cy - TILE_HALF_H * scale },
+    { x: cx + TILE_HALF_W * scale, y: cy },
+    { x: cx, y: cy + TILE_HALF_H * scale },
+    { x: cx - TILE_HALF_W * scale, y: cy },
+  ];
+  g.poly(diamond(1));
+  g.fill({ color: 0x000000, alpha: 0.08 });
+  g.poly(diamond(0.8));
+  g.fill({ color: 0x000000, alpha: 0.08 });
+  g.poly(diamond(0.6));
+  g.fill({ color: 0x000000, alpha: 0.08 });
   const texture = renderer.generateTexture(g);
   g.destroy();
   return texture;

@@ -72,6 +72,7 @@ function isNonBuildingTextureKey(key: string): boolean {
   if (key.startsWith('prop_')) return true;
   if (key.startsWith('queue_')) return true;
   if (key.startsWith('shore_')) return true;
+  if (key === 'lamp_pool' || key === 'building_shadow') return true;
   if (key === 'road' || key === 'power_line') return true;
   return false;
 }

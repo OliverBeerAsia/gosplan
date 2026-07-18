@@ -1942,9 +1942,11 @@
 .tutorial-message {
   flex: 1 1 auto;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* Instructions must never truncate: wrap instead of ellipsizing. */
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.35;
 }
 
 .tutorial-dismiss {
