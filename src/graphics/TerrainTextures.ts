@@ -4,6 +4,31 @@ import { PALETTE } from './SovietPalette';
 
 export type TerrainSeason = 'summer' | 'winter' | 'autumn' | 'spring';
 
+/**
+ * Vertical headroom baked into every base tile texture, in pixels above the
+ * diamond top. Trees and other tall tile-local details draw into this space.
+ *
+ * Pixi's generateTexture crops to drawn bounds, so without a fixed frame each
+ * texture would acquire a different origin and render offset from its tile:
+ * forest canopies pushed the whole diamond downward, bleeding dark pixels
+ * over lower neighbors at elevation steps. Every base tile generator starts
+ * with an invisible bounds rect spanning this exact frame, and TerrainRenderer
+ * compensates by placing base sprites TILE_TEXTURE_OVERHEAD higher.
+ */
+export const TILE_TEXTURE_OVERHEAD = 20;
+
+/** Fix the texture frame to (0,-OVERHEAD)..(2W, 2H) for every base tile. */
+function normalizeTileBounds(g: Graphics): void {
+  g.rect(0, -TILE_TEXTURE_OVERHEAD, TILE_HALF_W * 2, TILE_HALF_H * 2 + TILE_TEXTURE_OVERHEAD);
+  g.fill({ color: 0x000000, alpha: 0 });
+}
+
+/** Fix the texture frame to exactly the tile diamond for overlay masks. */
+function normalizeMaskBounds(g: Graphics): void {
+  g.rect(0, 0, TILE_HALF_W * 2, TILE_HALF_H * 2);
+  g.fill({ color: 0x000000, alpha: 0 });
+}
+
 export function generateTerrainTextures(renderer: Renderer): Map<string, Texture> {
   const textures = new Map<string, Texture>();
 
@@ -41,6 +66,16 @@ export function generateTerrainTextures(renderer: Renderer): Map<string, Texture
 
   for (let mask = 0; mask < 16; mask++) {
     textures.set(`terrain_edge_${mask}`, generateTerrainEdgeMask(renderer, mask));
+    textures.set(`shore_${mask}`, generateShorelineMask(renderer, mask, false));
+    textures.set(`shore_winter_${mask}`, generateShorelineMask(renderer, mask, true));
+  }
+
+  // Far-zoom forest canopy LOD (per season)
+  for (let v = 0; v < 3; v++) {
+    textures.set(`forest_far_${v}`, generateFarForestTile(renderer, v, null));
+    for (const season of ['winter', 'autumn', 'spring'] as TerrainSeason[]) {
+      textures.set(`forest_${season}_far_${v}`, generateFarForestTile(renderer, v, season));
+    }
   }
 
   textures.set('terrain_decal_0', generateEmptyOverlay(renderer));
@@ -87,6 +122,7 @@ function varHash(a: number, b: number): number {
 // ===== GROUND =====
 function generateGroundTile(renderer: Renderer, variant: number): Texture {
   const g = new Graphics();
+  normalizeTileBounds(g);
   const baseColors = [
     PALETTE.GROUND,
     PALETTE.GROUND + 0x010101,
@@ -95,9 +131,8 @@ function generateGroundTile(renderer: Renderer, variant: number): Texture {
   drawTileDiamond(g);
   g.fill(baseColors[variant]);
 
-  // Subtle tile-edge seam
-  drawTileDiamond(g);
-  g.stroke({ width: 0.8, color: PALETTE.GROUND_EDGE, alpha: 0.30 });
+  // No per-tile seam stroke: open ground reads as a continuous surface.
+  // Material boundaries are handled by the transition edge masks instead.
 
   // Subtle center shadow ellipse
   g.ellipse(TILE_HALF_W, TILE_HALF_H, 6, 3);
@@ -111,6 +146,7 @@ function generateGroundTile(renderer: Renderer, variant: number): Texture {
 // ===== WATER =====
 function generateWaterTile(renderer: Renderer, variant: number): Texture {
   const g = new Graphics();
+  normalizeTileBounds(g);
   const waterColors = [PALETTE.WATER, PALETTE.WATER + 0x010101, PALETTE.WATER - 0x010101];
   drawTileDiamond(g);
   g.fill(waterColors[variant]);
@@ -139,9 +175,6 @@ function generateWaterTile(renderer: Renderer, variant: number): Texture {
     g.ellipse(hx, hy, 2 + (h >> 4) % 2, 1);
     g.fill({ color: 0xFFFFFF, alpha: 0.08 + (i % 2) * 0.04 });
   }
-
-  drawTileDiamond(g);
-  g.stroke({ width: 0.5, color: 0x2A4353, alpha: 0.45 });
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -185,6 +218,7 @@ function drawBirch(g: Graphics, x: number, y: number, height: number): void {
 
 function generateForestTile(renderer: Renderer, variant: number): Texture {
   const g = new Graphics();
+  normalizeTileBounds(g);
   const forestColors = [
     PALETTE.FOREST_GREEN,
     PALETTE.FOREST_GREEN + 0x010101,
@@ -196,9 +230,6 @@ function generateForestTile(renderer: Renderer, variant: number): Texture {
   // Dense undergrowth fill
   g.ellipse(TILE_HALF_W, TILE_HALF_H, 18, 10);
   g.fill({ color: PALETTE.FOREST_DARK, alpha: 0.25 });
-
-  drawTileDiamond(g);
-  g.stroke({ width: 0.8, color: PALETTE.FOREST_DARK, alpha: 0.45 });
 
   // 4-5 trees with varied types and heights
   const treePositions = [
@@ -261,6 +292,7 @@ function generateForestTile(renderer: Renderer, variant: number): Texture {
 // ===== HILL =====
 function generateHillTile(renderer: Renderer, variant: number): Texture {
   const g = new Graphics();
+  normalizeTileBounds(g);
   const hillColors = [PALETTE.HILL_GREY, PALETTE.HILL_GREY + 0x010101, PALETTE.HILL_GREY - 0x010101];
   drawTileDiamond(g);
   g.fill(hillColors[variant]);
@@ -329,12 +361,10 @@ function generateHillTile(renderer: Renderer, variant: number): Texture {
 // ===== DIRT =====
 function generateDirtTile(renderer: Renderer, variant: number): Texture {
   const g = new Graphics();
+  normalizeTileBounds(g);
   const dirtColors = [PALETTE.DIRT_BROWN, PALETTE.DIRT_BROWN + 0x010101, PALETTE.DIRT_BROWN - 0x010101];
   drawTileDiamond(g);
   g.fill(dirtColors[variant]);
-
-  drawTileDiamond(g);
-  g.stroke({ width: 0.5, color: 0x6B5D3A, alpha: 0.4 });
 
   // Irregular polygon patches (puddle/mud areas)
   const patchCount = 1 + variant % 2;
@@ -470,6 +500,7 @@ function generateZoneTile(renderer: Renderer, color: number, pattern: ZonePatter
 
 function generateTerrainEdgeMask(renderer: Renderer, mask: number): Texture {
   const g = new Graphics();
+  normalizeMaskBounds(g);
   if (mask === 0) {
     drawTileDiamond(g);
     g.fill({ color: 0x000000, alpha: 0 });
@@ -478,24 +509,179 @@ function generateTerrainEdgeMask(renderer: Renderer, mask: number): Texture {
     return empty;
   }
 
-  const drawEdge = (x1: number, y1: number, x2: number, y2: number, nx: number, ny: number) => {
-    g.moveTo(x1, y1);
-    g.lineTo(x2, y2);
-    g.stroke({ width: 1, color: 0x1B1B1B, alpha: 0.30 });
-
+  // Ragged organic blend toward the higher-priority neighbor: a soft shade
+  // band plus dithered specks, without the old hard 1px boundary line.
+  const drawEdge = (
+    x1: number, y1: number, x2: number, y2: number,
+    nx: number, ny: number, edgeSalt: number,
+  ) => {
+    // Soft shade band, deepest at the boundary, feathering inward.
     g.poly([
       { x: x1, y: y1 },
       { x: x2, y: y2 },
-      { x: x2 + nx, y: y2 + ny },
-      { x: x1 + nx, y: y1 + ny },
+      { x: x2 + nx * 0.6, y: y2 + ny * 0.6 },
+      { x: x1 + nx * 0.6, y: y1 + ny * 0.6 },
     ]);
-    g.fill({ color: 0x000000, alpha: 0.10 });
+    g.fill({ color: 0x000000, alpha: 0.12 });
+    g.poly([
+      { x: x1 + nx * 0.6, y: y1 + ny * 0.6 },
+      { x: x2 + nx * 0.6, y: y2 + ny * 0.6 },
+      { x: x2 + nx * 1.4, y: y2 + ny * 1.4 },
+      { x: x1 + nx * 1.4, y: y1 + ny * 1.4 },
+    ]);
+    g.fill({ color: 0x000000, alpha: 0.05 });
+
+    // Dithered specks scatter the boundary so it reads ragged, not ruled.
+    for (let i = 0; i < 7; i++) {
+      const h = varHash(mask * 131 + i * 29, edgeSalt);
+      const t = 0.08 + (h % 84) / 100;
+      const depth = 0.3 + ((h >> 8) % 90) / 100; // 0.3..1.2 band depths
+      const px = x1 + (x2 - x1) * t + nx * depth;
+      const py = y1 + (y2 - y1) * t + ny * depth;
+      g.circle(px, py, 0.6 + ((h >> 4) % 2) * 0.4);
+      g.fill({ color: 0x000000, alpha: 0.10 + ((h >> 6) % 3) * 0.03 });
+    }
   };
 
-  if (mask & 1) drawEdge(TILE_HALF_W, 0, TILE_HALF_W * 2, TILE_HALF_H, -4, 4);
-  if (mask & 2) drawEdge(TILE_HALF_W * 2, TILE_HALF_H, TILE_HALF_W, TILE_HALF_H * 2, -4, -4);
-  if (mask & 4) drawEdge(TILE_HALF_W, TILE_HALF_H * 2, 0, TILE_HALF_H, 4, -4);
-  if (mask & 8) drawEdge(0, TILE_HALF_H, TILE_HALF_W, 0, 4, 4);
+  if (mask & 1) drawEdge(TILE_HALF_W, 0, TILE_HALF_W * 2, TILE_HALF_H, -4, 4, 11);
+  if (mask & 2) drawEdge(TILE_HALF_W * 2, TILE_HALF_H, TILE_HALF_W, TILE_HALF_H * 2, -4, -4, 23);
+  if (mask & 4) drawEdge(TILE_HALF_W, TILE_HALF_H * 2, 0, TILE_HALF_H, 4, -4, 47);
+  if (mask & 8) drawEdge(0, TILE_HALF_H, TILE_HALF_W, 0, 4, 4, 83);
+
+  const texture = renderer.generateTexture(g);
+  g.destroy();
+  return texture;
+}
+
+/**
+ * Shoreline drawn on the WATER side of a water/land boundary: a sand-toned
+ * bank lip plus a foam line, or shore-fast ice in winter. `mask` bits match
+ * the edge-mask convention (1=N, 2=E, 4=S, 8=W in grid space).
+ */
+function generateShorelineMask(renderer: Renderer, mask: number, winter: boolean): Texture {
+  const g = new Graphics();
+  normalizeMaskBounds(g);
+  if (mask === 0) {
+    drawTileDiamond(g);
+    g.fill({ color: 0x000000, alpha: 0 });
+    const empty = renderer.generateTexture(g);
+    g.destroy();
+    return empty;
+  }
+
+  const drawShore = (
+    x1: number, y1: number, x2: number, y2: number,
+    nx: number, ny: number, edgeSalt: number,
+  ) => {
+    if (winter) {
+      // Shore-fast ice: a brighter frozen collar against the bank.
+      g.poly([
+        { x: x1, y: y1 },
+        { x: x2, y: y2 },
+        { x: x2 + nx * 1.1, y: y2 + ny * 1.1 },
+        { x: x1 + nx * 1.1, y: y1 + ny * 1.1 },
+      ]);
+      g.fill({ color: 0xE2EAF0, alpha: 0.55 });
+      // Ridge line where sheet ice meets shore-fast ice
+      g.moveTo(x1 + nx * 1.1, y1 + ny * 1.1);
+      g.lineTo(x2 + nx * 1.1, y2 + ny * 1.1);
+      g.stroke({ width: 0.6, color: 0x8FA0B0, alpha: 0.5 });
+      return;
+    }
+
+    // Submerged bank: shallow water warms toward the shore.
+    g.poly([
+      { x: x1, y: y1 },
+      { x: x2, y: y2 },
+      { x: x2 + nx * 1.3, y: y2 + ny * 1.3 },
+      { x: x1 + nx * 1.3, y: y1 + ny * 1.3 },
+    ]);
+    g.fill({ color: 0x5E7D82, alpha: 0.45 });
+
+    // Foam line hugging the boundary, broken into segments.
+    for (let seg = 0; seg < 3; seg++) {
+      const h = varHash(mask * 57 + seg * 41, edgeSalt);
+      const t0 = seg * 0.34 + (h % 8) / 100;
+      const t1 = t0 + 0.16 + ((h >> 4) % 12) / 100;
+      const fx0 = x1 + (x2 - x1) * t0 + nx * 0.35;
+      const fy0 = y1 + (y2 - y1) * t0 + ny * 0.35;
+      const fx1 = x1 + (x2 - x1) * Math.min(t1, 0.97) + nx * 0.35;
+      const fy1 = y1 + (y2 - y1) * Math.min(t1, 0.97) + ny * 0.35;
+      g.moveTo(fx0, fy0);
+      g.lineTo(fx1, fy1);
+      g.stroke({ width: 1, color: PALETTE.WATER_FOAM, alpha: 0.55 });
+    }
+    // Foam flecks
+    for (let i = 0; i < 4; i++) {
+      const h = varHash(mask * 91 + i * 17, edgeSalt + 5);
+      const t = 0.1 + (h % 80) / 100;
+      const px = x1 + (x2 - x1) * t + nx * (0.5 + ((h >> 8) % 40) / 100);
+      const py = y1 + (y2 - y1) * t + ny * (0.5 + ((h >> 8) % 40) / 100);
+      g.circle(px, py, 0.5 + ((h >> 4) % 2) * 0.3);
+      g.fill({ color: PALETTE.WATER_FOAM, alpha: 0.4 });
+    }
+  };
+
+  if (mask & 1) drawShore(TILE_HALF_W, 0, TILE_HALF_W * 2, TILE_HALF_H, -4, 4, 13);
+  if (mask & 2) drawShore(TILE_HALF_W * 2, TILE_HALF_H, TILE_HALF_W, TILE_HALF_H * 2, -4, -4, 29);
+  if (mask & 4) drawShore(TILE_HALF_W, TILE_HALF_H * 2, 0, TILE_HALF_H, 4, -4, 53);
+  if (mask & 8) drawShore(0, TILE_HALF_H, TILE_HALF_W, 0, 4, 4, 97);
+
+  const texture = renderer.generateTexture(g);
+  g.destroy();
+  return texture;
+}
+
+/**
+ * Far-zoom forest canopy: massed crown blobs instead of individual trees, so
+ * distant forests read as continuous woodland rather than aliasing speckle.
+ */
+function generateFarForestTile(renderer: Renderer, variant: number, season: TerrainSeason | null): Texture {
+  const g = new Graphics();
+  normalizeTileBounds(g);
+  const base = season === 'winter' ? 0xC9CFCB
+    : season === 'autumn' ? 0x6E5C36
+    : season === 'spring' ? 0x477E33
+    : PALETTE.FOREST_GREEN;
+  const crown = season === 'winter' ? 0x3E5A34
+    : season === 'autumn' ? 0x8A6A2A
+    : season === 'spring' ? 0x568F3A
+    : PALETTE.GREEN_DARK;
+  const crownLight = season === 'winter' ? 0xEDF2EE
+    : season === 'autumn' ? 0xB08432
+    : season === 'spring' ? 0x6FA84C
+    : 0x477E33;
+
+  drawTileDiamond(g);
+  g.fill(base);
+
+  // Overlapping crown blobs spanning the tile, offset per variant.
+  const blobSets = [
+    [
+      { x: -8, y: -3, rx: 12, ry: 6 },
+      { x: 7, y: 2, rx: 11, ry: 6 },
+      { x: -2, y: 5, rx: 9, ry: 5 },
+    ],
+    [
+      { x: -10, y: 1, rx: 10, ry: 5 },
+      { x: 3, y: -4, rx: 12, ry: 6 },
+      { x: 9, y: 4, rx: 8, ry: 4 },
+    ],
+    [
+      { x: -4, y: -5, rx: 11, ry: 5 },
+      { x: -9, y: 4, rx: 9, ry: 5 },
+      { x: 8, y: -1, rx: 10, ry: 6 },
+    ],
+  ];
+  for (const b of blobSets[variant]) {
+    g.ellipse(TILE_HALF_W + b.x, TILE_HALF_H + b.y, b.rx, b.ry);
+    g.fill({ color: crown, alpha: season === 'winter' ? 0.85 : 1 });
+  }
+  // Lit crown tops (top-left sun)
+  for (const b of blobSets[variant]) {
+    g.ellipse(TILE_HALF_W + b.x - 2, TILE_HALF_H + b.y - 2, b.rx * 0.5, b.ry * 0.5);
+    g.fill({ color: crownLight, alpha: 0.5 });
+  }
 
   const texture = renderer.generateTexture(g);
   g.destroy();
@@ -733,6 +919,7 @@ function generatePropTexture(renderer: Renderer, type: PropType): Texture {
 
 function generateSeasonalGround(renderer: Renderer, variant: number, season: TerrainSeason): Texture {
   const g = new Graphics();
+  normalizeTileBounds(g);
   drawTileDiamond(g);
 
   if (season === 'winter') {
@@ -785,8 +972,6 @@ function generateSeasonalGround(renderer: Renderer, variant: number, season: Ter
     }
   }
 
-  drawTileDiamond(g);
-  g.stroke({ width: 0.8, color: PALETTE.GROUND_EDGE, alpha: 0.30 });
   const texture = renderer.generateTexture(g);
   g.destroy();
   return texture;
@@ -794,6 +979,7 @@ function generateSeasonalGround(renderer: Renderer, variant: number, season: Ter
 
 function generateSeasonalForest(renderer: Renderer, variant: number, season: TerrainSeason): Texture {
   const g = new Graphics();
+  normalizeTileBounds(g);
   drawTileDiamond(g);
 
   // Use variant-based tree positions for diversity (matches summer forest)
@@ -836,8 +1022,6 @@ function generateSeasonalForest(renderer: Renderer, variant: number, season: Ter
 
   if (season === 'winter') {
     g.fill(0xDCDCDC);
-    drawTileDiamond(g);
-    g.stroke({ width: 0.5, color: 0xBBBBBB, alpha: 0.4 });
     for (const t of trees) {
       const tx = TILE_HALF_W + t.x;
       const ty = TILE_HALF_H + t.y;
@@ -870,8 +1054,6 @@ function generateSeasonalForest(renderer: Renderer, variant: number, season: Ter
     }
   } else if (season === 'autumn') {
     g.fill(0x6A5A3A);
-    drawTileDiamond(g);
-    g.stroke({ width: 0.5, color: 0x4A3A2A, alpha: 0.4 });
     const autumnColors = [0xCC6622, 0xDD4422, 0x558B2F, 0xBB8822, 0xAA3311];
     for (let i = 0; i < trees.length; i++) {
       const t = trees[i];
@@ -904,8 +1086,6 @@ function generateSeasonalForest(renderer: Renderer, variant: number, season: Ter
   } else {
     // Spring
     g.fill(0x4A8A30);
-    drawTileDiamond(g);
-    g.stroke({ width: 0.5, color: 0x3A6A20, alpha: 0.4 });
     for (const t of trees) {
       const tx = TILE_HALF_W + t.x;
       const ty = TILE_HALF_H + t.y;
@@ -934,23 +1114,42 @@ function generateSeasonalForest(renderer: Renderer, variant: number, season: Ter
 
 function generateSeasonalWater(renderer: Renderer, variant: number, season: TerrainSeason): Texture {
   const g = new Graphics();
+  normalizeTileBounds(g);
   drawTileDiamond(g);
 
   if (season === 'winter') {
-    g.fill(0x6A7A8A);
-    for (let i = 0; i < 3 + variant % 2; i++) {
+    // Frozen sheet: clearly ice, not dark water. Matte pale blue-grey with
+    // long pressure cracks and drifted snow patches.
+    g.fill(0x9FAEBD + variant * 0x020202);
+    // Long pressure cracks crossing much of the tile
+    for (let i = 0; i < 2 + variant % 2; i++) {
       const h = varHash(variant * 40 + i, 55);
-      const sx = TILE_HALF_W + ((h % 20) - 10);
-      const sy = TILE_HALF_H + (((h >> 8) % 12) - 6);
+      const sx = TILE_HALF_W - 12 + (h % 8);
+      const sy = TILE_HALF_H - 5 + ((h >> 8) % 10);
+      const mx = sx + 8 + (h >> 4) % 6;
+      const my = sy + ((h >> 6) % 5) - 2;
+      const ex = sx + 18 + (h >> 5) % 6;
+      const ey = sy + ((h >> 7) % 7) - 3;
       g.moveTo(sx, sy);
-      g.lineTo(sx + 6, sy + 2);
-      g.stroke({ width: 0.5, color: 0xAABBCC, alpha: 0.4 });
-      g.moveTo(sx + 3, sy + 1);
-      g.lineTo(sx + 5, sy - 2);
-      g.stroke({ width: 0.4, color: 0xAABBCC, alpha: 0.3 });
+      g.lineTo(mx, my);
+      g.lineTo(ex, ey);
+      g.stroke({ width: 0.6, color: 0x7A8A9A, alpha: 0.55 });
+      // Short branch off the main crack
+      g.moveTo(mx, my);
+      g.lineTo(mx + 3, my - 3);
+      g.stroke({ width: 0.4, color: 0x7A8A9A, alpha: 0.4 });
     }
-    g.ellipse(TILE_HALF_W, TILE_HALF_H, 8, 4);
-    g.fill({ color: 0xDDEEFF, alpha: 0.08 });
+    // Drifted snow patches on the ice
+    for (let i = 0; i < 2 + variant % 2; i++) {
+      const h = varHash(variant * 90 + i, 23);
+      const px = TILE_HALF_W + ((h % 26) - 13);
+      const py = TILE_HALF_H + (((h >> 8) % 14) - 7);
+      g.ellipse(px, py, 5 + (h >> 4) % 4, 2.5);
+      g.fill({ color: 0xE6EDF2, alpha: 0.5 });
+    }
+    // Faint frozen sheen
+    g.ellipse(TILE_HALF_W, TILE_HALF_H, 10, 5);
+    g.fill({ color: 0xDDEEFF, alpha: 0.10 });
   } else if (season === 'autumn') {
     g.fill(0x3E5A6A);
     for (let i = 0; i < 3; i++) {
@@ -969,8 +1168,6 @@ function generateSeasonalWater(renderer: Renderer, variant: number, season: Terr
     }
   }
 
-  drawTileDiamond(g);
-  g.stroke({ width: 0.5, color: 0x2A4353, alpha: 0.45 });
   const texture = renderer.generateTexture(g);
   g.destroy();
   return texture;
@@ -978,6 +1175,7 @@ function generateSeasonalWater(renderer: Renderer, variant: number, season: Terr
 
 function generateSeasonalDirt(renderer: Renderer, variant: number, season: TerrainSeason): Texture {
   const g = new Graphics();
+  normalizeTileBounds(g);
   drawTileDiamond(g);
 
   if (season === 'winter') {
@@ -1010,8 +1208,6 @@ function generateSeasonalDirt(renderer: Renderer, variant: number, season: Terra
     }
   }
 
-  drawTileDiamond(g);
-  g.stroke({ width: 0.5, color: 0x6B5D3A, alpha: 0.4 });
   const texture = renderer.generateTexture(g);
   g.destroy();
   return texture;
@@ -1019,6 +1215,7 @@ function generateSeasonalDirt(renderer: Renderer, variant: number, season: Terra
 
 function generateSeasonalHill(renderer: Renderer, variant: number, season: TerrainSeason): Texture {
   const g = new Graphics();
+  normalizeTileBounds(g);
   drawTileDiamond(g);
 
   if (season === 'winter') {
