@@ -61,6 +61,12 @@ const MINIMUM_QUALITY_RANK: Readonly<Record<EnvironmentMinimumQuality, number>> 
 
 export class EnvironmentPropRenderer {
   readonly container: Container;
+  /**
+   * Night-light pools (street lamps). Game mounts this container above the
+   * night ambience veil so pools brighten the darkened ground.
+   */
+  readonly lightContainer: Container = new Container();
+  private lampPools = new Map<string, Sprite>();
   private sprites: Sprite[][] = [];
   private authoredSprites: Sprite[] = [];
   private emissiveSprites: EnvironmentEmissiveSprite[] = [];
@@ -109,6 +115,7 @@ export class EnvironmentPropRenderer {
     if (this.quality === quality) return;
     this.quality = quality;
     this.container.visible = quality !== 'low';
+    this.lightContainer.visible = quality !== 'low';
     this.updateAll();
   }
 
@@ -149,7 +156,7 @@ export class EnvironmentPropRenderer {
    * existing authored building light update without any grid scan.
    */
   updateLighting(now: number): void {
-    if (this.quality === 'low' || this.emissiveSprites.length === 0) return;
+    if (this.quality === 'low') return;
     const cycle = (now * 0.000045) % (Math.PI * 2);
     const dayFactor = (Math.sin(cycle) + 1) * 0.5;
     const nightIntensity = Math.max(0, (0.4 - dayFactor) / 0.4);
@@ -159,6 +166,16 @@ export class EnvironmentPropRenderer {
       const powered = !entry.requiresOwnerPower || Boolean(owner?.powered);
       entry.sprite.visible = powered && nightIntensity > 0;
       entry.sprite.alpha = powered ? entry.baseAlpha * nightIntensity : 0;
+    }
+
+    // Street-lamp ground pools fade with night intensity.
+    if (this.lampPools.size > 0) {
+      const poolAlpha = nightIntensity;
+      const show = nightIntensity > 0;
+      for (const pool of this.lampPools.values()) {
+        pool.visible = show;
+        pool.alpha = poolAlpha;
+      }
     }
   }
 
@@ -340,6 +357,7 @@ export class EnvironmentPropRenderer {
       ? 'prop_none'
       : this.pickPropForCell(gx, gy);
     sprite.texture = this.textures.get(propKey);
+    this.syncLampPool(gx, gy, propKey === 'prop_lamp');
     if (propKey === 'prop_none') {
       sprite.visible = false;
       return;
@@ -416,6 +434,33 @@ export class EnvironmentPropRenderer {
     if (roadCount > 0 && roll < 16 * density) return 'prop_lamp';
     if (roll < 7 * density) return hash % 2 === 0 ? 'prop_fence' : 'prop_bench';
     return 'prop_none';
+  }
+
+  /** Create or remove the warm night pool under a street lamp cell. */
+  private syncLampPool(gx: number, gy: number, isLamp: boolean): void {
+    const key = `${gx},${gy}`;
+    const existing = this.lampPools.get(key);
+    if (!isLamp) {
+      if (existing) {
+        this.lightContainer.removeChild(existing);
+        existing.destroy();
+        this.lampPools.delete(key);
+      }
+      return;
+    }
+    if (existing) return;
+
+    const elevation = this.grid.getElevation(gx, gy);
+    const pos = gridToWorld(gx, gy, elevation);
+    const pool = new Sprite(this.textures.get('lamp_pool'));
+    pool.anchor.set(0.5);
+    // Centered under the lamp head, which sits slightly right of the post.
+    pool.x = pos.x + 4;
+    pool.y = pos.y + TILE_HALF_H - 8;
+    pool.alpha = 0;
+    pool.visible = false;
+    this.lightContainer.addChild(pool);
+    this.lampPools.set(key, pool);
   }
 
   private tileHash(gx: number, gy: number): number {

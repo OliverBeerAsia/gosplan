@@ -55,6 +55,7 @@ import { assetPath } from '../utils/assetPath';
 import { audioManager } from '../audio/AudioManager';
 import { GoatCounterAnalytics } from '../analytics/GoatCounterAnalytics';
 import { WindowLightRenderer } from '../rendering/WindowLightRenderer';
+import { NightAmbience } from '../rendering/NightAmbience';
 import { TrafficRenderer } from '../rendering/TrafficRenderer';
 
 type VisualBenchmarkLight = 'day' | 'night' | 'live';
@@ -119,6 +120,7 @@ export class Game {
   private smokeParticles!: SmokeParticles;
   private weatherEffects!: WeatherEffects;
   private windowLights!: WindowLightRenderer;
+  private nightAmbience!: NightAmbience;
   private trafficRenderer!: TrafficRenderer;
   private currentSeason: Season | null = null; // null forces season sync on first update
 
@@ -406,13 +408,19 @@ export class Game {
       this.worldDepthLayer
     );
 
+    this.nightAmbience = new NightAmbience(this.grid);
+
     this.worldContainer.addChild(this.terrainRenderer.container);
     this.worldContainer.addChild(this.propRenderer.container);
     this.worldContainer.addChild(this.zoneRenderer.container);
     this.worldContainer.addChild(this.buildingRenderer.container);
     this.worldContainer.addChild(this.trafficRenderer.container);
-    this.worldContainer.addChild(this.windowLights.container);
     this.worldContainer.addChild(this.worldDepthLayer);
+    // The night veil multiplies everything in the depth layer; window lights
+    // render above it so they read as light sources, not tinted decals.
+    this.worldContainer.addChild(this.nightAmbience.container);
+    this.worldContainer.addChild(this.propRenderer.lightContainer);
+    this.worldContainer.addChild(this.windowLights.container);
     this.worldContainer.addChild(this.smokeParticles.container);
     this.worldContainer.addChild(this.overlayRenderer.container);
 
@@ -967,6 +975,7 @@ export class Game {
 
     // Update window lights (day/night cycle)
     this.windowLights.update(now);
+    this.nightAmbience.update(now);
     this.propRenderer.updateLighting(now);
 
     // Update traffic dots on roads

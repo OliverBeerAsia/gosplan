@@ -27,10 +27,12 @@ export class AmbienceOverlay {
   updateFrame(nowMs: number): void {
     const cycle = (nowMs * 0.000045) % (Math.PI * 2);
     const dayFactor = (Math.sin(cycle) + 1) * 0.5; // 0 night, 1 day
-    const baseDarkness = 0.18 - dayFactor * 0.14;
+    // The world-space NightAmbience layer now carries the actual darkening;
+    // this DOM overlay is only a soft vignette plus the unrest pulse.
+    const baseDarkness = 0.08 - dayFactor * 0.06;
     const unrestTint = Math.max(0, (this.state.unrestLevel - 45) / 100) * 0.12;
 
-    const opacity = Math.max(0, Math.min(0.28, baseDarkness + unrestTint));
+    const opacity = Math.max(0, Math.min(0.2, baseDarkness + unrestTint));
     this.el.style.opacity = opacity.toFixed(3);
 
     const red = this.state.unrestLevel > 60 ? 55 : 28;

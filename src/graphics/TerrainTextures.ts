@@ -88,6 +88,8 @@ export function generateTerrainTextures(renderer: Renderer): Map<string, Texture
   textures.set('zone_civic', generateZoneTile(renderer, 0x03A9F4, 'grid'));
   textures.set('zone_green', generateZoneTile(renderer, 0x8BC34A, 'dots'));
 
+  textures.set('lamp_pool', generateLampPoolTexture(renderer));
+
   textures.set('prop_none', generateEmptyOverlay(renderer));
   textures.set('prop_lamp', generatePropTexture(renderer, 'lamp'));
   textures.set('prop_fence', generatePropTexture(renderer, 'fence'));
@@ -726,6 +728,27 @@ function generateTerrainDecal(renderer: Renderer, variant: number): Texture {
     g.fill({ color: 0x4A4230, alpha: 0.12 });
   }
 
+  const texture = renderer.generateTexture(g);
+  g.destroy();
+  return texture;
+}
+
+/**
+ * Warm ground pool cast by a street lamp at night. Rendered above the night
+ * ambience veil, faded in with night intensity.
+ */
+function generateLampPoolTexture(renderer: Renderer): Texture {
+  const g = new Graphics();
+  const cx = 16;
+  const cy = 8;
+  g.rect(0, 0, 32, 16);
+  g.fill({ color: 0x000000, alpha: 0 });
+  g.ellipse(cx, cy, 15, 7.5);
+  g.fill({ color: 0xFFD9A0, alpha: 0.10 });
+  g.ellipse(cx, cy, 10, 5);
+  g.fill({ color: 0xFFDFAC, alpha: 0.14 });
+  g.ellipse(cx, cy, 5.5, 2.8);
+  g.fill({ color: 0xFFE9C4, alpha: 0.20 });
   const texture = renderer.generateTexture(g);
   g.destroy();
   return texture;
