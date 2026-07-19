@@ -16,7 +16,7 @@ import {
 import { TILE_HALF_W, TILE_HALF_H } from '../constants';
 import { GraphicsQuality } from '../core/GameState';
 import { TerrainType } from '../grid/Cell';
-import { TerrainSeason } from '../graphics/TerrainTextures';
+import { TerrainSeason, TILE_TEXTURE_OVERHEAD } from '../graphics/TerrainTextures';
 
 const TERRAIN_VARIANTS: Record<TerrainType, number> = {
   ground: 3,
@@ -73,6 +73,8 @@ export class TerrainRenderer {
   // Water shimmer tracking
   private waterTiles: { gx: number; gy: number; hash: number }[] = [];
   private currentSeason: TerrainSeason | null = null; // null = summer (default)
+  // Far-zoom LOD state with hysteresis (enter below 0.45, leave above 0.55)
+  private farZoom = false;
   // Pre-cached shimmer colors (updated on season change)
   private shimmerBaseR = 0x4A; private shimmerBaseG = 0x6B; private shimmerBaseB = 0x7C;
   private shimmerLightR = 0x5D; private shimmerLightG = 0x8A; private shimmerLightB = 0x9C;
@@ -109,6 +111,30 @@ export class TerrainRenderer {
       });
       events.on('game:loaded', () => this.rebuildCliffs());
       events.on('graphics:quality:changed', ({ quality }) => this.setQuality(quality));
+      events.on('camera:moved', ({ zoom }) => this.updateZoomLod(zoom));
+    }
+  }
+
+  /**
+   * Far-zoom level of detail: below ~0.45x individual trees and decal specks
+   * alias into noise, so forests swap to massed canopy tiles and decals hide.
+   * Hysteresis prevents thrashing at the boundary.
+   */
+  private updateZoomLod(zoom: number): void {
+    const wantFar = this.farZoom ? zoom < 0.55 : zoom < 0.45;
+    if (wantFar === this.farZoom) return;
+    this.farZoom = wantFar;
+
+    this.decalContainer.visible = !wantFar && this.quality === 'high';
+
+    for (let gx = 0; gx < this.grid.size; gx++) {
+      for (let gy = 0; gy < this.grid.size; gy++) {
+        const cell = this.grid.getCell(gx, gy);
+        if (!cell || cell.terrain !== 'forest') continue;
+        const base = this.baseSprites[gx]?.[gy];
+        if (!base) continue;
+        base.texture = this.textures.get(this.getTerrainVariantKey('forest', gx, gy));
+      }
     }
   }
 
@@ -169,6 +195,27 @@ export class TerrainRenderer {
           color: style.shadow,
           alpha: 0.24,
         });
+      }
+
+      // Horizontal strata: sedimentary banding makes tall faces read as
+      // earth and rock instead of extruded polygons.
+      const strataCount = 2 + (this.tileHash(gx * 5 + tier.step, gy * 3) % 2);
+      for (let s = 0; s < strataCount; s++) {
+        const v = 0.18 + (s + 1) * (0.62 / (strataCount + 1))
+          + ((this.tileHash(gx + s * 11, gy + tier.step * 7) % 8) - 4) / 100;
+        const band = getCliffFaceBandGeometry(tier.points, v, v + 0.045);
+        face.poly(band).fill({
+          color: s % 2 === 0 ? style.grain : style.band,
+          alpha: s % 2 === 0 ? 0.16 : 0.20,
+        });
+      }
+      // Occasional embedded stones along a stratum
+      for (let stone = 0; stone < 2; stone++) {
+        const h = this.tileHash(gx * 23 + stone * 13 + tier.step, gy * 31 + (direction === 'gx' ? 3 : 7));
+        if (h % 5 !== 0) continue;
+        const p = this.getCliffFacePoint(tier.points, 0.15 + (h % 70) / 100, 0.3 + ((h >>> 8) % 45) / 100);
+        face.ellipse(Math.round(p.x), Math.round(p.y), 1.6, 1);
+        face.fill({ color: style.grain, alpha: 0.4 });
       }
 
       this.drawCliffTexture(face, tier.points, gx, gy, tier.step, direction, style.grain);
@@ -295,9 +342,15 @@ export class TerrainRenderer {
     const count = TERRAIN_VARIANTS[terrain] ?? 1;
     if (count <= 1) return terrain;
     const variant = this.tileHash(gx, gy) % count;
+    const s = season ?? this.currentSeason;
+
+    // Far-zoom canopy LOD for forests
+    if (terrain === 'forest' && this.farZoom) {
+      const farKey = s ? `forest_${s}_far_${variant}` : `forest_far_${variant}`;
+      if (this.textures.has(farKey)) return farKey;
+    }
 
     // Try seasonal texture first
-    const s = season ?? this.currentSeason;
     if (s) {
       const seasonalKey = `${terrain}_${s}_${variant}`;
       if (this.textures.has(seasonalKey)) return seasonalKey;
@@ -305,6 +358,37 @@ export class TerrainRenderer {
 
     const key = `${terrain}_${variant}`;
     return this.textures.has(key) ? key : terrain;
+  }
+
+  /**
+   * Water tiles use the edge-sprite slot for shorelines: foam and submerged
+   * bank against land neighbors, shore-fast ice in winter.
+   */
+  private getShorelineMask(gx: number, gy: number): number {
+    const neighbors = [
+      { bit: 1, x: gx, y: gy - 1 },
+      { bit: 2, x: gx + 1, y: gy },
+      { bit: 4, x: gx, y: gy + 1 },
+      { bit: 8, x: gx - 1, y: gy },
+    ];
+    let mask = 0;
+    for (const n of neighbors) {
+      const neighbor = this.grid.getCell(n.x, n.y);
+      if (!neighbor) continue;
+      if (neighbor.terrain !== 'water') mask |= n.bit;
+    }
+    return mask;
+  }
+
+  private getEdgeTextureKey(gx: number, gy: number): { key: string; mask: number } {
+    const cell = this.grid.getCell(gx, gy);
+    if (cell?.terrain === 'water') {
+      const mask = this.getShorelineMask(gx, gy);
+      const prefix = this.currentSeason === 'winter' ? 'shore_winter_' : 'shore_';
+      return { key: `${prefix}${mask}`, mask };
+    }
+    const mask = this.getEdgeMask(gx, gy);
+    return { key: `terrain_edge_${mask}`, mask };
   }
 
   private getDecalKey(terrain: TerrainType, gx: number, gy: number): string {
@@ -358,18 +442,19 @@ export class TerrainRenderer {
 
         const baseSprite = new Sprite(this.textures.get(this.getTerrainVariantKey(cell.terrain, gx, gy)));
         baseSprite.x = pos.x - TILE_HALF_W;
-        baseSprite.y = pos.y - TILE_HALF_H;
+        // Base tile textures carry fixed overhead space for tall details
+        baseSprite.y = pos.y - TILE_HALF_H - TILE_TEXTURE_OVERHEAD;
         baseSprite.zIndex = baseDepth;
         this.baseSprites[gx][gy] = baseSprite;
         this.groundContainer.addChild(baseSprite);
         this.worldDepth.attach(baseSprite);
 
-        const edgeMask = this.getEdgeMask(gx, gy);
-        const edgeSprite = new Sprite(this.textures.get(`terrain_edge_${edgeMask}`));
+        const edge = this.getEdgeTextureKey(gx, gy);
+        const edgeSprite = new Sprite(this.textures.get(edge.key));
         edgeSprite.x = pos.x - TILE_HALF_W;
         edgeSprite.y = pos.y - TILE_HALF_H;
         edgeSprite.zIndex = tileDepth(gx, gy, WorldDepthPhase.TERRAIN_EDGE);
-        edgeSprite.alpha = edgeMask === 0 ? 0 : 1;
+        edgeSprite.alpha = edge.mask === 0 ? 0 : 1;
         this.edgeSprites[gx][gy] = edgeSprite;
         this.edgeContainer.addChild(edgeSprite);
         this.worldDepth.attach(edgeSprite);
@@ -414,15 +499,17 @@ export class TerrainRenderer {
       sprite.x = pos.x - TILE_HALF_W;
       sprite.y = pos.y - TILE_HALF_H;
     }
+    // Base tile textures carry fixed overhead space for tall details
+    base.y = pos.y - TILE_HALF_H - TILE_TEXTURE_OVERHEAD;
     base.zIndex = tileDepth(gx, gy, WorldDepthPhase.TERRAIN);
     edge.zIndex = tileDepth(gx, gy, WorldDepthPhase.TERRAIN_EDGE);
     decal.zIndex = tileDepth(gx, gy, WorldDepthPhase.TERRAIN_DECAL);
 
     base.texture = this.textures.get(this.getTerrainVariantKey(cell.terrain, gx, gy));
 
-    const edgeMask = this.getEdgeMask(gx, gy);
-    edge.texture = this.textures.get(`terrain_edge_${edgeMask}`);
-    edge.alpha = edgeMask === 0 ? 0 : 1;
+    const edgeInfo = this.getEdgeTextureKey(gx, gy);
+    edge.texture = this.textures.get(edgeInfo.key);
+    edge.alpha = edgeInfo.mask === 0 ? 0 : 1;
 
     const decalKey = this.getDecalKey(cell.terrain, gx, gy);
     decal.texture = this.textures.get(decalKey);
@@ -432,7 +519,7 @@ export class TerrainRenderer {
   setQuality(quality: GraphicsQuality): void {
     this.quality = quality;
     this.edgeContainer.visible = quality !== 'low';
-    this.decalContainer.visible = quality === 'high';
+    this.decalContainer.visible = quality === 'high' && !this.farZoom;
   }
 
   private shimmerFrame = 0;
@@ -440,6 +527,9 @@ export class TerrainRenderer {
   /** Animate water tile tints with a gentle shimmer. Call from the game loop. */
   updateWaterShimmer(now: number): void {
     if (this.quality === 'low') return;
+    // Frozen water is matte: no shimmer in winter, and none at far zoom
+    // where per-tile tint churn is invisible anyway.
+    if (this.currentSeason === 'winter' || this.farZoom) return;
     // Throttle to every 3rd frame — shimmer is smooth enough at ~20fps
     if (++this.shimmerFrame % 3 !== 0) return;
 
@@ -504,6 +594,16 @@ export class TerrainRenderer {
         if (cell.terrain !== 'water') {
           // Only apply tint if we're using a non-seasonal (summer) texture
           base.tint = terrainSeason ? 0xFFFFFF : baseTint;
+        } else {
+          // Frozen sheets are matte; clear any residual shimmer tint
+          if (terrainSeason === 'winter') base.tint = 0xFFFFFF;
+          // Shorelines swap between foam and shore-fast ice
+          const edge = this.edgeSprites[gx]?.[gy];
+          if (edge) {
+            const edgeInfo = this.getEdgeTextureKey(gx, gy);
+            edge.texture = this.textures.get(edgeInfo.key);
+            edge.alpha = edgeInfo.mask === 0 ? 0 : 1;
+          }
         }
         if (decal) {
           decal.tint = terrainSeason ? 0xFFFFFF : baseTint;

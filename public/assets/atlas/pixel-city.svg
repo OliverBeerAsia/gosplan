@@ -45,37 +45,37 @@
 
   <g transform="translate(320,0)">
     <!-- ground_highlight -->
-    <polygon points="32,0 64,16 32,32 0,16" fill="#1eff55" opacity="0.26" stroke="#1eff55" opacity="0.7" />
+    <polygon points="32,0 64,16 32,32 0,16" fill="#1eff55" fill-opacity="0.26" stroke="#1eff55" stroke-opacity="0.7" />
   </g>
 
   <g transform="translate(384,0)">
     <!-- ground_invalid -->
-    <polygon points="32,0 64,16 32,32 0,16" fill="#ff4747" opacity="0.26" stroke="#ff4747" opacity="0.7" />
+    <polygon points="32,0 64,16 32,32 0,16" fill="#ff4747" fill-opacity="0.26" stroke="#ff4747" stroke-opacity="0.7" />
   </g>
 
   <g transform="translate(448,0)">
     <!-- power_overlay -->
-    <polygon points="32,0 64,16 32,32 0,16" fill="#ffe04a" opacity="0.23" stroke="#ffe04a" opacity="0.65" />
+    <polygon points="32,0 64,16 32,32 0,16" fill="#ffe04a" fill-opacity="0.23" stroke="#ffe04a" stroke-opacity="0.65" />
   </g>
 
   <g transform="translate(512,0)">
     <!-- zone_housing -->
-    <polygon points="32,0 64,16 32,32 0,16" fill="#59ba67" opacity="0.22" stroke="#59ba67" opacity="0.6" />
+    <polygon points="32,0 64,16 32,32 0,16" fill="#59ba67" fill-opacity="0.22" stroke="#59ba67" stroke-opacity="0.6" />
   </g>
 
   <g transform="translate(576,0)">
     <!-- zone_industry -->
-    <polygon points="32,0 64,16 32,32 0,16" fill="#f7a43f" opacity="0.22" stroke="#f7a43f" opacity="0.6" />
+    <polygon points="32,0 64,16 32,32 0,16" fill="#f7a43f" fill-opacity="0.22" stroke="#f7a43f" stroke-opacity="0.6" />
   </g>
 
   <g transform="translate(640,0)">
     <!-- zone_civic -->
-    <polygon points="32,0 64,16 32,32 0,16" fill="#3db8e6" opacity="0.22" stroke="#3db8e6" opacity="0.6" />
+    <polygon points="32,0 64,16 32,32 0,16" fill="#3db8e6" fill-opacity="0.22" stroke="#3db8e6" stroke-opacity="0.6" />
   </g>
 
   <g transform="translate(704,0)">
     <!-- zone_green -->
-    <polygon points="32,0 64,16 32,32 0,16" fill="#8fd146" opacity="0.22" stroke="#8fd146" opacity="0.6" />
+    <polygon points="32,0 64,16 32,32 0,16" fill="#8fd146" fill-opacity="0.22" stroke="#8fd146" stroke-opacity="0.6" />
   </g>
 
   <!-- Infrastructure row -->
@@ -97,7 +97,7 @@
 
   <g transform="translate(128,40)">
     <!-- service overlay -->
-    <polygon points="32,0 64,16 32,32 0,16" fill="#47c7f4" opacity="0.25" stroke="#47c7f4" opacity="0.6" />
+    <polygon points="32,0 64,16 32,32 0,16" fill="#47c7f4" fill-opacity="0.25" stroke="#47c7f4" stroke-opacity="0.6" />
   </g>
 
   <!-- Building row (128x160 each) -->

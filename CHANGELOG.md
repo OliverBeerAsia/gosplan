@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+### Added
+
+- SVG well-formedness validation in the art and atlas CI gates (dependency-free XML checker; catches duplicate attributes, mismatched tags, unquoted values), with node:test coverage and a shipped-SVG sweep.
+- `docs/ART_AUTHORING_TEMPLATE.md`: the Khrushchyovka atlas and manifest entry extracted as the reusable template for future building-family packs.
+- Shorelines drawn on the water side of water/land boundaries: submerged bank and broken foam line, shore-fast ice collar in winter.
+- Distinct winter ice: matte pale frozen sheets with pressure cracks and snow drifts; shimmer disabled while frozen.
+- Cliff faces gain sedimentary strata bands and embedded stones.
+- Far-zoom forest canopy LOD below 0.45x zoom (massed crowns instead of aliasing speckle), with hysteresis at 0.55x.
+- World-space day/night ambience: a multiply veil darkens terrain and buildings through amber dusk into moonlit night; window lights and new street-lamp ground pools render above it.
+- Baked contact shadows seat every non-flat building on its tile.
+- Traffic vehicles are small oriented isometric vans (per-direction textures, right-hand lane offset) instead of 3x4 rectangles.
+
+### Fixed
+
+- `pixel-city.svg` was invalid XML since 2026-02 (duplicate opacity attributes), so the legacy atlas never decoded in browsers; every boot logged an atlas warning and the terrain-override path was dead code. The SVG is repaired, the eight legacy building and seven legacy terrain manifest entries that referenced it are removed, and the dead runtime override is deleted. Boot is warning-free; behavior is unchanged and now truthful.
+- Base tile textures bake a fixed frame (`TILE_TEXTURE_OVERHEAD`) and overlay masks a diamond frame, fixing bounds-derived sprite misalignment: forest tiles no longer bleed dark canopy over lower neighbors at elevation steps, and edge masks no longer render as floating streaks.
+- Universal per-tile seam strokes removed; material boundaries use ragged dithered transition bands.
+- Tutorial banner instructions wrap instead of truncating with an ellipsis.
+- The idle inspect help text no longer sits permanently mid-screen.
+
+### Compatibility
+
+- Save format, simulation RNG, footprints, costs, and balance unchanged; determinism gate passes.
+- Rollback reference: base commit `18df2e0` (v1.10 foundation merge). See `docs/GRAPHICS_BACKUP_AND_ROLLBACK.md` section 2026-07-18.
+
 ## [1.10.0] - Release candidate
 
 v1.10.0 is a graphics foundation release, not the completed graphics overhaul. Production remains on v1.9.4 until the candidate commit passes CI, deploys through GitHub Pages, and passes live verification.

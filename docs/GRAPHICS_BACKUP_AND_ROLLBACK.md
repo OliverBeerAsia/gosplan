@@ -286,3 +286,49 @@ Rollback or disable the affected pack when any of these remain unresolved at rel
 The release owner decides whether to disable an asset, revert a pack, or restore the program baseline. Art direction, rendering, interaction, QA, and release owners provide evidence, but one named release owner performs and records the rollback.
 
 No rollback is considered complete until the live GitHub Pages site is verified and the deployed commit is recorded.
+
+## 2026-07-18 checkpoint: graphics quick wins + Workstreams A/B
+
+Branch: `codex/graphics-quick-wins-ab`, seven commits on the clean base
+`18df2e03228414c32567c7c98dabbffde53331c5` (the deployed v1.10 foundation
+merge on `origin/main`). Built and verified in a clean clone, never in the
+dirty mixed tree.
+
+### Recovery points
+
+- Pre-change recovery point: commit `18df2e0` itself. The branch contains no
+  work from the dirty tree, so a commit reference is a complete recovery
+  point for this series (unlike the 2026-07-10 checkpoints).
+- Delivery artifacts (patch series, git bundle, evidence captures, apply
+  instructions): `patches/2026-07-18-graphics-quick-wins-ab/` in the
+  workspace. The bundle allows exact branch reconstruction offline:
+  `git fetch graphics-quick-wins-ab.bundle codex/graphics-quick-wins-ab:...`
+- Checksum-verified source archive of the candidate tree:
+  `.backups/graphics-program/2026-07-18-quick-wins-ab/` with
+  `SHA256SUMS.txt`. `.backups/` stays git-ignored; backup binaries are not
+  committed.
+
+### Rollback procedures
+
+1. Before merge: delete the local branch and the patches folder. Nothing has
+   changed on `main` or the live site.
+2. After merge to `main`, before acceptance fails: `git revert -m 1 <merge_sha>`
+   through a normal protected PR. The Pages workflow redeploys the reverted
+   tree automatically on merge. Do not reset or force push (protected main).
+3. Partial rollback: each commit in the series is independently revertable;
+   the terrain commit (3) and ambience commit (4) have no dependencies on
+   each other. Commit 2 (validator) depends on commit 1 (fixed SVG), revert
+   them together if unwinding the atlas repair.
+4. The removed legacy manifest entries are restorable from commit 1's diff,
+   but note they were provably non-functional since 2026-02; restoring them
+   restores the boot warning.
+
+### Verification recorded for this checkpoint
+
+All gates from `.github/workflows/deploy-pages.yml` pass locally on the
+candidate: npm audit (0 vulnerabilities), check:art, test:art (19),
+check:khrushchyovka, check:courtyard, check:environment, benchmark pack4a
+and pack4b plus production-exclusion variants, check:visual-evidence,
+check:elevation, check:interaction, check:depth, check:atlas,
+check:determinism, tsc, and the production build. Browser evidence for the
+visual changes is in `patches/2026-07-18-graphics-quick-wins-ab/evidence/`.

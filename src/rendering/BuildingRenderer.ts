@@ -50,9 +50,13 @@ export function computeNetworkConnectionMask(
   return mask;
 }
 
+/** Building families that sit flush with the ground and cast no shadow. */
+const NO_SHADOW_IDS = new Set(['road', 'power_line', 'park', 'plaza']);
+
 export class BuildingRenderer {
   readonly container: Container;
   private spriteMap: Map<number, Sprite> = new Map();
+  private shadowMap: Map<number, Sprite> = new Map();
   private authoredSpriteIds: Set<number> = new Set();
   /**
    * The exact authored frame and variant currently shown for each building.
@@ -112,6 +116,11 @@ export class BuildingRenderer {
       sprite.destroy();
     }
     this.spriteMap.clear();
+    for (const shadow of this.shadowMap.values()) {
+      this.container.removeChild(shadow);
+      shadow.destroy();
+    }
+    this.shadowMap.clear();
     this.authoredSpriteIds.clear();
     this.authoredVisualMap.clear();
 
@@ -226,6 +235,24 @@ export class BuildingRenderer {
       this.authoredSpriteIds.add(building.id);
       this.authoredVisualMap.set(building.id, authored);
     }
+
+    // Baked contact shadow seats the building on its tile. Sun is top-left,
+    // so the pool leans slightly down-right.
+    if (!NO_SHADOW_IDS.has(def.id) && this.textures.has('building_shadow')) {
+      const shadow = new Sprite(this.textures.get('building_shadow'));
+      const span = (def.width + def.height) / 2;
+      shadow.anchor.set(0.5);
+      shadow.width = span * TILE_HALF_W * 2 * 1.06;
+      shadow.height = span * TILE_HALF_H * 2 * 1.06;
+      shadow.x = pos.x + 2;
+      shadow.y = pos.y + TILE_HALF_H - span * TILE_HALF_H + 1;
+      // PROP phase: above terrain and zones, below the structure itself.
+      shadow.zIndex = this.getBuildingDepth(building, WorldDepthPhase.PROP);
+      this.shadowMap.set(building.id, shadow);
+      this.container.addChild(shadow);
+      this.worldDepth.attach(shadow);
+    }
+
     this.container.addChild(sprite);
     this.worldDepth.attach(sprite);
     this.applySpriteLook(building, sprite);
@@ -271,6 +298,12 @@ export class BuildingRenderer {
       this.container.removeChild(sprite);
       sprite.destroy();
       this.spriteMap.delete(buildingId);
+    }
+    const shadow = this.shadowMap.get(buildingId);
+    if (shadow) {
+      this.container.removeChild(shadow);
+      shadow.destroy();
+      this.shadowMap.delete(buildingId);
     }
     this.authoredSpriteIds.delete(buildingId);
     this.authoredVisualMap.delete(buildingId);

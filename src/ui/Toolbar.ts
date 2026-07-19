@@ -304,6 +304,13 @@ export class Toolbar {
 
     this.renderSelectedTool(snapshot);
     this.helpEl.textContent = snapshot.helpText;
+    // The idle inspect prompts otherwise sit permanently mid-screen and
+    // read as a stuck tooltip. Show help only when it names something
+    // concrete (a selected tool, or a hovered building/amenity).
+    const idleHelp = snapshot.tool === 'select'
+      && (snapshot.helpText === 'Inspect buildings and city tiles'
+        || snapshot.helpText === 'Inspect city tile');
+    this.helpEl.style.display = idleHelp ? 'none' : '';
   }
 
   private renderSelectedTool(snapshot: ToolSnapshot): void {

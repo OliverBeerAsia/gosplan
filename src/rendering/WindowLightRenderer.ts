@@ -149,8 +149,10 @@ export class WindowLightRenderer {
         sprite.visible = false;
 
         this.lights.push({ sprite, buildingId: building.id, baseAlpha });
+        // Not attached to the world depth layer: window lights render in
+        // their own container above the night ambience veil, so they stay
+        // warm instead of being multiplied down with the buildings.
         this.container.addChild(sprite);
-        this.worldDepth.attach(sprite);
       }
     }
   }
@@ -192,8 +194,8 @@ export class WindowLightRenderer {
       sprite.visible = false;
 
       this.lights.push({ sprite, buildingId, baseAlpha });
+      // See rebuild(): lights render above the night veil, unattached.
       this.container.addChild(sprite);
-      this.worldDepth.attach(sprite);
     }
   }
 

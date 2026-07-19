@@ -49,6 +49,153 @@ function publicAssetPath(publicDir, relativePath, errors, label) {
   return resolved;
 }
 
+/**
+ * Minimal XML well-formedness scan for SVG assets. Browsers decode SVG with a
+ * strict XML parser, so a malformed atlas fails silently at runtime while
+ * frames-file and bounds checks still pass. This deliberately small tokenizer
+ * catches the failure classes that have bitten us (duplicate attributes,
+ * mismatched or unclosed tags, unquoted attribute values) without adding an
+ * XML parser dependency. Returns the first parse problem, or undefined.
+ */
+function findSvgParseError(source) {
+  const nameToken = /[A-Za-z_:][A-Za-z0-9._:-]*/y;
+  const stack = [];
+  const length = source.length;
+  let pos = source.charCodeAt(0) === 0xfeff ? 1 : 0;
+  let sawRoot = false;
+
+  const lineOf = (index) => {
+    let line = 1;
+    for (let i = 0; i < index && i < length; i++) {
+      if (source[i] === '\n') line++;
+    }
+    return line;
+  };
+  const matchName = (index) => {
+    nameToken.lastIndex = index;
+    const match = nameToken.exec(source);
+    return match && match.index === index ? match[0] : undefined;
+  };
+  const isSpace = (char) => char === ' ' || char === '\t' || char === '\n' || char === '\r';
+
+  while (pos < length) {
+    const open = source.indexOf('<', pos);
+    if (open < 0) break;
+    pos = open;
+
+    if (source.startsWith('<!--', pos)) {
+      const end = source.indexOf('-->', pos + 4);
+      if (end < 0) return `unterminated comment starting at line ${lineOf(pos)}`;
+      pos = end + 3;
+      continue;
+    }
+    if (source.startsWith('<![CDATA[', pos)) {
+      const end = source.indexOf(']]>', pos + 9);
+      if (end < 0) return `unterminated CDATA section starting at line ${lineOf(pos)}`;
+      pos = end + 3;
+      continue;
+    }
+    if (source.startsWith('<!', pos)) {
+      const end = source.indexOf('>', pos);
+      if (end < 0) return `unterminated <! declaration starting at line ${lineOf(pos)}`;
+      pos = end + 1;
+      continue;
+    }
+    if (source.startsWith('<?', pos)) {
+      const end = source.indexOf('?>', pos + 2);
+      if (end < 0) return `unterminated processing instruction starting at line ${lineOf(pos)}`;
+      pos = end + 2;
+      continue;
+    }
+
+    if (source.startsWith('</', pos)) {
+      const name = matchName(pos + 2);
+      if (!name) return `malformed closing tag at line ${lineOf(pos)}`;
+      let cursor = pos + 2 + name.length;
+      while (cursor < length && isSpace(source[cursor])) cursor++;
+      if (source[cursor] !== '>') return `malformed closing tag </${name}> at line ${lineOf(pos)}`;
+      const expected = stack.pop();
+      if (expected === undefined) {
+        return `closing tag </${name}> at line ${lineOf(pos)} has no matching open tag`;
+      }
+      if (expected !== name) {
+        return `mismatched tag at line ${lineOf(pos)}: expected </${expected}> but found </${name}>`;
+      }
+      pos = cursor + 1;
+      continue;
+    }
+
+    const tagLine = lineOf(pos);
+    const name = matchName(pos + 1);
+    if (!name) return `invalid tag name at line ${tagLine}`;
+    if (sawRoot && stack.length === 0) return `multiple root elements: <${name}> at line ${tagLine}`;
+    sawRoot = true;
+    let cursor = pos + 1 + name.length;
+    const seenAttributes = new Set();
+
+    for (;;) {
+      while (cursor < length && isSpace(source[cursor])) cursor++;
+      if (cursor >= length) return `unterminated <${name}> tag starting at line ${tagLine}`;
+      const char = source[cursor];
+      if (char === '>') {
+        stack.push(name);
+        cursor++;
+        break;
+      }
+      if (char === '/') {
+        if (source[cursor + 1] !== '>') return `malformed "/" inside <${name}> tag at line ${tagLine}`;
+        cursor += 2;
+        break;
+      }
+      const attribute = matchName(cursor);
+      if (!attribute) return `invalid attribute syntax in <${name}> tag at line ${tagLine}`;
+      if (seenAttributes.has(attribute)) {
+        return `duplicate attribute "${attribute}" on <${name}> tag at line ${tagLine}`;
+      }
+      seenAttributes.add(attribute);
+      cursor += attribute.length;
+      while (cursor < length && isSpace(source[cursor])) cursor++;
+      if (source[cursor] !== '=') {
+        return `attribute "${attribute}" on <${name}> tag at line ${tagLine} is missing "="`;
+      }
+      cursor++;
+      while (cursor < length && isSpace(source[cursor])) cursor++;
+      const quote = source[cursor];
+      if (quote !== '"' && quote !== "'") {
+        return `attribute "${attribute}" on <${name}> tag at line ${tagLine} has an unquoted value`;
+      }
+      const valueEnd = source.indexOf(quote, cursor + 1);
+      if (valueEnd < 0) {
+        return `attribute "${attribute}" on <${name}> tag at line ${tagLine} has an unterminated value`;
+      }
+      if (source.slice(cursor + 1, valueEnd).includes('<')) {
+        return `attribute "${attribute}" on <${name}> tag at line ${tagLine} contains a raw "<"`;
+      }
+      cursor = valueEnd + 1;
+    }
+    pos = cursor;
+  }
+
+  if (stack.length > 0) return `unclosed <${stack[stack.length - 1]}> tag at end of file`;
+  if (!sawRoot) return 'no root element found';
+  return undefined;
+}
+
+function validateSvgWellFormed(filePath, relativePath, errors, label) {
+  if (path.extname(filePath).toLowerCase() !== '.svg') return;
+  let source;
+  try {
+    source = fs.readFileSync(filePath, 'utf8');
+  } catch (error) {
+    errors.push(`${label} could not be read: ${String(error)}`);
+    return;
+  }
+  const parseError = findSvgParseError(source);
+  if (parseError) {
+    errors.push(`${label} is not well-formed XML (${relativePath}): ${parseError}`);
+  }
+}
+
 function readImageDimensions(filePath) {
   const buffer = fs.readFileSync(filePath);
   const extension = path.extname(filePath).toLowerCase();
@@ -203,6 +350,7 @@ function buildAtlasIndex(atlases, publicDir, errors) {
     } else if (imagePath) {
       dimensions = readImageDimensions(imagePath);
       if (!dimensions) errors.push(`atlas "${id}" image dimensions could not be read: ${atlas.image}`);
+      validateSvgWellFormed(imagePath, atlas.image, errors, `atlas "${id}" image`);
     }
 
     let frameManifest;
@@ -606,7 +754,11 @@ function validateFiles(definitions, publicDir, errors, collection, extraValidati
     for (const field of ['file', 'fallbackFile']) {
       if (field === 'fallbackFile' && definition[field] === undefined) continue;
       const filePath = publicAssetPath(publicDir, definition[field], errors, `${collection} "${id}" ${field}`);
-      if (filePath && !fs.existsSync(filePath)) errors.push(`${collection} "${id}" ${field} does not exist: ${definition[field]}`);
+      if (filePath && !fs.existsSync(filePath)) {
+        errors.push(`${collection} "${id}" ${field} does not exist: ${definition[field]}`);
+      } else if (filePath) {
+        validateSvgWellFormed(filePath, definition[field], errors, `${collection} "${id}" ${field}`);
+      }
     }
     extraValidation(definition, id);
   }
@@ -738,6 +890,7 @@ function main() {
 if (require.main === module) main();
 
 module.exports = {
+  findSvgParseError,
   parseRuntimeLoadingAssets,
   readImageDimensions,
   validateArtManifest,
